@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  ShieldCheck,
   Plus,
   Trash2,
   Store,
@@ -20,17 +19,15 @@ import {
   MessageCircle,
   RefreshCw,
   Edit3,
-  Sparkles,
-  ExternalLink,
   Crown,
-  Wallet,
-  ArrowUpRight,
-  Filter,
   Lock,
   User,
   X,
   ChevronRight,
   Zap,
+  ShieldAlert,
+  ArrowRight,
+  Sparkles,
 } from 'lucide-react';
 import { StoreClient } from '../types';
 import { getClients, saveClient, deleteClient } from '../lib/firestoreService';
@@ -49,7 +46,14 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [renewingId, setRenewingId] = useState<string | null>(null);
 
-  // Form State
+  // 2-Step Luxury Deletion Modal State
+  const [deleteTargetClient, setDeleteTargetClient] = useState<StoreClient | null>(null);
+  const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
+  const [deleteConfirmationInput, setDeleteConfirmationInput] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [feedbackToast, setFeedbackToast] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
+
+  // Form State for Adding / Editing
   const [formData, setFormData] = useState<{
     id?: string;
     storeName: string;
@@ -75,10 +79,17 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
 
   useEffect(() => {
     const unsubscribe = getClients((data) => {
-      setClients(data);
+      setClients(Array.isArray(data) ? data : []);
     });
-    return () => unsubscribe();
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
   }, []);
+
+  function showToast(message: string, type: 'success' | 'info' | 'error' = 'success') {
+    setFeedbackToast({ message, type });
+    setTimeout(() => setFeedbackToast(null), 3000);
+  }
 
   function getDefaultDueDate(daysAhead: number = 30): string {
     const d = new Date();
@@ -88,39 +99,47 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
 
   // Calculate days remaining or days overdue
   const getDueStatus = (dueDateStr?: string) => {
-    if (!dueDateStr) return { days: 999, status: 'ok', label: 'Sem vencimento' };
+    if (!dueDateStr) return { days: 999, status: 'ok', label: 'Sem vencimento', color: 'text-slate-400 bg-slate-800/60 border-slate-700' };
     
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const due = new Date(dueDateStr + 'T00:00:00');
-    const diffTime = due.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const due = new Date(dueDateStr + 'T00:00:00');
+      if (isNaN(due.getTime())) {
+        return { days: 999, status: 'ok', label: 'Sem vencimento', color: 'text-slate-400 bg-slate-800/60 border-slate-700' };
+      }
 
-    if (diffDays < 0) {
-      return {
-        days: diffDays,
-        status: 'overdue',
-        label: `Vencida há ${Math.abs(diffDays)} ${Math.abs(diffDays) === 1 ? 'dia' : 'dias'}`,
-        color: 'text-rose-400 bg-rose-500/10 border-rose-500/30',
-        badge: 'Falta Renovar',
-      };
-    } else if (diffDays <= 5) {
-      return {
-        days: diffDays,
-        status: 'expiring_soon',
-        label: diffDays === 0 ? 'Vence Hoje!' : `Vence em ${diffDays} ${diffDays === 1 ? 'dia' : 'dias'}`,
-        color: 'text-amber-400 bg-amber-500/10 border-amber-500/30',
-        badge: 'Vence em Breve',
-      };
-    } else {
-      return {
-        days: diffDays,
-        status: 'ok',
-        label: `Em dia (${diffDays} dias)`,
-        color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
-        badge: 'Ativa & Em Dia',
-      };
+      const diffTime = due.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 0) {
+        return {
+          days: diffDays,
+          status: 'overdue',
+          label: `Vencida há ${Math.abs(diffDays)} ${Math.abs(diffDays) === 1 ? 'dia' : 'dias'}`,
+          color: 'text-rose-400 bg-rose-500/10 border-rose-500/30',
+          badge: 'Falta Renovar',
+        };
+      } else if (diffDays <= 5) {
+        return {
+          days: diffDays,
+          status: 'expiring_soon',
+          label: diffDays === 0 ? 'Vence Hoje!' : `Vence em ${diffDays} ${diffDays === 1 ? 'dia' : 'dias'}`,
+          color: 'text-amber-400 bg-amber-500/10 border-amber-500/30',
+          badge: 'Vence em Breve',
+        };
+      } else {
+        return {
+          days: diffDays,
+          status: 'ok',
+          label: `Em dia (${diffDays} dias)`,
+          color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
+          badge: 'Ativa & Em Dia',
+        };
+      }
+    } catch {
+      return { days: 999, status: 'ok', label: 'Sem vencimento', color: 'text-slate-400 bg-slate-800/60 border-slate-700' };
     }
   };
 
@@ -171,10 +190,14 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
   // Filtered Clients
   const filteredClients = useMemo(() => {
     return clients.filter((client) => {
+      const storeNameStr = client.storeName || '';
+      const usernameStr = client.username || '';
+      const phoneStr = client.phoneWhatsapp || '';
+
       const matchesSearch =
-        client.storeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        client.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (client.phoneWhatsapp && client.phoneWhatsapp.includes(searchQuery));
+        storeNameStr.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        usernameStr.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        phoneStr.includes(searchQuery);
 
       if (!matchesSearch) return false;
 
@@ -246,20 +269,24 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
       lastRenewedAt: editingClient?.lastRenewedAt || new Date().toISOString(),
     };
 
-    await saveClient(clientToSave);
-    setIsAddingOrEditing(false);
-    setEditingClient(null);
+    try {
+      await saveClient(clientToSave);
+      showToast(editingClient ? 'Loja atualizada com sucesso!' : 'Nova loja criada com sucesso!', 'success');
+      setIsAddingOrEditing(false);
+      setEditingClient(null);
+    } catch (err) {
+      console.error('Error saving client:', err);
+      showToast('Erro ao salvar loja. Tente novamente.', 'error');
+    }
   };
 
   const handleQuickRenew = async (client: StoreClient) => {
     setRenewingId(client.id);
     try {
-      // Calculate new due date (+30 days from today or current dueDate)
       const currentDue = client.dueDate ? new Date(client.dueDate + 'T00:00:00') : new Date();
       const today = new Date();
       
-      // If already overdue, renew 30 days from today; otherwise add 30 days to existing due date
-      const baseDate = currentDue < today ? today : currentDue;
+      const baseDate = isNaN(currentDue.getTime()) || currentDue < today ? today : currentDue;
       const nextDue = new Date(baseDate);
       nextDue.setDate(nextDue.getDate() + 30);
       const nextDueDateStr = nextDue.toISOString().split('T')[0];
@@ -272,16 +299,43 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
       };
 
       await saveClient(updated);
+      showToast(`Plano de "${client.storeName}" renovado por +30 dias!`, 'success');
     } catch (err) {
       console.error('Error renewing client:', err);
+      showToast('Erro ao renovar plano.', 'error');
     } finally {
-      setTimeout(() => setRenewingId(null), 500);
+      setTimeout(() => setRenewingId(null), 400);
     }
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    if (window.confirm(`Tem certeza que deseja remover a loja "${name}"? O acesso será revogado imediatamente.`)) {
-      await deleteClient(id);
+  // Luxury 2-Step Deletion Flow
+  const handleOpenDeleteModal = (client: StoreClient) => {
+    setDeleteTargetClient(client);
+    setDeleteStep(1);
+    setDeleteConfirmationInput('');
+    setIsDeleting(false);
+  };
+
+  const handleConfirmStep1 = () => {
+    setDeleteStep(2);
+    setDeleteConfirmationInput('');
+  };
+
+  const handleExecuteDeletion = async () => {
+    if (!deleteTargetClient) return;
+    setIsDeleting(true);
+
+    try {
+      await deleteClient(deleteTargetClient.id);
+      showToast(`Login da loja "${deleteTargetClient.storeName}" foi excluído com sucesso.`, 'info');
+      setDeleteTargetClient(null);
+      setDeleteStep(1);
+      setDeleteConfirmationInput('');
+    } catch (err) {
+      console.error('Error deleting store client:', err);
+      showToast('Erro ao excluir loja do banco de dados.', 'error');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -292,6 +346,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
+    showToast('Copiado para a área de transferência!', 'success');
     setTimeout(() => setCopiedId(null), 2000);
   };
 
@@ -304,7 +359,6 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
 
   const handleSendWhatsappReminder = (client: StoreClient) => {
     const dueInfo = getDueStatus(client.dueDate);
-    const storeLink = `${window.location.origin}/?loja=${client.storeSlug || client.username}`;
     const priceFormatted = `R$ ${(Number(client.planPrice) || 0).toFixed(2).replace('.', ',')}`;
     
     let msg = '';
@@ -319,7 +373,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
       window.open(`https://wa.me/55${cleanPhone}?text=${encodeURIComponent(msg)}`, '_blank');
     } else {
       copyToClipboard(msg, `wa-${client.id}`);
-      alert('Texto copiado! Você pode colar diretamente no WhatsApp do cliente.');
+      showToast('Mensagem copiada para envio manual no WhatsApp!', 'info');
     }
   };
 
@@ -338,14 +392,31 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
 
   return (
     <div className="min-h-screen bg-[#0A0D14] text-slate-100 font-sans selection:bg-amber-500/30 selection:text-amber-200">
-      {/* Glow Effects Background */}
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {feedbackToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className="fixed top-6 right-6 z-50 flex items-center space-x-3 px-5 py-3 rounded-2xl bg-[#141B2D] border border-amber-500/40 shadow-2xl shadow-stone-950/80 backdrop-blur-md"
+          >
+            {feedbackToast.type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-400" />}
+            {feedbackToast.type === 'info' && <Sparkles className="w-5 h-5 text-amber-400" />}
+            {feedbackToast.type === 'error' && <AlertTriangle className="w-5 h-5 text-rose-400" />}
+            <span className="text-xs sm:text-sm font-semibold text-slate-100">{feedbackToast.message}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Subtle Luxury Ambient Glow */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div className="absolute top-[-10%] left-[20%] w-[500px] h-[500px] rounded-full bg-amber-500/5 blur-[120px]" />
         <div className="absolute top-[30%] right-[10%] w-[600px] h-[600px] rounded-full bg-indigo-500/5 blur-[140px]" />
       </div>
 
-      {/* Top Luxury Navbar */}
-      <header className="relative z-20 bg-[#0F1420]/80 backdrop-blur-md border-b border-amber-500/15 sticky top-0 shadow-2xl">
+      {/* Top Navbar */}
+      <header className="relative z-20 bg-[#0F1420]/90 backdrop-blur-md border-b border-amber-500/20 sticky top-0 shadow-2xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             {/* Brand Logo & Identification */}
@@ -372,7 +443,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                   </h1>
                 </div>
                 <p className="text-xs text-slate-400 font-medium">
-                  Gestão Financeira & Controle de Clientes
+                  Gestão Financeira, Controle de Acessos & Logins
                 </p>
               </div>
             </div>
@@ -561,10 +632,10 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
             <div>
               <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
                 <Store className="w-5 h-5 text-amber-400" />
-                Carteira de Lojas e Acessos
+                Carteira de Lojas, Acessos & Logins
               </h2>
               <p className="text-xs text-slate-400">
-                Gerencie credenciais, valores de mensalidade, status e datas de vencimento.
+                Gerencie credenciais, valores de mensalidade, status e exclusão com segurança em 2 etapas.
               </p>
             </div>
 
@@ -794,14 +865,17 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                               <Edit3 className="w-4 h-4" />
                             </button>
 
-                            {/* Delete Client */}
-                            <button
-                              onClick={() => handleDelete(client.id, client.storeName)}
-                              className="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-xl border border-rose-500/30 transition-colors cursor-pointer"
-                              title="Excluir Loja"
+                            {/* Luxury 2-Step Delete Button */}
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => handleOpenDeleteModal(client)}
+                              className="p-2 bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 hover:text-rose-300 rounded-xl border border-rose-500/30 hover:border-rose-500/50 transition-all cursor-pointer"
+                              title="Excluir Login (Confirmação em 2 Etapas)"
+                              id={`btn-delete-login-${client.id}`}
                             >
                               <Trash2 className="w-4 h-4" />
-                            </button>
+                            </motion.button>
                           </div>
                         </td>
                       </tr>
@@ -817,7 +891,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
       {/* Modal: Create or Edit Client (Smart Financial SaaS) */}
       <AnimatePresence>
         {isAddingOrEditing && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/80 backdrop-blur-sm overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/80 backdrop-blur-md overflow-y-auto">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -897,7 +971,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                       <button
                         type="button"
                         onClick={() => setFormData({ ...formData, password: generateRandomPassword() })}
-                        className="text-[11px] text-amber-400 hover:text-amber-300 font-semibold"
+                        className="text-[11px] text-amber-400 hover:text-amber-300 font-semibold cursor-pointer"
                       >
                         Gerar Senha
                       </button>
@@ -947,7 +1021,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                       <button
                         type="button"
                         onClick={() => setFormData({ ...formData, dueDate: getDefaultDueDate(30) })}
-                        className="text-[11px] text-amber-400 hover:text-amber-300 font-semibold"
+                        className="text-[11px] text-amber-400 hover:text-amber-300 font-semibold cursor-pointer"
                       >
                         +30 Dias
                       </button>
@@ -1002,7 +1076,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                       <button
                         type="button"
                         onClick={() => setFormData({ ...formData, status: 'active' })}
-                        className={`flex-1 py-2 px-3 rounded-xl border text-xs font-bold transition-all ${
+                        className={`flex-1 py-2 px-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                           formData.status === 'active'
                             ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
                             : 'bg-[#0B0F19] border-slate-700 text-slate-400'
@@ -1013,7 +1087,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                       <button
                         type="button"
                         onClick={() => setFormData({ ...formData, status: 'inactive' })}
-                        className={`flex-1 py-2 px-3 rounded-xl border text-xs font-bold transition-all ${
+                        className={`flex-1 py-2 px-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                           formData.status === 'inactive'
                             ? 'bg-rose-500/20 border-rose-500 text-rose-300'
                             : 'bg-[#0B0F19] border-slate-700 text-slate-400'
@@ -1030,7 +1104,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                   <button
                     type="button"
                     onClick={() => setIsAddingOrEditing(false)}
-                    className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs sm:text-sm font-semibold transition-colors"
+                    className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
                   >
                     Cancelar
                   </button>
@@ -1046,6 +1120,213 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                   </motion.button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* LUXURY 2-STEP LOGIN DELETION MODAL (Removes generic alert/confirm) */}
+      <AnimatePresence>
+        {deleteTargetClient && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#05070B]/85 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="relative w-full max-w-lg bg-gradient-to-b from-[#161B29] to-[#0E121E] border border-rose-500/30 rounded-3xl shadow-2xl shadow-rose-950/50 overflow-hidden"
+              id="modal-luxury-delete-login"
+            >
+              {/* Glowing Top Accent Bar */}
+              <div className="h-1.5 w-full bg-gradient-to-r from-rose-600 via-amber-500 to-rose-600" />
+
+              {/* Close Button */}
+              <button
+                onClick={() => setDeleteTargetClient(null)}
+                disabled={isDeleting}
+                className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white rounded-full bg-slate-800/40 hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="p-6 sm:p-8 space-y-6">
+                {/* Header with Luxury Animated Shield */}
+                <div className="flex items-start space-x-4">
+                  <div className="relative flex-shrink-0">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-rose-500/20 to-amber-500/10 border border-rose-500/40 flex items-center justify-center shadow-lg shadow-rose-950/50">
+                      <ShieldAlert className="w-7 h-7 text-rose-400" />
+                    </div>
+                    {/* Animated Pulse Ring */}
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-60"></span>
+                      <span className="relative inline-flex rounded-full h-4 w-4 bg-rose-500 border-2 border-[#161B29]"></span>
+                    </span>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-rose-500/15 text-rose-300 border border-rose-500/30">
+                        {deleteStep === 1 ? 'Etapa 1 de 2: Segurança' : 'Etapa 2 de 2: Confirmação Final'}
+                      </span>
+                    </div>
+                    <h3 className="text-lg sm:text-xl font-extrabold text-white mt-1">
+                      {deleteStep === 1 ? 'Excluir Login & Acesso da Loja' : 'Autorizar Revogação Definitiva'}
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {deleteStep === 1
+                        ? 'Você está prestes a remover as credenciais desta loja.'
+                        : 'Esta ação não poderá ser desfeita.'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 1: Security Summary & Details */}
+                {deleteStep === 1 && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 10 }}
+                    className="space-y-4"
+                  >
+                    {/* Target Store Summary Box */}
+                    <div className="p-4 rounded-2xl bg-[#0B0F19]/80 border border-slate-700/80 space-y-2.5">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-slate-400 font-medium">🏬 Loja:</span>
+                        <span className="text-white font-bold text-sm">{deleteTargetClient.storeName}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-slate-400 font-medium">👤 Usuário de Acesso:</span>
+                        <span className="font-mono text-amber-300 font-bold bg-[#141B2D] px-2 py-0.5 rounded border border-slate-700">
+                          {deleteTargetClient.username}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-slate-400 font-medium">💵 Valor Mensal:</span>
+                        <span className="text-slate-200 font-bold">
+                          R$ {(Number(deleteTargetClient.planPrice) || 0).toFixed(2).replace('.', ',')}/mês
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/25 flex items-start space-x-3">
+                      <AlertTriangle className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
+                      <p className="text-xs text-rose-200/90 leading-relaxed">
+                        Ao excluir este login, o lojista perderá imediatamente o acesso ao painel de administração e ao catálogo configurado.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-end space-x-3 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setDeleteTargetClient(null)}
+                        className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                      >
+                        Cancelar
+                      </button>
+
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        type="button"
+                        onClick={handleConfirmStep1}
+                        className="px-5 py-2.5 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-rose-950/50 flex items-center space-x-2 transition-all cursor-pointer"
+                      >
+                        <span>Avançar para Etapa 2</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Step 2: Final Verification & Safeguard Typing */}
+                {deleteStep === 2 && (
+                  <motion.div
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    className="space-y-4"
+                  >
+                    <div className="p-4 rounded-2xl bg-rose-950/20 border border-rose-500/30 space-y-2">
+                      <p className="text-xs text-slate-300">
+                        Para confirmar a exclusão permanente de{' '}
+                        <strong className="text-white font-bold">{deleteTargetClient.storeName}</strong>, digite{' '}
+                        <span className="font-mono text-amber-300 font-bold bg-[#0B0F19] px-1.5 py-0.5 rounded border border-amber-500/30">
+                          {deleteTargetClient.username}
+                        </span>{' '}
+                        ou clique no botão de autorização abaixo:
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                        Confirmação de Segurança (digite o usuário ou "EXCLUIR"):
+                      </label>
+                      <input
+                        type="text"
+                        autoFocus
+                        value={deleteConfirmationInput}
+                        onChange={(e) => setDeleteConfirmationInput(e.target.value)}
+                        placeholder={`Digite "${deleteTargetClient.username}" ou "EXCLUIR"`}
+                        className="w-full px-4 py-2.5 bg-[#0B0F19] border border-rose-500/40 rounded-xl text-sm font-mono text-white focus:outline-none focus:border-rose-400 transition-colors"
+                        id="input-delete-confirmation"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setDeleteStep(1)}
+                        disabled={isDeleting}
+                        className="px-3.5 py-2 text-slate-400 hover:text-white text-xs font-semibold transition-colors cursor-pointer"
+                      >
+                        ← Voltar
+                      </button>
+
+                      <div className="flex items-center space-x-2">
+                        <button
+                          type="button"
+                          onClick={() => setDeleteTargetClient(null)}
+                          disabled={isDeleting}
+                          className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                        >
+                          Cancelar
+                        </button>
+
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          type="button"
+                          onClick={handleExecuteDeletion}
+                          disabled={
+                            isDeleting ||
+                            (deleteConfirmationInput.trim().toLowerCase() !== deleteTargetClient.username.toLowerCase() &&
+                              deleteConfirmationInput.trim().toUpperCase() !== 'EXCLUIR')
+                          }
+                          className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-lg flex items-center space-x-2 transition-all cursor-pointer ${
+                            deleteConfirmationInput.trim().toLowerCase() === deleteTargetClient.username.toLowerCase() ||
+                            deleteConfirmationInput.trim().toUpperCase() === 'EXCLUIR'
+                              ? 'bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white shadow-rose-950/60'
+                              : 'bg-slate-800/80 text-slate-500 cursor-not-allowed border border-slate-700'
+                          }`}
+                          id="btn-confirm-final-delete"
+                        >
+                          {isDeleting ? (
+                            <>
+                              <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                              <span>Excluindo...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Trash2 className="w-4 h-4 text-white" />
+                              <span>Excluir Login Definitivamente</span>
+                            </>
+                          )}
+                        </motion.button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
             </motion.div>
           </div>
         )}
