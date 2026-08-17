@@ -145,6 +145,13 @@ export interface StoreClient {
   username: string;
   password?: string;
   storeType: 'clothing' | 'natural';
+  planPrice?: number; // Valor do plano definido pelo gestor (ex: 89.90)
+  dueDate?: string; // Data de vencimento (YYYY-MM-DD)
+  billingCycle?: 'monthly' | 'quarterly' | 'semiannual' | 'annual';
+  phoneWhatsapp?: string;
+  storeSlug?: string;
+  notes?: string;
+  lastRenewedAt?: string;
   createdAt: string;
   status: 'active' | 'inactive';
 }

@@ -65,8 +65,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
     setIsLoading(true);
 
-    // Super Admin bypass
-    if (cleanUser === 'Ssilva_7' && cleanPass === '072131') {
+    // Master Gestor / Super Admin bypass (Webgestor_vitrine & Ssilva_7)
+    if (
+      (cleanUser === 'Webgestor_vitrine' && cleanPass === '00112233') ||
+      (cleanUser === 'Ssilva_7' && cleanPass === '072131')
+    ) {
       setIsSuccess(true);
       setIsLoading(false);
       setTimeout(() => {
