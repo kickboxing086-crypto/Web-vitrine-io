@@ -95,21 +95,8 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
   const copyInviteLink = () => {
     let inviteUrl = '';
     if (currentClient?.username) {
-      const hostname = window.location.hostname;
-      const baseDomains = ['web-vitrine-site.vercel.app', 'localhost'];
-      let isBaseDomain = false;
-      
-      for (const base of baseDomains) {
-        if (hostname === base || hostname.endsWith(`.${base}`)) {
-          inviteUrl = `${window.location.protocol}//${currentClient.username}.${base}`;
-          isBaseDomain = true;
-          break;
-        }
-      }
-      
-      if (!isBaseDomain) {
-        inviteUrl = `${window.location.origin}/?loja=${currentClient.username}`;
-      }
+      // Prioritize the standard reliable query param URL that works 100% on Vercel
+      inviteUrl = `${window.location.origin}/?loja=${currentClient.username}`;
     } else {
       inviteUrl = `${window.location.origin}?invite=${formData.inviteCode || 'VIP'}`;
     }
