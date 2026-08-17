@@ -675,16 +675,29 @@ export const deleteClient = async (id: string) => {
   }
 };
 
-export const getClientByUsername = async (username: string): Promise<any | null> => {
+export const getClientByUsername = async (slugOrUsername: string): Promise<any | null> => {
   try {
     const clientsCol = collection(db, COLLECTIONS.CLIENTS);
-    const q = query(clientsCol, where('username', '==', username));
-    const snapshot = await getDocs(q);
-    if (snapshot.empty) return null;
-    const docSnap = snapshot.docs[0];
-    return { id: docSnap.id, ...docSnap.data() };
+    
+    // Check by username
+    const qUsername = query(clientsCol, where('username', '==', slugOrUsername));
+    const snapshotUsername = await getDocs(qUsername);
+    if (!snapshotUsername.empty) {
+      const docSnap = snapshotUsername.docs[0];
+      return { id: docSnap.id, ...docSnap.data() };
+    }
+
+    // Check by custom storeSlug
+    const qSlug = query(clientsCol, where('storeSlug', '==', slugOrUsername));
+    const snapshotSlug = await getDocs(qSlug);
+    if (!snapshotSlug.empty) {
+      const docSnap = snapshotSlug.docs[0];
+      return { id: docSnap.id, ...docSnap.data() };
+    }
+
+    return null;
   } catch (error) {
-    console.error('Error fetching client by username:', error);
+    console.error('Error fetching client by username/slug:', error);
     return null;
   }
 };

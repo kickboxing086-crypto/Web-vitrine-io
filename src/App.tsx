@@ -46,6 +46,7 @@ import {
   saveFinanceToDb,
   deleteFinanceFromDb,
   resetDatabaseToDefaults,
+  saveClient,
 } from './lib/firestoreService';
 import { Navbar } from './components/Navbar';
 import { ProductCard } from './components/ProductCard';
@@ -760,6 +761,14 @@ export default function App() {
         isOpen={isStoreSetupOpen}
         isFirstSetup={isFirstOnboarding}
         settings={settings}
+        onUpdateClientSlug={async (newSlug) => {
+          if (currentClient) {
+            const updatedClient = { ...currentClient, storeSlug: newSlug };
+            setCurrentClient(updatedClient);
+            localStorage.setItem('store_current_client', JSON.stringify(updatedClient));
+            await saveClient(updatedClient);
+          }
+        }}
         onSave={(newSettings) => {
           handleUpdateSettings(newSettings);
           setIsFirstOnboarding(false);

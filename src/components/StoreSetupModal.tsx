@@ -28,6 +28,7 @@ interface StoreSetupModalProps {
   isFirstSetup?: boolean;
   settings: StoreSettings;
   onSave: (newSettings: StoreSettings) => void;
+  onUpdateClientSlug?: (newSlug: string) => void;
   onClose?: () => void;
 }
 
@@ -37,9 +38,11 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
   isFirstSetup = false,
   settings,
   onSave,
+  onUpdateClientSlug,
   onClose,
 }) => {
   const [formData, setFormData] = useState<StoreSettings>({ ...settings });
+  const [storeSlug, setStoreSlug] = useState(currentClient?.storeSlug || currentClient?.username || '');
   const [copiedInvite, setCopiedInvite] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isUploadingBanner, setIsUploadingBanner] = useState(false);
@@ -50,8 +53,9 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setFormData({ ...settings });
+      setStoreSlug(currentClient?.storeSlug || currentClient?.username || '');
     }
-  }, [isOpen, settings]);
+  }, [isOpen, settings, currentClient]);
 
   if (!isOpen) return null;
 
@@ -89,14 +93,19 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
       ...formData,
       isFirstSetupDone: true,
     });
+    if (onUpdateClientSlug && storeSlug.trim()) {
+      onUpdateClientSlug(storeSlug.trim().replace(/\s+/g, '').toLowerCase());
+    }
     if (onClose) onClose();
   };
 
   const copyInviteLink = () => {
     let inviteUrl = '';
-    if (currentClient?.username) {
+    const activeSlug = storeSlug.trim().replace(/\s+/g, '').toLowerCase() || currentClient?.storeSlug || currentClient?.username;
+    
+    if (activeSlug) {
       // Prioritize the standard reliable query param URL that works 100% on Vercel
-      inviteUrl = `${window.location.origin}/?loja=${currentClient.username}`;
+      inviteUrl = `${window.location.origin}/?loja=${activeSlug}`;
     } else {
       inviteUrl = `${window.location.origin}?invite=${formData.inviteCode || 'VIP'}`;
     }
@@ -425,7 +434,9 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                     const isSelected = formData.deliveryMode === opt.id;
                     const IconComp = opt.icon;
                     return (
-                      <button
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         key={opt.id}
                         type="button"
                         onClick={() => setFormData({ ...formData, deliveryMode: opt.id })}
@@ -449,7 +460,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                         <p className="text-[11px] text-stone-500 leading-tight">
                           {opt.desc}
                         </p>
-                      </button>
+                      </motion.button>
                     );
                   })}
                 </div>
@@ -462,7 +473,9 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                       Tipo de Taxa de Entrega:
                     </label>
                     <div className="flex items-center space-x-2 bg-white p-1 rounded-xl border border-brand-border-dark">
-                      <button
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                         type="button"
                         onClick={() => setFormData({ ...formData, deliveryFeeType: 'flat' })}
                         className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
@@ -472,8 +485,10 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                         }`}
                       >
                         Taxa Única
-                      </button>
-                      <button
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                         type="button"
                         onClick={() => setFormData({ ...formData, deliveryFeeType: 'custom' })}
                         className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
@@ -483,7 +498,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                         }`}
                       >
                         Por Bairro / Cidade
-                      </button>
+                      </motion.button>
                     </div>
                   </div>
 
@@ -799,10 +814,25 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                   )}
                 </button>
               </div>
-              <p className="text-xs text-stone-600 mb-2">
-                Ao clicar em "Copiar Link", o link da sua vitrine será copiado contendo o seu nome de usuário. Opcionalmente, você pode definir um código de convite interno abaixo:
-              </p>
-              <p className="text-xs text-stone-600">
+              <div className="mb-4">
+                <p className="text-xs text-stone-600 mb-2">
+                  Personalize o final do link que será enviado para os seus clientes. Use um nome curto, sem espaços ou caracteres especiais.
+                </p>
+                <div className="flex items-center">
+                  <span className="px-3 py-2 bg-stone-100 border border-r-0 border-brand-border-dark rounded-l-xl text-stone-500 text-sm font-mono">
+                    vitrine.com/?loja=
+                  </span>
+                  <input
+                    type="text"
+                    value={storeSlug}
+                    onChange={(e) => setStoreSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                    placeholder="nomedasuamarca"
+                    className="flex-1 px-3 py-2 bg-white border border-brand-border-dark rounded-r-xl text-stone-900 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-primary-dark/30 focus:border-brand-primary-dark"
+                  />
+                </div>
+              </div>
+              
+              <p className="text-xs text-stone-600 mt-4">
                 Código VIP de Convite (Interno):{' '}
                 <input
                   type="text"

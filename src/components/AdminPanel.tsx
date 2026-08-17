@@ -400,9 +400,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   const handleCopyInvite = () => {
     let inviteUrl = '';
-    if (currentClient?.username) {
+    const activeSlug = currentClient?.storeSlug || currentClient?.username;
+    
+    if (activeSlug) {
       // Prioritize the standard reliable query param URL that works 100% on Vercel without wildcard DNS
-      inviteUrl = `${window.location.origin}/?loja=${currentClient.username}`;
+      inviteUrl = `${window.location.origin}/?loja=${activeSlug}`;
     } else {
       inviteUrl = `${window.location.origin}?invite=${settings.inviteCode || 'VIP'}`;
     }
