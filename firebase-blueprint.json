@@ -1,0 +1,152 @@
+{
+  "$schema": "https://firebase.google.com/schemas/firestore/blueprint.json",
+  "collections": [
+    {
+      "name": "settings",
+      "description": "Store general settings and customization",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "storeName": { "type": "string" },
+          "slogan": { "type": "string" },
+          "phoneWhatsapp": { "type": "string" },
+          "instagramHandle": { "type": "string" },
+          "address": { "type": "string" },
+          "cityState": { "type": "string" },
+          "openingHours": { "type": "string" },
+          "deliveryMode": { "type": "string" },
+          "deliveryFee": { "type": "number" },
+          "freeDeliveryThreshold": { "type": "number" },
+          "minOrderValue": { "type": "number" },
+          "logoUrl": { "type": "string" },
+          "bannerUrl": { "type": "string" },
+          "announcementBannerText": { "type": "string" },
+          "showAnnouncementBanner": { "type": "boolean" },
+          "isStoreOpen": { "type": "boolean" },
+          "inviteCode": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "products",
+      "description": "Store apparel products and clothing items",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "price": { "type": "number" },
+          "promotionalPrice": { "type": "number" },
+          "isOnSale": { "type": "boolean" },
+          "isNew": { "type": "boolean" },
+          "category": { "type": "string" },
+          "stock": { "type": "number" },
+          "sizes": { "type": "array" },
+          "colors": { "type": "array" },
+          "images": { "type": "array" },
+          "tags": { "type": "array" },
+          "fabricDetails": { "type": "string" },
+          "careInstructions": { "type": "string" },
+          "createdAt": { "type": "string" }
+        },
+        "required": ["name", "price", "category", "images"]
+      }
+    },
+    {
+      "name": "categories",
+      "description": "Clothing departments and categories",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "icon": { "type": "string" },
+          "coverImage": { "type": "string" },
+          "order": { "type": "number" }
+        },
+        "required": ["name"]
+      }
+    },
+    {
+      "name": "tags",
+      "description": "Catalog tags for filtering and grouping products",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "color": { "type": "string" },
+          "description": { "type": "string" }
+        },
+        "required": ["name"]
+      }
+    },
+    {
+      "name": "orders",
+      "description": "Customer purchase orders sent via vitrine",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "customerName": { "type": "string" },
+          "customerPhone": { "type": "string" },
+          "deliveryType": { "type": "string" },
+          "address": { "type": "string" },
+          "neighborhood": { "type": "string" },
+          "city": { "type": "string" },
+          "complement": { "type": "string" },
+          "items": { "type": "array" },
+          "subtotal": { "type": "number" },
+          "discountAmount": { "type": "number" },
+          "deliveryFee": { "type": "number" },
+          "finalTotal": { "type": "number" },
+          "appliedCoupon": { "type": "string" },
+          "customerNotes": { "type": "string" },
+          "paymentMethod": { "type": "string" },
+          "status": { "type": "string" },
+          "createdAt": { "type": "string" }
+        },
+        "required": ["customerName", "customerPhone", "items", "finalTotal", "status"]
+      }
+    },
+    {
+      "name": "coupons",
+      "description": "Discount vouchers and promotional codes",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "code": { "type": "string" },
+          "discountType": { "type": "string" },
+          "discountValue": { "type": "number" },
+          "minOrderValue": { "type": "number" },
+          "usageLimit": { "type": "number" },
+          "usageCount": { "type": "number" },
+          "isActive": { "type": "boolean" },
+          "expiresAt": { "type": "string" }
+        },
+        "required": ["code", "discountType", "discountValue"]
+      }
+    },
+    {
+      "name": "financial_transactions",
+      "description": "Cash flow revenues, expenses and sales records",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "type": { "type": "string" },
+          "amount": { "type": "number" },
+          "category": { "type": "string" },
+          "description": { "type": "string" },
+          "date": { "type": "string" },
+          "orderId": { "type": "string" },
+          "paymentMethod": { "type": "string" }
+        },
+        "required": ["type", "amount", "description", "date"]
+      }
+    }
+  ]
+}

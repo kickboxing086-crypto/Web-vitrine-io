@@ -1,0 +1,6 @@
+{
+  "name": "Web Vitrine - Plataforma de Vendas",
+  "description": "Vitrine virtual e painel de controle administrativo completo para lojas online com catálogo digital, pedidos via WhatsApp e gestão financeira.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
