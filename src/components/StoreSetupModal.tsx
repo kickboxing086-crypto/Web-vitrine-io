@@ -518,7 +518,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                       <div className="space-y-1.5 max-h-40 overflow-y-auto">
                         {(formData.customDeliveryRates || []).map((rate, idx) => (
                           <div
-                            key={rate.id || idx}
+                            key={`rate-setup-${idx}`}
                             className="flex items-center justify-between p-2 bg-brand-bg border border-stone-200 rounded-xl text-xs"
                           >
                             <span className="font-semibold text-stone-800">

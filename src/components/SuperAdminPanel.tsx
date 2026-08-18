@@ -79,6 +79,8 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
     status: 'active',
   });
 
+  const [renewTargetClient, setRenewTargetClient] = useState<StoreClient | null>(null);
+
   useEffect(() => {
     const unsubscribe = getClients((data) => {
       setClients(Array.isArray(data) ? data : []);
@@ -282,10 +284,11 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
     }
   };
 
-  const handleQuickRenew = async (client: StoreClient) => {
-    setRenewingId(client.id);
+  const confirmRenewClient = async () => {
+    if (!renewTargetClient) return;
+    setRenewingId(renewTargetClient.id);
     try {
-      const currentDue = client.dueDate ? new Date(client.dueDate + 'T00:00:00') : new Date();
+      const currentDue = renewTargetClient.dueDate ? new Date(renewTargetClient.dueDate + 'T00:00:00') : new Date();
       const today = new Date();
       
       const baseDate = isNaN(currentDue.getTime()) || currentDue < today ? today : currentDue;
@@ -294,20 +297,25 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
       const nextDueDateStr = nextDue.toISOString().split('T')[0];
 
       const updated: StoreClient = {
-        ...client,
+        ...renewTargetClient,
         dueDate: nextDueDateStr,
         status: 'active',
         lastRenewedAt: new Date().toISOString(),
       };
 
       await saveClient(updated);
-      showToast(`Plano de "${client.storeName}" renovado por +30 dias!`, 'success');
+      showToast(`Plano de "${renewTargetClient.storeName}" renovado por +30 dias!`, 'success');
     } catch (err) {
       console.error('Error renewing client:', err);
       showToast('Erro ao renovar plano.', 'error');
     } finally {
       setTimeout(() => setRenewingId(null), 400);
+      setRenewTargetClient(null);
     }
+  };
+
+  const handleQuickRenew = async (client: StoreClient) => {
+    setRenewTargetClient(client);
   };
 
   // Luxury 2-Step Deletion Flow
@@ -1173,6 +1181,55 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                   </motion.button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* LUXURY 2-STEP RENEWAL MODAL */}
+      <AnimatePresence>
+        {renewTargetClient && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#05070B]/85 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: -20 }}
+              transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+              className="w-full max-w-md bg-[#0F1523] border border-emerald-500/30 rounded-3xl overflow-hidden shadow-2xl shadow-emerald-500/10"
+              id="modal-luxury-renew-login"
+            >
+              <div className="p-6">
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="w-16 h-16 rounded-2xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center border border-emerald-500/30 shadow-inner">
+                    <RefreshCw className="w-8 h-8" />
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-xl font-bold text-white mb-1.5 font-serif-luxury">
+                      Confirmar Renovação
+                    </h3>
+                    <p className="text-sm text-slate-400 leading-relaxed max-w-sm mx-auto">
+                      Deseja renovar manualmente a loja <strong className="text-emerald-300">{renewTargetClient.storeName}</strong> por mais <strong className="text-white">30 dias</strong>?
+                    </p>
+                  </div>
+                  
+                  <div className="w-full mt-4 flex gap-3">
+                    <button
+                      onClick={() => setRenewTargetClient(null)}
+                      className="flex-1 py-3 px-4 rounded-xl bg-[#182030] hover:bg-[#20293D] text-slate-300 text-sm font-bold border border-slate-700 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={confirmRenewClient}
+                      className="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold shadow-lg shadow-emerald-600/20 transition-colors flex items-center justify-center space-x-2"
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>Confirmar (+30d)</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </motion.div>
           </div>
         )}

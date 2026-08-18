@@ -18,12 +18,26 @@ const PLANS = [
 
 export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settings }) => {
   const [selectedPlan, setSelectedPlan] = useState<typeof PLANS[0] | null>(null);
-  const [step, setStep] = useState<'plans' | 'confirm' | 'payment'>('plans');
+  const [step, setStep] = useState<'plans' | 'confirm' | 'payment' | 'expired' | 'success'>('plans');
   const [pixString, setPixString] = useState('');
   const [copied, setCopied] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
+  const [isSimulatingPayment, setIsSimulatingPayment] = useState(false);
   
   // Mock days remaining for demonstration
   const daysRemaining = 5; 
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (step === 'payment' && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+    } else if (step === 'payment' && timeLeft === 0) {
+      setStep('expired');
+    }
+    return () => clearInterval(timer);
+  }, [step, timeLeft]);
 
   const handleSelectPlan = (plan: typeof PLANS[0]) => {
     setSelectedPlan(plan);
@@ -40,7 +54,22 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settin
       `RENOVAR${selectedPlan.id.toUpperCase()}`
     );
     setPixString(payload);
+    setTimeLeft(300); // Reset timer to 5 minutes
     setStep('payment');
+  };
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const handleSimulatePayment = () => {
+    setIsSimulatingPayment(true);
+    setTimeout(() => {
+      setIsSimulatingPayment(false);
+      setStep('success');
+    }, 2000);
   };
 
   const handleCopyPix = () => {
@@ -230,18 +259,109 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settin
                 </div>
 
                 <div className="bg-amber-50 text-amber-800 text-xs p-3 rounded-xl border border-amber-200/60 mt-4">
-                  <p className="font-bold mb-1">Pagamento Automático</p>
+                  <div className="flex justify-between items-center mb-1">
+                    <p className="font-bold">Aguardando Pagamento...</p>
+                    <div className="flex items-center gap-1 font-mono bg-amber-200/50 px-2 py-0.5 rounded text-amber-900">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>{formatTime(timeLeft)}</span>
+                    </div>
+                  </div>
                   <p>O seu acesso será liberado automaticamente em até 1 minuto após a confirmação do Pix.</p>
                 </div>
                 
                 <button
-                  onClick={() => setStep('plans')}
-                  className="w-full mt-2 py-2 text-xs font-bold text-stone-500 hover:text-stone-700 transition-colors"
+                  onClick={handleSimulatePayment}
+                  disabled={isSimulatingPayment}
+                  className="w-full mt-2 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-600/50 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
                 >
-                  Voltar para os planos
+                  {isSimulatingPayment ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Processando...
+                    </>
+                  ) : (
+                    <>Já realizei o pagamento</>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setStep('plans')}
+                  disabled={isSimulatingPayment}
+                  className="w-full mt-2 py-2 text-xs font-bold text-stone-500 hover:text-stone-700 transition-colors disabled:opacity-50"
+                >
+                  Cancelar e voltar para os planos
                 </button>
               </div>
             </div>
+          </motion.div>
+        )}
+
+        {step === 'expired' && (
+          <motion.div
+            key="expired"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white border border-brand-border-dark rounded-2xl p-6 shadow-xl max-w-md mx-auto text-center"
+          >
+            <div className="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Clock className="w-8 h-8" />
+            </div>
+            <h3 className="text-xl font-bold text-stone-900 mb-2">Tempo Esgotado</h3>
+            <p className="text-sm text-stone-600 mb-6">
+              O tempo limite de 5 minutos para o pagamento deste código Pix expirou. Por favor, gere um novo código se ainda deseja assinar.
+            </p>
+            <button
+              onClick={() => setStep('plans')}
+              className="w-full py-3 px-4 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-sm font-bold transition-colors"
+            >
+              Escolher Plano Novamente
+            </button>
+          </motion.div>
+        )}
+
+        {step === 'success' && (
+          <motion.div
+            key="success"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white border border-emerald-200 rounded-2xl p-8 shadow-xl max-w-md mx-auto text-center relative overflow-hidden"
+          >
+            <motion.div 
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 200, damping: 15 }}
+              className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6"
+            >
+              <Check className="w-10 h-10" />
+            </motion.div>
+            <motion.h3 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-2xl font-black text-stone-900 mb-2"
+            >
+              Pagamento Recebido!
+            </motion.h3>
+            <motion.p 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-sm text-stone-600 mb-8"
+            >
+              Tudo certo! Seu plano foi renovado com sucesso e seu acesso já está garantido e atualizado na plataforma.
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <button
+                onClick={() => window.location.reload()}
+                className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold transition-colors shadow-lg shadow-emerald-600/30"
+              >
+                Voltar ao Painel
+              </button>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
