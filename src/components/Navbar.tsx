@@ -10,13 +10,16 @@ import {
   Share2,
   CheckCircle2,
   X,
+  Clock,
+  Crown,
 } from 'lucide-react';
 import { formatPhone, cleanPhoneForWhatsapp } from '../lib/formatters';
+import { checkStoreHoursStatus } from '../lib/themeUtils';
 
 interface NavbarProps {
   settings: StoreSettings;
-  activeView: 'store' | 'admin' | 'super_admin';
-  onToggleView: (view: 'store' | 'admin' | 'super_admin') => void;
+  activeView: 'store' | 'admin' | 'super_admin' | 'landing';
+  onToggleView: (view: 'store' | 'admin' | 'super_admin' | 'landing') => void;
   cartCount: number;
   onOpenCart: () => void;
   searchQuery: string;
@@ -25,6 +28,8 @@ interface NavbarProps {
   onSelectCategory: (cat: string) => void;
   categories: string[];
   onOpenStoreSetup: () => void;
+  onOpenStoreHours?: () => void;
+  onOpenLandingHero?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -39,8 +44,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSelectCategory,
   categories,
   onOpenStoreSetup,
+  onOpenStoreHours,
+  onOpenLandingHero,
 }) => {
   const [showSearch, setShowSearch] = useState(false);
+  const hoursStatus = checkStoreHoursStatus(settings);
 
   return (
     <header className="sticky top-0 z-40 bg-brand-bg/98 backdrop-blur-md border-b border-brand-bg-alt transition-all">
@@ -77,8 +85,54 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           </div>
 
-          {/* Right Controls: Search, Cart, Admin toggle */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
+          {/* Right Controls: Store Hours, Search, Bag, System Landing, Admin toggle */}
+          <div className="flex items-center space-x-1.5 sm:space-x-2.5">
+            {/* Store Hours Highlighted Clock Button */}
+            {onOpenStoreHours && activeView === 'store' && (
+              <button
+                type="button"
+                onClick={onOpenStoreHours}
+                className={`flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer shadow-2xs ${
+                  hoursStatus.isBreakNow
+                    ? 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
+                    : hoursStatus.isOpenNow
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+                    : 'bg-stone-100 text-stone-700 border-stone-200 hover:bg-stone-200'
+                }`}
+                title="Ver horários de funcionamento e intervalo"
+                id="btn-navbar-store-hours"
+              >
+                <div className="relative">
+                  <Clock className="w-4 h-4" />
+                  <span className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full ${
+                    hoursStatus.isBreakNow
+                      ? 'bg-amber-500 animate-pulse'
+                      : hoursStatus.isOpenNow
+                      ? 'bg-emerald-500'
+                      : 'bg-stone-400'
+                  }`} />
+                </div>
+                <span className="hidden sm:inline font-bold">
+                  {hoursStatus.isBreakNow ? 'Em Intervalo' : hoursStatus.isOpenNow ? 'Aberto' : 'Horários'}
+                </span>
+              </button>
+            )}
+
+            {/* Presentation / Landing Button ("Adquira Sua Vitrine") */}
+            {onOpenLandingHero && activeView === 'store' && (
+              <button
+                type="button"
+                onClick={onOpenLandingHero}
+                className="inline-flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 bg-gradient-to-r from-stone-900 via-stone-800 to-stone-900 hover:from-black hover:to-stone-900 text-[#E5C378] rounded-xl text-xs font-bold border border-[#D4AF37]/40 shadow-xs transition-all cursor-pointer animate-pulse hover:animate-none"
+                id="btn-navbar-landing"
+                title="Conheça a plataforma Web Vitrine e adquira para sua loja"
+              >
+                <Crown className="w-3.5 h-3.5 text-[#D4AF37]" />
+                <span className="hidden sm:inline">Adquira Sua Vitrine</span>
+                <span className="sm:hidden">Assinar</span>
+              </button>
+            )}
+
             {/* Search Toggle */}
             <button
               onClick={() => setShowSearch(!showSearch)}

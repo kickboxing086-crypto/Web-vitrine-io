@@ -89,6 +89,7 @@ interface AdminPanelProps {
   onResetData: () => void;
   onLogout?: () => void;
   onViewStore?: () => void;
+  onShareProduct?: (product: Product) => void;
 }
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({
@@ -114,6 +115,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   onResetData,
   onLogout,
   onViewStore,
+  onShareProduct,
 }) => {
   const [activeTab, setActiveTab] = useState<
     'dashboard' | 'products' | 'orders' | 'tags' | 'coupons' | 'settings'
@@ -128,12 +130,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [isEditingProduct, setIsEditingProduct] = useState(false);
   const [productForm, setProductForm] = useState<Partial<Product>>({});
   const [newColorName, setNewColorName] = useState('');
-  const [newColorHex, setNewColorHex] = useState('#111111');
+  const [newColorHex, setNewColorHex] = useState('#F472B6');
+  const [newColorImageUrl, setNewColorImageUrl] = useState('');
+  const [isUploadingColorImg, setIsUploadingColorImg] = useState(false);
   const [newSizeInput, setNewSizeInput] = useState('');
   const [newTagInput, setNewTagInput] = useState('');
   const [newImageInput, setNewImageInput] = useState('');
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const colorFileInputRef = useRef<HTMLInputElement>(null);
 
   // Coupon Form state
   const [isAddingCoupon, setIsAddingCoupon] = useState(false);
@@ -1116,6 +1121,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                               </span>
 
                               <div className="flex items-center space-x-1.5">
+                                {onShareProduct && (
+                                  <button
+                                    type="button"
+                                    onClick={() => onShareProduct(p)}
+                                    className="p-1.5 text-stone-600 hover:text-brand-primary-dark hover:bg-stone-100 rounded-lg transition-colors cursor-pointer"
+                                    title="Compartilhar nas Redes Sociais"
+                                  >
+                                    <Share2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
                                 <button
                                   type="button"
                                   onClick={() => handleToggleProductAvailability(p)}
@@ -1336,6 +1351,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         </span>
 
                         <div className="flex items-center space-x-1">
+                          {onShareProduct && (
+                            <button
+                              type="button"
+                              onClick={() => onShareProduct(p)}
+                              className="p-1.5 text-stone-600 hover:text-brand-primary-dark hover:bg-stone-100 rounded-lg transition-colors cursor-pointer"
+                              title="Compartilhar nas Redes Sociais"
+                            >
+                              <Share2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                           <button
                             type="button"
                             onClick={() => handleOpenProductEdit(p)}
@@ -1690,6 +1715,220 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </span>
                   ))}
                 </div>
+              </div>
+
+              {/* Shopee-Style Color Palette Variants with Instant Image Binding */}
+              <div className="p-4 bg-white rounded-2xl border border-brand-border space-y-3.5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="block text-xs font-bold text-stone-900 uppercase tracking-wide">
+                      Variações de Cores da Peça (Estilo Shopee)
+                    </label>
+                    <p className="text-[11px] text-stone-500">
+                      Quando o cliente clica na cor (ex: Rosa), a foto muda automaticamente para a peça daquela cor.
+                    </p>
+                  </div>
+
+                  <label className="flex items-center space-x-2 cursor-pointer bg-brand-bg px-3 py-1.5 rounded-xl border border-brand-border-dark">
+                    <input
+                      type="checkbox"
+                      checked={productForm.hasColors !== false}
+                      onChange={(e) =>
+                        setProductForm({ ...productForm, hasColors: e.target.checked })
+                      }
+                      className="rounded text-stone-900 focus:ring-stone-900"
+                    />
+                    <span className="text-xs font-semibold text-stone-800">
+                      Ativar Cores
+                    </span>
+                  </label>
+                </div>
+
+                {productForm.hasColors !== false && (
+                  <div className="space-y-3 pt-1">
+                    {/* Quick Color Presets */}
+                    <div>
+                      <span className="text-[11px] font-semibold text-stone-600 block mb-1.5">
+                        Sugestões Rápidas de Cores Nobres:
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {[
+                          { name: 'Rosa Chiclete', hex: '#F472B6' },
+                          { name: 'Rosa Pastel', hex: '#FBCFE8' },
+                          { name: 'Preto Nobre', hex: '#111111' },
+                          { name: 'Off White', hex: '#FAF8F5' },
+                          { name: 'Terracota', hex: '#C26D53' },
+                          { name: 'Verde Oliva', hex: '#556B2F' },
+                          { name: 'Azul Marinho', hex: '#1E293B' },
+                          { name: 'Dourado Mostarda', hex: '#D97706' },
+                          { name: 'Vinho Marsala', hex: '#881337' },
+                          { name: 'Lavanda', hex: '#A78BFA' },
+                          { name: 'Caramelo', hex: '#B45309' },
+                          { name: 'Nude Areia', hex: '#D7C4B7' },
+                        ].map((preset) => (
+                          <button
+                            key={preset.name}
+                            type="button"
+                            onClick={() => {
+                              setNewColorName(preset.name);
+                              setNewColorHex(preset.hex);
+                            }}
+                            className="inline-flex items-center space-x-1.5 px-2.5 py-1 bg-brand-bg hover:bg-stone-200 border border-brand-border-dark rounded-lg text-xs text-stone-800 transition-all cursor-pointer"
+                          >
+                            <span
+                              className="w-3 h-3 rounded-full border border-black/15 flex-shrink-0"
+                              style={{ backgroundColor: preset.hex }}
+                            />
+                            <span>{preset.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Add Color Form */}
+                    <div className="p-3 bg-brand-bg rounded-xl border border-brand-border space-y-2.5">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <div className="sm:col-span-1">
+                          <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                            Nome da Cor *
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Ex: Rosa, Preto, Off White..."
+                            value={newColorName}
+                            onChange={(e) => setNewColorName(e.target.value)}
+                            className="w-full px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs"
+                          />
+                        </div>
+
+                        <div className="sm:col-span-1">
+                          <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                            Tom / Hexadecimal
+                          </label>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="color"
+                              value={newColorHex}
+                              onChange={(e) => setNewColorHex(e.target.value)}
+                              className="w-8 h-8 rounded-md border border-stone-300 cursor-pointer p-0.5"
+                            />
+                            <input
+                              type="text"
+                              value={newColorHex}
+                              onChange={(e) => setNewColorHex(e.target.value)}
+                              className="w-full px-2 py-1.5 bg-white border border-stone-300 rounded-lg text-xs font-mono"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="sm:col-span-1">
+                          <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                            Vincular Foto da Cor
+                          </label>
+                          {/* Choose from existing photos or paste URL */}
+                          <select
+                            value={newColorImageUrl}
+                            onChange={(e) => setNewColorImageUrl(e.target.value)}
+                            className="w-full px-2 py-1.5 bg-white border border-stone-300 rounded-lg text-xs"
+                          >
+                            <option value="">(Usar foto principal)</option>
+                            {(productForm.images || []).map((img, i) => (
+                              <option key={i} value={img}>
+                                Foto {i + 1} {i === 0 ? '(Capa)' : ''}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-1">
+                        <span className="text-[10px] text-stone-500">
+                          {newColorImageUrl ? '✓ Foto específica associada a esta cor' : 'Dica: Carregue as fotos abaixo para vincular a foto da cor'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!newColorName.trim()) return;
+                            const curColors = productForm.colors || [];
+                            const newColorObj = {
+                              name: newColorName.trim(),
+                              hex: newColorHex,
+                              imageUrl: newColorImageUrl.trim() || undefined,
+                            };
+                            setProductForm({
+                              ...productForm,
+                              colors: [...curColors, newColorObj],
+                            });
+                            setNewColorName('');
+                            setNewColorImageUrl('');
+                          }}
+                          className="px-4 py-1.5 bg-stone-900 hover:bg-stone-800 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                        >
+                          + Adicionar Cor
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Configured Colors List */}
+                    <div className="space-y-1.5">
+                      <span className="text-[11px] font-bold text-stone-700 block">
+                        Cores Ativas nesta Peça ({productForm.colors?.length || 0}):
+                      </span>
+
+                      {(!productForm.colors || productForm.colors.length === 0) && (
+                        <p className="text-xs text-stone-400 italic py-1">
+                          Nenhuma cor adicionada. A peça será exibida sem seletor de cor.
+                        </p>
+                      )}
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {productForm.colors?.map((c, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center justify-between p-2 bg-brand-bg border border-stone-200 rounded-xl text-xs"
+                          >
+                            <div className="flex items-center space-x-2.5">
+                              <span
+                                className="w-5 h-5 rounded-full border border-black/20 shrink-0 shadow-2xs"
+                                style={{ backgroundColor: c.hex }}
+                              />
+                              <div>
+                                <span className="font-bold text-stone-900 block leading-tight">
+                                  {c.name}
+                                </span>
+                                <span className="text-[10px] text-stone-500 font-mono">
+                                  {c.hex} {c.imageUrl ? '• Foto vinculada' : ''}
+                                </span>
+                              </div>
+                            </div>
+
+                            {c.imageUrl && (
+                              <img
+                                src={c.imageUrl}
+                                alt={c.name}
+                                className="w-8 h-8 rounded-lg object-cover border border-stone-300"
+                              />
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setProductForm({
+                                  ...productForm,
+                                  colors: productForm.colors?.filter((_, i) => i !== idx),
+                                });
+                              }}
+                              className="text-stone-400 hover:text-red-600 p-1 cursor-pointer"
+                              title="Remover cor"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Photos Management (Base64 + Max 10 Photos) */}

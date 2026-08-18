@@ -17,13 +17,15 @@ import {
   Tag,
   CheckCircle2,
   CreditCard,
-  Sparkles,
   MapPin,
   User,
   Phone,
+  Clock,
+  ArrowLeft,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'motion/react';
+import { checkStoreHoursStatus } from '../lib/themeUtils';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -276,13 +278,28 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </div>
               </div>
 
-              <button
-                onClick={onClose}
-                className="p-2 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-full transition-colors"
-                id="btn-close-cart"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex items-center space-x-1.5 px-3 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                  id="btn-cart-header-continue-shopping"
+                  title="Continuar Comprando no Catálogo"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Continuar Comprando</span>
+                  <span className="sm:hidden">Comprar +</span>
+                </button>
+
+                <button
+                  onClick={onClose}
+                  className="p-2 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-full transition-colors cursor-pointer"
+                  id="btn-close-cart"
+                  title="Fechar"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Scrollable Content */}
@@ -301,9 +318,11 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="mt-3 px-5 py-2.5 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold"
+                    className="mt-3 inline-flex items-center space-x-2 px-6 py-3 bg-stone-900 hover:bg-stone-800 text-white rounded-2xl text-xs font-bold shadow-md cursor-pointer transition-all"
+                    id="btn-empty-cart-continue-shopping"
                   >
-                    Ver Catálogo de Roupas
+                    <ArrowLeft className="w-4 h-4" />
+                    <span>Continuar Comprando</span>
                   </button>
                 </div>
               ) : (
@@ -390,6 +409,17 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                         </div>
                       );
                     })}
+
+                    {/* Quick action to continue browsing catalog */}
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="w-full py-2.5 px-3 border border-dashed border-stone-300 hover:border-brand-primary-dark rounded-xl text-xs font-semibold text-stone-700 hover:text-stone-900 bg-white/80 hover:bg-white flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-2xs"
+                      id="btn-cart-items-add-more"
+                    >
+                      <ShoppingBag className="w-3.5 h-3.5 text-brand-primary-dark" />
+                      <span>+ Adicionar mais peças (Continuar Comprando)</span>
+                    </button>
                   </div>
 
                   {/* Coupon Area */}
@@ -700,16 +730,99 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   </div>
                 </div>
 
+                {/* Operating hours context banner */}
+                {(() => {
+                  const hoursStatus = checkStoreHoursStatus(settings);
+                  if (hoursStatus.isBreakNow) {
+                    return (
+                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs flex items-start space-x-2 text-amber-900">
+                        <Clock className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                        <div>
+                          <span className="font-bold block">Loja em Intervalo de Almoço</span>
+                          <span className="text-[11px] opacity-90 block mt-0.5 leading-tight">
+                            {settings.acceptOrdersDuringBreak ?? true
+                              ? 'Você pode enviar o pedido agora! Nossa equipe atenderá na volta do intervalo.'
+                              : 'Atendimento temporariamente pausado. Retornamos em breve!'}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  if (!hoursStatus.isOpenNow) {
+                    if (hoursStatus.acceptsOrdersNow) {
+                      return (
+                        <div className="p-3 bg-stone-50 border border-stone-200 rounded-xl text-xs flex items-start space-x-2 text-stone-800">
+                          <Clock className="w-4 h-4 text-brand-primary-dark mt-0.5 shrink-0" />
+                          <div>
+                            <span className="font-bold block">{hoursStatus.statusLabel}</span>
+                            <span className="text-[11px] text-stone-600 block mt-0.5 leading-tight">
+                              Seu pedido será enviado normalmente pelo WhatsApp e processado no início do próximo expediente!
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs flex items-start space-x-2 text-amber-900">
+                          <Clock className="w-4 h-4 text-amber-700 mt-0.5 shrink-0" />
+                          <div>
+                            <span className="font-bold block">Atendimento Pausado ({hoursStatus.statusLabel})</span>
+                            <span className="text-[11px] opacity-90 block mt-0.5 leading-tight">
+                              A loja não está recebendo pedidos fora do expediente ({settings.businessDaysLabel || 'Segunda a Sábado'}, {settings.openingTime || '08:00'} às {settings.closingTime || '18:00'}).
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    }
+                  }
+
+                  return null;
+                })()}
+
                 {/* Confirm & Send to WhatsApp Button */}
+                {(() => {
+                  const hoursStatus = checkStoreHoursStatus(settings);
+                  const isBlocked = !hoursStatus.acceptsOrdersNow;
+
+                  if (isBlocked) {
+                    return (
+                      <button
+                        type="button"
+                        disabled
+                        className="w-full flex items-center justify-center space-x-2.5 py-4 bg-stone-300 text-stone-600 rounded-2xl font-bold text-sm cursor-not-allowed shadow-none"
+                        id="btn-send-whatsapp-order-disabled"
+                      >
+                        <Clock className="w-5 h-5 text-stone-500" />
+                        <span>Pedidos Temporariamente Fechados</span>
+                      </button>
+                    );
+                  }
+
+                  return (
+                    <button
+                      type="button"
+                      onClick={handleCheckout}
+                      className="w-full flex items-center justify-center space-x-2.5 py-4 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-2xl font-bold text-sm shadow-lg shadow-emerald-600/20 transition-all cursor-pointer"
+                      id="btn-send-whatsapp-order"
+                    >
+                      <MessageCircle className="w-5 h-5 fill-white" />
+                      <span>Enviar Pedido pelo WhatsApp</span>
+                    </button>
+                  );
+                })()}
+
+                {/* Secondary Continue Shopping Button */}
                 <button
                   type="button"
-                  onClick={handleCheckout}
-                  className="w-full flex items-center justify-center space-x-2.5 py-4 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-2xl font-bold text-sm shadow-lg shadow-emerald-600/20 transition-all cursor-pointer"
-                  id="btn-send-whatsapp-order"
+                  onClick={onClose}
+                  className="w-full flex items-center justify-center space-x-2 py-3 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-2xl font-bold text-xs transition-all cursor-pointer"
+                  id="btn-continue-shopping-cart-footer"
                 >
-                  <MessageCircle className="w-5 h-5 fill-white" />
-                  <span>Enviar Pedido pelo WhatsApp</span>
+                  <ArrowLeft className="w-4 h-4 text-stone-600" />
+                  <span>Continuar Comprando (Explorar Catálogo)</span>
                 </button>
+
                 <p className="text-[10px] text-center text-stone-400">
                   Ao clicar, você será direcionado para o WhatsApp oficial da {settings.storeName} com a mensagem pronta.
                 </p>

@@ -13,6 +13,9 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  ArrowLeft,
+  CheckCircle2,
+  Share2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -22,6 +25,8 @@ interface ProductModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAddToCart: (product: Product, size: string, color: { name: string; hex: string }, qty: number) => void;
+  onOpenCart?: () => void;
+  onShareProduct?: (product: Product) => void;
 }
 
 export const ProductModal: React.FC<ProductModalProps> = ({
@@ -30,21 +35,35 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   isOpen,
   onClose,
   onAddToCart,
+  onOpenCart,
+  onShareProduct,
 }) => {
   if (!isOpen || !product) return null;
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string>(product.sizes[0] || 'M');
-  const [selectedColor, setSelectedColor] = useState<{ name: string; hex: string }>(
-    product.colors[0] || { name: 'Padrão', hex: '#111111' }
+  const [selectedColor, setSelectedColor] = useState<{ name: string; hex: string; imageUrl?: string }>(
+    product.colors && product.colors[0] ? product.colors[0] : { name: 'Padrão', hex: '#111111' }
   );
   const [quantity, setQuantity] = useState(1);
   const [showSizeGuide, setShowSizeGuide] = useState(false);
   const [addedAnimation, setAddedAnimation] = useState(false);
 
-  const images = product.images.length > 0
-    ? product.images
-    : ['https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop&q=80'];
+  // If product has colors with images, include them in gallery
+  const hasColorVariants = product.hasColors !== false && Array.isArray(product.colors) && product.colors.length > 0;
+  const colorImages = hasColorVariants
+    ? product.colors.filter((c) => c.imageUrl && c.imageUrl.trim()).map((c) => c.imageUrl!)
+    : [];
+
+  const allImages = Array.from(
+    new Set([
+      ...(product.images || []),
+      ...colorImages,
+      'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop&q=80',
+    ])
+  ).filter((img) => img && img.trim().length > 0);
+
+  const images = allImages;
 
   const currentPrice = product.isOnSale && product.promotionalPrice
     ? product.promotionalPrice
@@ -65,9 +84,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   const handleAddBag = () => {
     onAddToCart(product, selectedSize, selectedColor, quantity);
     setAddedAnimation(true);
-    setTimeout(() => {
-      setAddedAnimation(false);
-    }, 1800);
   };
 
   return (
@@ -77,21 +93,35 @@ export const ProductModal: React.FC<ProductModalProps> = ({
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="relative w-full max-w-4xl bg-brand-bg rounded-3xl border border-[#E3D7CA] shadow-2xl overflow-hidden my-auto"
+          className="relative w-full max-w-4xl max-h-[92vh] md:max-h-[88vh] bg-brand-bg rounded-3xl border border-[#E3D7CA] shadow-2xl overflow-hidden my-auto flex flex-col"
           id="product-modal-container"
         >
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 z-20 p-2.5 bg-white/90 hover:bg-white text-stone-700 hover:text-stone-900 rounded-full shadow-md transition-all cursor-pointer"
-            id="btn-close-product-modal"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {/* Top Right Actions: Share & Close buttons */}
+          <div className="absolute top-4 right-4 z-30 flex items-center space-x-2">
+            <button
+              type="button"
+              onClick={() => onShareProduct && onShareProduct(product)}
+              className="p-2 sm:px-3 sm:py-2 bg-white/95 hover:bg-white text-stone-700 hover:text-brand-primary-dark rounded-full shadow-md transition-all cursor-pointer flex items-center space-x-1.5 text-xs font-semibold"
+              id="btn-share-product-modal-top"
+              title="Compartilhar nas Redes Sociais"
+            >
+              <Share2 className="w-4 h-4 text-brand-primary-dark" />
+              <span className="hidden sm:inline">Compartilhar</span>
+            </button>
 
-          <div className="grid grid-cols-1 md:grid-cols-2">
+            <button
+              onClick={onClose}
+              className="p-2.5 bg-white/90 hover:bg-white text-stone-700 hover:text-stone-900 rounded-full shadow-md transition-all cursor-pointer"
+              id="btn-close-product-modal"
+              title="Fechar"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 flex-1 min-h-0 overflow-hidden">
             {/* Gallery Column */}
-            <div className="relative bg-[#F2EDE7] flex flex-col justify-between p-4 sm:p-6">
+            <div className="relative bg-[#F2EDE7] flex flex-col justify-between p-4 sm:p-6 overflow-y-auto max-h-[40vh] md:max-h-full">
               {/* Main Image */}
               <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden bg-stone-200 shadow-inner group">
                 <img
@@ -157,11 +187,12 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               )}
             </div>
 
-            {/* Info & Buy Column */}
-            <div className="p-6 sm:p-8 flex flex-col justify-between max-h-[85vh] overflow-y-auto">
-              <div>
+            {/* Info & Buy Column (With Sticky Bottom Action Bar) */}
+            <div className="flex flex-col h-full min-h-0 bg-white overflow-hidden justify-between">
+              {/* Scrollable details area */}
+              <div className="flex-1 overflow-y-auto p-5 sm:p-7 space-y-4">
                 {/* Category & Tags */}
-                <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                <div className="flex flex-wrap items-center gap-1.5 mb-1">
                   <span className="text-xs font-semibold uppercase tracking-widest text-brand-primary-dark">
                     {product.category}
                   </span>
@@ -176,12 +207,12 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 </div>
 
                 {/* Product Name */}
-                <h2 className="text-2xl sm:text-3xl font-serif-luxury font-medium text-stone-900 leading-snug">
+                <h2 className="text-xl sm:text-2xl font-serif-luxury font-medium text-stone-900 leading-snug">
                   {product.name}
                 </h2>
 
                 {/* Price Display */}
-                <div className="mt-3 flex items-baseline space-x-3">
+                <div className="flex items-baseline space-x-3">
                   <span className="text-2xl sm:text-3xl font-bold text-stone-900">
                     {formatCurrency(currentPrice)}
                   </span>
@@ -191,7 +222,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-stone-500 mt-1">
+                <p className="text-xs text-stone-500">
                   {settings.enableInstallments !== false &&
                   currentPrice >= (settings.minOrderValueForInstallments || 0) &&
                   Math.min(settings.maxInstallments || 6, Math.floor(currentPrice / (settings.minInstallmentAmount || 30))) >= 2 ? (
@@ -209,13 +240,13 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 </p>
 
                 {/* Description */}
-                <div className="mt-4 pt-4 border-t border-brand-bg-alt text-sm text-stone-600 leading-relaxed">
+                <div className="pt-3 border-t border-brand-bg-alt text-sm text-stone-600 leading-relaxed">
                   {product.description}
                 </div>
 
                 {/* Fabric & Care Accordion */}
                 {(product.fabricDetails || product.careInstructions) && (
-                  <div className="mt-4 p-3.5 bg-brand-bg-alt rounded-2xl border border-brand-border text-xs space-y-1.5 text-stone-700">
+                  <div className="p-3.5 bg-brand-bg-alt rounded-2xl border border-brand-border text-xs space-y-1.5 text-stone-700">
                     {product.fabricDetails && (
                       <p>
                         <strong className="text-stone-900">Composição:</strong> {product.fabricDetails}
@@ -229,143 +260,128 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                   </div>
                 )}
 
-                {/* Color Selection */}
-                {product.colors.length > 0 && (
-                  <div className="mt-5">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold text-stone-800 uppercase tracking-wide">
-                        Cor Selecionada: <span className="font-normal text-stone-600">{selectedColor.name}</span>
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap gap-2.5">
-                      {product.colors.map((color, idx) => {
-                        const isChosen = selectedColor.name === color.name;
-                        return (
-                          <motion.button
-                            key={idx}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => setSelectedColor(color)}
-                            className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
-                              isChosen
-                                ? 'border-brand-primary-dark bg-white ring-2 ring-brand-primary-dark/30 text-stone-900 shadow-xs'
-                                : 'border-brand-border-dark bg-white/70 text-stone-700 hover:border-stone-400'
-                            }`}
-                          >
-                            <span
-                              className="w-3.5 h-3.5 rounded-full border border-black/15 flex-shrink-0"
-                              style={{ backgroundColor: color.hex }}
-                            />
-                            <span>{color.name}</span>
-                            {isChosen && <Check className="w-3 h-3 text-brand-primary-dark" />}
-                          </motion.button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
                 {/* Size Selection */}
-                {product.sizes.length > 0 && (
-                  <div className="mt-5">
+                {product.sizes && product.sizes.length > 0 && (
+                  <div className="pt-2">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold text-stone-800 uppercase tracking-wide">
-                        Tamanho:
+                      <span className="text-xs font-bold text-stone-800 uppercase tracking-wider">
+                        Selecione o Tamanho
                       </span>
                       <button
                         type="button"
                         onClick={() => setShowSizeGuide(!showSizeGuide)}
-                        className="flex items-center space-x-1 text-xs text-brand-primary-dark hover:text-[#977349] font-medium cursor-pointer"
+                        className="text-[11px] text-brand-primary-dark hover:underline flex items-center space-x-1 font-medium"
                       >
-                        <Ruler className="w-3.5 h-3.5" />
-                        <span>Guia de Medidas</span>
+                        <Ruler className="w-3 h-3" />
+                        <span>Tabela de Medidas</span>
                       </button>
                     </div>
 
-                    <div className="flex flex-wrap gap-2">
-                      {product.sizes.map((size) => {
-                        const isChosen = selectedSize === size;
-                        return (
-                          <motion.button
-                            key={size}
-                            whileHover={{ scale: 1.08 }}
-                            whileTap={{ scale: 0.92 }}
-                            onClick={() => setSelectedSize(size)}
-                            className={`min-w-[44px] px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                              isChosen
-                                ? 'bg-stone-900 text-white shadow-md ring-2 ring-stone-900/20'
-                                : 'bg-white border border-brand-border-dark text-stone-700 hover:border-stone-800'
-                            }`}
-                          >
-                            {size}
-                          </motion.button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Size Guide Drawer */}
                     {showSizeGuide && (
-                      <div className="mt-3 p-3 bg-white rounded-xl border border-brand-border text-[11px] text-stone-600">
-                        <div className="font-semibold text-stone-900 mb-1">
-                          Tabela de Referência de Medidas (cm):
-                        </div>
-                        <div className="grid grid-cols-4 gap-1 text-center py-1 font-mono">
-                          <span className="font-bold">PP: 36</span>
-                          <span className="font-bold">P: 38</span>
-                          <span className="font-bold">M: 40</span>
-                          <span className="font-bold">G: 42-44</span>
-                        </div>
-                        <p className="text-[10px] text-stone-500 mt-1">
-                          Dúvidas sobre o caimento? Fale conosco pelo botão do WhatsApp abaixo!
-                        </p>
+                      <div className="mb-3 p-3 bg-brand-bg rounded-xl border border-brand-border text-[11px] text-stone-600">
+                        <p className="font-semibold text-stone-800 mb-1">Guia de Medidas Aproximadas:</p>
+                        <ul className="list-disc list-inside space-y-0.5">
+                          <li><strong>P:</strong> Busto 84-88cm | Cintura 66-70cm | Quadril 94-98cm</li>
+                          <li><strong>M:</strong> Busto 89-93cm | Cintura 71-75cm | Quadril 99-103cm</li>
+                          <li><strong>G:</strong> Busto 94-98cm | Cintura 76-80cm | Quadril 104-108cm</li>
+                          <li><strong>GG:</strong> Busto 99-104cm | Cintura 81-86cm | Quadril 109-114cm</li>
+                        </ul>
                       </div>
                     )}
+
+                    <div className="flex flex-wrap gap-2">
+                      {product.sizes.map((size) => (
+                        <button
+                          key={size}
+                          type="button"
+                          onClick={() => setSelectedSize(size)}
+                          className={`min-w-[44px] h-10 px-3.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                            selectedSize === size
+                              ? 'bg-stone-900 text-white border-stone-900 shadow-xs scale-105'
+                              : 'bg-white text-stone-700 border-brand-border-dark hover:border-stone-500'
+                          }`}
+                        >
+                          {size}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
 
+                {/* Color Selection */}
+                {hasColorVariants && product.colors && product.colors.length > 0 && (
+                  <div className="pt-2">
+                    <span className="text-xs font-bold text-stone-800 uppercase tracking-wider block mb-2">
+                      Cor: <span className="font-normal text-stone-600">{selectedColor.name}</span>
+                    </span>
+                    <div className="flex flex-wrap gap-2.5">
+                      {product.colors.map((color, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => {
+                            setSelectedColor(color);
+                            const matchingImageIdx = images.findIndex((img) => img === color.imageUrl);
+                            if (matchingImageIdx !== -1) {
+                              setActiveImageIndex(matchingImageIdx);
+                            }
+                          }}
+                          className={`group relative flex items-center space-x-2 px-3 py-1.5 rounded-xl border text-xs transition-all cursor-pointer ${
+                            selectedColor.name === color.name
+                              ? 'bg-brand-bg-alt border-stone-900 shadow-2xs font-semibold'
+                              : 'bg-white border-brand-border hover:border-brand-border-dark'
+                          }`}
+                        >
+                          <span
+                            className="w-4 h-4 rounded-full border border-black/10 shadow-2xs"
+                            style={{ backgroundColor: color.hex }}
+                          />
+                          <span>{color.name}</span>
+                          {selectedColor.name === color.name && (
+                            <Check className="w-3.5 h-3.5 text-stone-900" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Quantity */}
+                <div className="pt-2 flex items-center justify-between">
+                  <span className="text-xs font-bold text-stone-800 uppercase tracking-wider">
+                    Quantidade
+                  </span>
+                  <div className="flex items-center border border-brand-border-dark rounded-xl bg-brand-bg-alt">
+                    <button
+                      type="button"
+                      onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                      className="px-3 py-1.5 text-stone-600 hover:text-stone-900 font-bold"
+                    >
+                      -
+                    </button>
+                    <span className="px-3 text-xs font-bold text-stone-900 min-w-[28px] text-center">
+                      {quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setQuantity((q) => q + 1)}
+                      className="px-3 py-1.5 text-stone-600 hover:text-stone-900 font-bold"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
                 {/* Stock info */}
-                <div className="mt-4 flex items-center space-x-2 text-xs text-stone-500">
+                <div className="flex items-center space-x-2 text-xs text-stone-500 pt-1">
                   <Tag className="w-3.5 h-3.5 text-brand-primary-dark" />
                   <span>
-                    Peça com acabamento fino • {product.stock > 0 ? `${product.stock} unidades disponíveis no estoque` : 'Disponível sob encomenda'}
+                    {product.stock > 0 ? `${product.stock} peças disponíveis no estoque` : 'Disponível sob encomenda'}
                   </span>
                 </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="mt-6 pt-5 border-t border-brand-bg-alt space-y-3">
-                {/* Add to Bag Button */}
-                <button
-                  type="button"
-                  onClick={handleAddBag}
-                  className={`w-full flex items-center justify-center space-x-2.5 py-3.5 rounded-2xl font-semibold text-sm transition-all shadow-md ${
-                    addedAnimation
-                      ? 'bg-emerald-700 text-white shadow-emerald-700/20'
-                      : 'bg-stone-900 hover:bg-[#2C2723] text-white shadow-stone-900/15'
-                  }`}
-                  id="btn-add-to-bag-modal"
-                >
-                  <ShoppingBag className="w-4 h-4 text-brand-primary" />
-                  <span>
-                    {addedAnimation
-                      ? '✓ Adicionado à Sacola!'
-                      : `Adicionar à Sacola • ${formatCurrency(currentPrice)}`}
-                  </span>
-                </button>
-
-                {/* Direct WhatsApp Button */}
-                <button
-                  type="button"
-                  onClick={handleDirectWhatsapp}
-                  className="w-full flex items-center justify-center space-x-2 py-3 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-2xl font-semibold text-sm shadow-sm transition-all cursor-pointer"
-                  id="btn-whatsapp-direct-modal"
-                >
-                  <MessageCircle className="w-4 h-4 fill-white" />
-                  <span>Pedir ou Tirar Dúvida via WhatsApp</span>
-                </button>
 
                 {/* Trust Highlights */}
-                <div className="grid grid-cols-3 gap-2 pt-2 text-[10px] text-stone-500 text-center">
+                <div className="grid grid-cols-3 gap-2 pt-2 text-[10px] text-stone-500 text-center border-t border-brand-bg-alt">
                   <div className="flex flex-col items-center">
                     <ShieldCheck className="w-3.5 h-3.5 text-stone-600 mb-0.5" />
                     <span>Peça Original</span>
@@ -384,6 +400,87 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                     <RotateCcw className="w-3.5 h-3.5 text-stone-600 mb-0.5" />
                     <span>Troca Facilitada</span>
                   </div>
+                </div>
+              </div>
+
+              {/* PERMANENTLY FIXED & STICKY ACTION FOOTER */}
+              <div className="sticky bottom-0 z-30 bg-white/98 backdrop-blur-md border-t border-brand-border p-4 sm:p-5 shadow-2xl space-y-2.5 shrink-0">
+                {/* Status indicator when in cart */}
+                {addedAnimation && (
+                  <div className="p-2.5 bg-emerald-50 border border-emerald-300 rounded-xl flex items-center justify-between text-xs text-emerald-800 font-medium animate-fadeIn">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>Peça adicionada à sacola!</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onClose();
+                        if (onOpenCart) onOpenCart();
+                      }}
+                      className="text-xs font-bold text-emerald-900 underline hover:text-emerald-950 cursor-pointer"
+                    >
+                      Ver Sacola ({quantity}) →
+                    </button>
+                  </div>
+                )}
+
+                {/* Primary Fixed Buttons Grid: Continuar Comprando + Adicionar/Ver Sacola */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {/* Fixed Continuar Comprando Button */}
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="w-full flex items-center justify-center space-x-2 py-3 bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-300 rounded-xl font-bold text-xs shadow-2xs transition-all cursor-pointer"
+                    id="btn-fixed-continue-shopping-modal"
+                    title="Continuar Comprando e Explorando Catálogo"
+                  >
+                    <ArrowLeft className="w-4 h-4 text-stone-600" />
+                    <span>Continuar Comprando</span>
+                  </button>
+
+                  {/* Add to Bag or Go to Cart */}
+                  <button
+                    type="button"
+                    onClick={handleAddBag}
+                    className={`w-full flex items-center justify-center space-x-2 py-3 rounded-xl font-bold text-xs transition-all shadow-md cursor-pointer ${
+                      addedAnimation
+                        ? 'bg-emerald-700 hover:bg-emerald-800 text-white shadow-emerald-700/20'
+                        : 'bg-stone-900 hover:bg-stone-800 text-white shadow-stone-900/15'
+                    }`}
+                    id="btn-fixed-add-to-bag-modal"
+                  >
+                    <ShoppingBag className="w-4 h-4 text-brand-primary" />
+                    <span>
+                      {addedAnimation
+                        ? `Adicionar Mais (${quantity}) • ${formatCurrency(currentPrice * quantity)}`
+                        : `Adicionar à Sacola • ${formatCurrency(currentPrice * quantity)}`}
+                    </span>
+                  </button>
+                </div>
+
+                {/* Secondary Actions: WhatsApp Direct & Social Share */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={handleDirectWhatsapp}
+                    className="sm:col-span-2 w-full flex items-center justify-center space-x-2 py-2.5 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl font-semibold text-xs shadow-2xs transition-all cursor-pointer"
+                    id="btn-fixed-whatsapp-direct-modal"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5 fill-white" />
+                    <span>Pedir / Dúvida no WhatsApp</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onShareProduct && onShareProduct(product)}
+                    className="w-full flex items-center justify-center space-x-1.5 py-2.5 bg-brand-bg hover:bg-brand-bg-alt text-brand-primary-dark font-bold text-xs rounded-xl border border-brand-border transition-colors cursor-pointer"
+                    id="btn-fixed-share-direct-modal"
+                    title="Compartilhar nas redes sociais"
+                  >
+                    <Share2 className="w-3.5 h-3.5" />
+                    <span>Divulgar</span>
+                  </button>
                 </div>
               </div>
             </div>

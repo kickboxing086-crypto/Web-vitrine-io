@@ -1,7 +1,7 @@
 import React from 'react';
 import { Product, StoreSettings } from '../types';
 import { formatCurrency, generateWhatsappDirectProductMessage, cleanPhoneForWhatsapp } from '../lib/formatters';
-import { MessageCircle, Eye, ShoppingBag, Images } from 'lucide-react';
+import { MessageCircle, Eye, ShoppingBag, Images, Share2 } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface ProductCardProps {
@@ -9,6 +9,7 @@ interface ProductCardProps {
   settings: StoreSettings;
   onOpenDetails: (product: Product) => void;
   onQuickAddToCart: (product: Product) => void;
+  onShareProduct?: (product: Product) => void;
   isShopee?: boolean;
 }
 
@@ -17,14 +18,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   settings,
   onOpenDetails,
   onQuickAddToCart,
+  onShareProduct,
   isShopee = false,
 }) => {
+  const [selectedColorIndex, setSelectedColorIndex] = React.useState<number>(0);
+
   const currentPrice =
     product.isOnSale && product.promotionalPrice
       ? product.promotionalPrice
       : product.price;
 
+  const hasColorVariants = product.hasColors !== false && Array.isArray(product.colors) && product.colors.length > 0;
+  const activeColor = hasColorVariants ? product.colors[selectedColorIndex] : undefined;
+
+  // If active color has a dedicated photo, use it; otherwise use product.images[0]
   const mainImage =
+    (activeColor?.imageUrl && activeColor.imageUrl.trim()) ||
     product.images[0] ||
     'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop&q=80';
 
@@ -34,11 +43,23 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       product.name,
       currentPrice,
       product.sizes[0],
-      product.colors[0]?.name,
+      activeColor?.name || product.colors[0]?.name,
       settings
     );
     const phone = cleanPhoneForWhatsapp(settings.phoneWhatsapp);
     window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank');
+  };
+
+  const handleShareClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onShareProduct) {
+      onShareProduct(product);
+    }
+  };
+
+  const handleColorClick = (e: React.MouseEvent, index: number) => {
+    e.stopPropagation();
+    setSelectedColorIndex(index);
   };
 
   return (
@@ -63,7 +84,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {/* Gradient overlay on bottom */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-        {/* Badges on Top */}
+        {/* Badges on Top Left */}
         <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 z-10">
           {product.isOnSale && (
             <span className="px-2.5 py-0.5 bg-[#9C3A3A] text-white text-[10px] font-bold tracking-wider uppercase rounded-full shadow-xs">
@@ -77,16 +98,30 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           )}
         </div>
 
-        {/* Photo count indicator on top right */}
-        {product.images && product.images.length > 1 && (
-          <div className="absolute top-2.5 right-2.5 z-10 px-2 py-0.5 bg-black/65 backdrop-blur-xs text-white text-[10px] font-bold rounded-full flex items-center gap-1 shadow-xs">
-            <Images className="w-3 h-3 text-brand-primary" />
-            <span>{product.images.length}</span>
-          </div>
-        )}
+        {/* Top Right Controls: Share Button & Photo count */}
+        <div className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1.5">
+          {/* Share Button (Always Visible) */}
+          <button
+            type="button"
+            onClick={handleShareClick}
+            className="p-1.5 bg-white/90 hover:bg-white text-stone-700 hover:text-brand-primary-dark rounded-full shadow-xs hover:shadow-md transition-all cursor-pointer"
+            title="Compartilhar nas Redes Sociais"
+            id={`btn-share-product-card-${product.id}`}
+          >
+            <Share2 className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Photo count indicator */}
+          {product.images && product.images.length > 1 && (
+            <div className="px-2 py-0.5 bg-black/65 backdrop-blur-xs text-white text-[10px] font-bold rounded-full flex items-center gap-1 shadow-xs">
+              <Images className="w-3 h-3 text-brand-primary" />
+              <span>{product.images.length}</span>
+            </div>
+          )}
+        </div>
 
         {/* Quick Action Overlay Buttons (Desktop Hover) */}
-        <div className="absolute inset-x-3 bottom-3 flex items-center gap-2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-20">
+        <div className="absolute inset-x-3 bottom-3 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-20">
           <button
             type="button"
             onClick={(e) => {
@@ -101,8 +136,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
           <button
             type="button"
+            onClick={handleShareClick}
+            className="p-2.5 bg-white/95 hover:bg-white text-stone-800 hover:text-brand-primary-dark rounded-xl shadow-md transition-colors cursor-pointer"
+            title="Compartilhar Peça"
+          >
+            <Share2 className="w-4 h-4" />
+          </button>
+
+          <button
+            type="button"
             onClick={handleWhatsappClick}
-            className="p-2.5 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl shadow-md transition-colors"
+            className="p-2.5 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl shadow-md transition-colors cursor-pointer"
             title="Pedir no WhatsApp"
           >
             <MessageCircle className="w-4 h-4 fill-white" />
@@ -113,7 +157,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       {/* Product Content */}
       <div className={`flex flex-col flex-1 justify-between bg-white ${isShopee ? "p-2 sm:p-3" : "p-4 sm:p-5"}`}>
         <div>
-          {/* Category & Tags preview */}
+          {/* Category & Stock */}
           <div className="flex items-center justify-between text-[11px] text-brand-primary-darker font-semibold tracking-wider uppercase mb-1">
             <span>{product.category}</span>
             {product.stock <= 3 && product.stock > 0 && (
@@ -131,7 +175,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           {/* Sizes & Colors preview */}
           <div className="mt-2.5 flex items-center justify-between gap-2">
             <div className="flex items-center gap-1 flex-wrap">
-              {product.sizes.slice(0, 4).map((s) => (
+              {product.sizes?.slice(0, 4).map((s) => (
                 <span
                   key={s}
                   className="px-1.5 py-0.5 bg-brand-bg-alt border border-brand-border text-stone-700 text-[10px] font-semibold rounded"
@@ -139,25 +183,41 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                   {s}
                 </span>
               ))}
-              {product.sizes.length > 4 && (
+              {product.sizes && product.sizes.length > 4 && (
                 <span className="text-[10px] text-stone-400 font-medium">
                   +{product.sizes.length - 4}
                 </span>
               )}
             </div>
 
-            {/* Colors dots */}
-            <div className="flex items-center -space-x-1">
-              {product.colors.slice(0, 3).map((c, i) => (
-                <span
-                  key={i}
-                  className="w-3.5 h-3.5 rounded-full border-2 border-white shadow-xs"
-                  style={{ backgroundColor: c.hex }}
-                  title={c.name}
-                />
-              ))}
-            </div>
+            {/* Colors Swatches with dynamic photo change */}
+            {hasColorVariants && (
+              <div className="flex items-center gap-1">
+                {product.colors.map((c, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={(e) => handleColorClick(e, i)}
+                    className={`w-4 h-4 rounded-full border shadow-2xs transition-all cursor-pointer ${
+                      selectedColorIndex === i
+                        ? 'ring-2 ring-stone-900 scale-110'
+                        : 'border-white hover:scale-105'
+                    }`}
+                    style={{ backgroundColor: c.hex }}
+                    title={`${c.name}${c.imageUrl ? ' (Clique para ver a foto)' : ''}`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
+
+          {/* Active color name indicator if available */}
+          {hasColorVariants && activeColor && (
+            <div className="mt-1 flex items-center gap-1 text-[10px] text-stone-500 font-medium">
+              <span>Cor:</span>
+              <span className="text-stone-800 font-semibold">{activeColor.name}</span>
+            </div>
+          )}
         </div>
 
         {/* Price & Action Row */}
@@ -186,17 +246,28 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             )}
           </div>
 
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onQuickAddToCart(product);
-            }}
-            className="p-2.5 bg-stone-100 hover:bg-stone-900 text-stone-700 hover:text-white rounded-xl transition-all"
-            title="Adicionar à Sacola"
-          >
-            <ShoppingBag className="w-4 h-4" />
-          </button>
+          <div className="flex items-center space-x-1.5">
+            <button
+              type="button"
+              onClick={handleShareClick}
+              className="p-2.5 bg-brand-bg hover:bg-stone-200 text-stone-700 rounded-xl transition-all cursor-pointer"
+              title="Compartilhar produto"
+            >
+              <Share2 className="w-4 h-4 text-stone-700" />
+            </button>
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onQuickAddToCart(product);
+              }}
+              className="p-2.5 bg-stone-100 hover:bg-stone-900 text-stone-700 hover:text-white rounded-xl transition-all cursor-pointer"
+              title="Adicionar à Sacola"
+            >
+              <ShoppingBag className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
     </motion.div>

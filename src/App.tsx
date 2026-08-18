@@ -58,7 +58,14 @@ import { LoginModal } from './components/LoginModal';
 import { AdminPanel } from './components/AdminPanel';
 import { SuperAdminPanel } from './components/SuperAdminPanel';
 import { Footer } from './components/Footer';
-import { SlidersHorizontal, AlertCircle, Tag as TagIcon } from 'lucide-react';
+import { LandingPage } from './components/LandingPage';
+import { LandingHeroModal } from './components/LandingHeroModal';
+import { StoreHoursModal } from './components/StoreHoursModal';
+import { ShareProductModal } from './components/ShareProductModal';
+import { SlidersHorizontal, AlertCircle, Tag as TagIcon, ShoppingBag, ArrowLeft, MessageCircle } from 'lucide-react';
+import { getFontFamilyCss } from './lib/themeUtils';
+import { formatCurrency } from './lib/formatters';
+import { motion, AnimatePresence } from 'motion/react';
 
 export default function App() {
   // Application Data States (initial fallback from local cache)
@@ -72,16 +79,24 @@ export default function App() {
   const [adminUser] = useState<AdminUser>(getStoredAdminUser);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(getAuthSession);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
+  const [isStoreHoursModalOpen, setIsStoreHoursModalOpen] = useState<boolean>(false);
+  const [isLandingHeroModalOpen, setIsLandingHeroModalOpen] = useState<boolean>(false);
   const [isCloudSyncing, setIsCloudSyncing] = useState<boolean>(true);
 
-  // View state: 'store' (Vitrine do Cliente) | 'admin' (Painel do Dono) | 'super_admin' (Painel SaaS)
-  const [activeView, setActiveView] = useState<'store' | 'admin' | 'super_admin'>('store');
+  // View state: 'store' (Vitrine do Cliente) | 'landing' (Página Oficial) | 'admin' (Painel do Dono) | 'super_admin' (Painel SaaS)
+  const [activeView, setActiveView] = useState<'store' | 'admin' | 'super_admin' | 'landing'>(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('page') === 'landing' || urlParams.get('landing') === 'true') {
+      return 'landing';
+    }
+    return 'store';
+  });
   const [currentClient, setCurrentClient] = useState<any>(() => {
     const saved = localStorage.getItem('store_current_client');
     return saved ? JSON.parse(saved) : null;
   });
 
-  const handleToggleView = (view: 'store' | 'admin' | 'super_admin') => {
+  const handleToggleView = (view: 'store' | 'admin' | 'super_admin' | 'landing') => {
     if (view === 'admin' && !isAdminAuthenticated) {
       setIsLoginModalOpen(true);
     } else {
@@ -125,6 +140,15 @@ export default function App() {
   const [isStoreSetupOpen, setIsStoreSetupOpen] = useState(false);
   const [isFirstOnboarding, setIsFirstOnboarding] = useState(false);
 
+  // Share Product Modal State
+  const [sharingProduct, setSharingProduct] = useState<Product | null>(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+
+  const handleShareProduct = (product: Product) => {
+    setSharingProduct(product);
+    setIsShareModalOpen(true);
+  };
+
   // 2-Step Delete Modal State
   const [deleteModalState, setDeleteModalState] = useState<{
     isOpen: boolean;
@@ -139,7 +163,7 @@ export default function App() {
     onConfirm: () => {},
   });
 
-  // Dynamic document title and meta tags update
+  // Dynamic document title, meta tags, fonts and primary colors update
   useEffect(() => {
     if (settings.storeName) {
       document.title = `${settings.storeName} | Vitrine Virtual`;
@@ -148,7 +172,16 @@ export default function App() {
         metaDescription.setAttribute('content', settings.description || `Vitrine virtual e catálogo exclusivo da ${settings.storeName}.`);
       }
     }
-  }, [settings.storeName, settings.description]);
+
+    // Apply custom dynamic store font and primary color to root document
+    if (settings.fontFamily) {
+      document.documentElement.style.setProperty('--font-serif-luxury', getFontFamilyCss(settings.fontFamily));
+    }
+    if (settings.primaryColor) {
+      document.documentElement.style.setProperty('--brand-primary', settings.primaryColor);
+      document.documentElement.style.setProperty('--brand-primary-dark', settings.primaryColor);
+    }
+  }, [settings.storeName, settings.description, settings.fontFamily, settings.primaryColor]);
 
   // Check first access and URL params for admin login and tenant stores
   useEffect(() => {
@@ -256,6 +289,21 @@ export default function App() {
       unsubFinance();
     };
   }, [currentClient]);
+
+  // Open product modal automatically if product ID is in URL parameters
+  useEffect(() => {
+    if (products.length > 0) {
+      const params = new URLSearchParams(window.location.search);
+      const prodId = params.get('produto') || params.get('product');
+      if (prodId) {
+        const product = products.find((p) => p.id === prodId);
+        if (product) {
+          setSelectedProduct(product);
+          setIsProductModalOpen(true);
+        }
+      }
+    }
+  }, [products]);
 
   // Persist changes to Cloud Firestore
   const handleUpdateSettings = async (newSettings: StoreSettings) => {
@@ -556,8 +604,59 @@ export default function App() {
     return <SuperAdminPanel onLogout={handleLogout} />;
   }
 
+  if (activeView === 'landing') {
+    return (
+      <>
+        <LandingPage
+          settings={settings}
+          onEnterStore={() => setActiveView('store')}
+          onAdminLogin={() => setIsLoginModalOpen(true)}
+        />
+        {/* Admin Login Modal */}
+        <LoginModal
+          isOpen={isLoginModalOpen}
+          onClose={() => setIsLoginModalOpen(false)}
+          onLoginSuccess={handleLoginSuccess}
+          adminUser={adminUser}
+          settings={settings}
+        />
+      </>
+    );
+  }
+
   return (
     <div className={`min-h-screen bg-brand-bg text-stone-900 flex flex-col selection:bg-brand-border ${activeStoreType === 'natural' ? 'theme-natural' : ''}`}>
+      {/* Top Global Announcement Switcher */}
+      <div className="bg-gradient-to-r from-stone-950 via-[#1C1814] to-stone-950 text-white text-xs py-2 px-4 border-b border-[#3D3328] shadow-xs">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center space-x-2">
+            <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse" />
+            <span className="text-stone-300 text-[11px] sm:text-xs">
+              Você está na <strong className="text-white">Vitrine de Demonstração</strong> • Plataforma por <strong className="text-[#E5C378]">R$ 29,99/mês</strong>
+            </span>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <button
+              type="button"
+              onClick={() => setActiveView('landing')}
+              className="px-2.5 py-0.5 sm:px-3 sm:py-1 bg-[#D4AF37] hover:bg-[#c59e2a] text-black font-bold text-[11px] rounded-lg transition-colors cursor-pointer shadow-xs"
+              id="btn-topbar-landing"
+            >
+              Conhecer Página Oficial
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsLoginModalOpen(true)}
+              className="px-2.5 py-0.5 sm:px-3 sm:py-1 bg-stone-800 hover:bg-stone-700 text-stone-200 text-[11px] font-semibold rounded-lg border border-white/10 transition-colors cursor-pointer"
+              id="btn-topbar-admin-login"
+            >
+              Área do Lojista
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Top Navbar */}
       <Navbar
         settings={settings}
@@ -571,6 +670,8 @@ export default function App() {
         onSelectCategory={setSelectedCategory}
         categories={categoryNames}
         onOpenStoreSetup={() => setIsStoreSetupOpen(true)}
+        onOpenStoreHours={() => setIsStoreHoursModalOpen(true)}
+        onOpenLandingHero={() => setActiveView('landing')}
       />
 
       {/* Main Content Body */}
@@ -681,6 +782,7 @@ export default function App() {
                     settings={settings}
                     onOpenDetails={handleOpenProductDetails}
                     onQuickAddToCart={handleQuickAddToCart}
+                    onShareProduct={handleShareProduct}
                     isShopee={activeStoreType === 'natural'}
                   />
                 ))}
@@ -712,12 +814,31 @@ export default function App() {
             onResetData={handleResetData}
             onLogout={handleLogout}
             onViewStore={() => setActiveView('store')}
+            onShareProduct={handleShareProduct}
           />
         )}
       </main>
 
       {/* Footer */}
-      <Footer settings={settings} onOpenAdmin={() => handleToggleView('admin')} />
+      <Footer
+        settings={settings}
+        onOpenAdmin={() => handleToggleView('admin')}
+        onOpenLanding={() => setActiveView('landing')}
+      />
+
+      {/* Store Hours Status Modal */}
+      <StoreHoursModal
+        isOpen={isStoreHoursModalOpen}
+        onClose={() => setIsStoreHoursModalOpen(false)}
+        settings={settings}
+      />
+
+      {/* Landing / Acquisition Modal ("Adquira Sua Vitrine") */}
+      <LandingHeroModal
+        isOpen={isLandingHeroModalOpen}
+        onClose={() => setIsLandingHeroModalOpen(false)}
+        onOpenLogin={() => setIsLoginModalOpen(true)}
+      />
 
       {/* Admin Login Modal */}
       <LoginModal
@@ -736,9 +857,20 @@ export default function App() {
         onClose={() => setIsProductModalOpen(false)}
         onAddToCart={(prod, sz, col, qty) => {
           handleAddToCart(prod, sz, col, qty);
+        }}
+        onOpenCart={() => {
           setIsProductModalOpen(false);
           setIsCartOpen(true);
         }}
+        onShareProduct={handleShareProduct}
+      />
+
+      {/* Share Product Modal */}
+      <ShareProductModal
+        product={sharingProduct}
+        settings={settings}
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
       />
 
       {/* Cart / Order Drawer */}
@@ -786,6 +918,67 @@ export default function App() {
         onConfirm={deleteModalState.onConfirm}
         onClose={() => setDeleteModalState((prev) => ({ ...prev, isOpen: false }))}
       />
+
+      {/* Floating Sticky Bottom Action Bar (Fixed on Screen when Items Selected) */}
+      <AnimatePresence>
+        {cart.length > 0 && activeView === 'store' && !isCartOpen && !selectedProduct && (
+          <motion.div
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 80, opacity: 0 }}
+            className="fixed bottom-4 inset-x-3 sm:inset-x-auto sm:right-6 z-40 max-w-lg mx-auto sm:mx-0 bg-stone-900/95 backdrop-blur-md text-white p-3 sm:p-3.5 rounded-2xl shadow-2xl border border-stone-700/80 flex items-center justify-between gap-2.5"
+            id="floating-fixed-cart-bar"
+          >
+            <div className="flex items-center space-x-3 min-w-0">
+              <div className="relative p-2 bg-brand-primary/20 text-brand-primary rounded-xl border border-brand-primary/30 shrink-0">
+                <ShoppingBag className="w-5 h-5 text-brand-primary" />
+                <span className="absolute -top-1 -right-1 bg-[#9C3A3A] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  {cart.reduce((acc, item) => acc + item.quantity, 0)}
+                </span>
+              </div>
+              <div className="min-w-0">
+                <span className="text-xs font-bold text-white block truncate">
+                  {cart.reduce((acc, item) => acc + item.quantity, 0)} {cart.reduce((acc, item) => acc + item.quantity, 0) === 1 ? 'peça na sacola' : 'peças na sacola'}
+                </span>
+                <span className="text-[11px] text-stone-300 font-mono">
+                  {formatCurrency(
+                    cart.reduce((acc, item) => {
+                      const p = item.product.isOnSale && item.product.promotionalPrice
+                        ? item.product.promotionalPrice
+                        : item.product.price;
+                      return acc + p * item.quantity;
+                    }, 0)
+                  )}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="px-2.5 py-2 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-xl font-medium text-xs transition-colors hidden sm:flex items-center space-x-1 cursor-pointer"
+                id="btn-floating-keep-browsing"
+                title="Continuar Comprando"
+              >
+                <span>+ Ver Catálogo</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsCartOpen(true)}
+                className="px-3.5 py-2 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl font-bold text-xs shadow-md transition-all flex items-center space-x-1.5 cursor-pointer"
+                id="btn-floating-open-cart"
+              >
+                <ShoppingBag className="w-3.5 h-3.5 text-white" />
+                <span>Ver Sacola & Finalizar</span>
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

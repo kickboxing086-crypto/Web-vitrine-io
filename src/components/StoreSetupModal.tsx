@@ -9,7 +9,6 @@ import {
   CreditCard,
   Truck,
   Building2,
-  Sparkles,
   Save,
   X,
   Share2,
@@ -18,9 +17,16 @@ import {
   Image as ImageIcon,
   Trash2,
   Info,
+  Palette,
+  Type,
+  Coffee,
+  Check,
+  Crown,
+  Calendar,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { fileToBase64 } from '../lib/imageUtils';
+import { STORE_FONTS, STORE_COLOR_PALETTES, WEEK_DAYS, formatBusinessDaysLabel } from '../lib/themeUtils';
 
 interface StoreSetupModalProps {
   currentClient?: any;
@@ -162,7 +168,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
             {/* Section 1: Identidade da Loja */}
             <div className="space-y-4">
               <div className="flex items-center space-x-2 text-stone-900 border-b border-brand-border pb-2">
-                <Sparkles className="w-4 h-4 text-brand-primary-dark" />
+                <Crown className="w-4 h-4 text-brand-primary-dark" />
                 <h3 className="font-semibold text-sm tracking-wide uppercase text-stone-800">
                   1. Identidade & Apresentação
                 </h3>
@@ -279,7 +285,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                 <div className="p-3.5 bg-white border border-brand-border-dark rounded-2xl space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-semibold text-stone-800 flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-brand-primary-dark" />
+                      <ImageIcon className="w-3.5 h-3.5 text-brand-primary-dark" />
                       <span>Capa Principal / Banner</span>
                     </label>
                     {formData.bannerUrl && (
@@ -416,7 +422,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                       id: 'both' as DeliveryMode,
                       title: 'Ambos (Recomendado)',
                       desc: 'Cliente escolhe entre Entrega ou Retirar na Loja',
-                      icon: Sparkles,
+                      icon: Crown,
                     },
                     {
                       id: 'pickup' as DeliveryMode,
@@ -640,90 +646,536 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
               )}
             </div>
 
-            {/* Section 4: Parcelamento no Cartão */}
+            {/* Section 2: Identidade Visual (Cores & Tipografia de Luxo) */}
             <div className="space-y-4">
               <div className="flex items-center space-x-2 text-stone-900 border-b border-brand-border pb-2">
-                <CreditCard className="w-4 h-4 text-brand-primary-dark" />
+                <Palette className="w-4 h-4 text-brand-primary-dark" />
                 <h3 className="font-semibold text-sm tracking-wide uppercase text-stone-800">
-                  4. Opções de Parcelamento no Cartão
+                  2. Identidade Visual (Cores & Fontes de Luxo)
                 </h3>
               </div>
 
+              {/* 10 Luxury Color Palettes */}
               <div className="p-4 bg-white border border-brand-border-dark rounded-2xl space-y-3">
-                <label className="flex items-center space-x-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.enableInstallments !== false}
-                    onChange={(e) =>
-                      setFormData({ ...formData, enableInstallments: e.target.checked })
-                    }
-                    className="w-4 h-4 text-stone-900 rounded focus:ring-stone-900"
-                  />
-                  <span className="text-xs font-bold text-stone-800">
-                    Exibir opções de parcelamento sem juros nos produtos
-                  </span>
-                </label>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-stone-900 block">
+                      Paleta de Cor Primária da Vitrine
+                    </span>
+                    <span className="text-[11px] text-stone-500">
+                      Escolha a tonalidade nobre que definirá os detalhes, botões e destaques da loja.
+                    </span>
+                  </div>
+                  {formData.primaryColor && (
+                    <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-stone-100 rounded-lg text-xs font-mono">
+                      <span
+                        className="w-3 h-3 rounded-full border border-black/20"
+                        style={{ backgroundColor: formData.primaryColor }}
+                      />
+                      <span>{formData.primaryColor}</span>
+                    </div>
+                  )}
+                </div>
 
-                {formData.enableInstallments !== false && (
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-stone-100">
-                    <div>
-                      <label className="block text-[11px] font-semibold text-stone-700 mb-1">
-                        Máximo de Parcelas
-                      </label>
-                      <select
-                        value={formData.maxInstallments || 6}
-                        onChange={(e) =>
-                          setFormData({ ...formData, maxInstallments: parseInt(e.target.value) || 6 })
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-1">
+                  {STORE_COLOR_PALETTES.map((pal) => {
+                    const isSelected =
+                      (formData.primaryColor || '#B8860B').toLowerCase() === pal.hex.toLowerCase();
+                    return (
+                      <button
+                        key={pal.id}
+                        type="button"
+                        onClick={() =>
+                          setFormData({
+                            ...formData,
+                            primaryColor: pal.hex,
+                          })
                         }
-                        className="w-full px-3 py-2 bg-brand-bg border border-stone-300 rounded-xl text-xs"
+                        className={`p-2.5 rounded-xl border text-left flex flex-col justify-between space-y-2 transition-all cursor-pointer ${
+                          isSelected
+                            ? 'ring-2 ring-stone-900 border-stone-900 bg-stone-50 shadow-sm'
+                            : 'border-stone-200 hover:border-stone-400 bg-white'
+                        }`}
                       >
-                        <option value={2}>Até 2x sem juros</option>
-                        <option value={3}>Até 3x sem juros</option>
-                        <option value={4}>Até 4x sem juros</option>
-                        <option value={5}>Até 5x sem juros</option>
-                        <option value={6}>Até 6x sem juros</option>
-                        <option value={10}>Até 10x sem juros</option>
-                        <option value={12}>Até 12x sem juros</option>
-                      </select>
-                    </div>
+                        <div className="flex items-center justify-between">
+                          <span
+                            className="w-5 h-5 rounded-full border border-black/10 shadow-xs flex items-center justify-center"
+                            style={{ backgroundColor: pal.hex }}
+                          >
+                            {isSelected && <Check className="w-3 h-3 text-white" />}
+                          </span>
+                          <span className="text-[10px] text-stone-400 font-mono">
+                            {pal.hex}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="font-semibold text-xs text-stone-900 block leading-tight">
+                            {pal.name}
+                          </span>
+                          <span className="text-[9px] text-stone-500 line-clamp-1">
+                            {pal.description}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
 
-                    <div>
-                      <label className="block text-[11px] font-semibold text-stone-700 mb-1">
-                        Valor Mínimo da Parcela (R$)
-                      </label>
-                      <input
-                        type="number"
-                        min="5"
-                        value={formData.minInstallmentAmount || 30}
-                        onChange={(e) =>
+                {/* Custom Color Input */}
+                <div className="flex items-center space-x-3 pt-2 border-t border-stone-100 text-xs">
+                  <span className="text-stone-600 font-medium">Ou personalize a cor Hex:</span>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="color"
+                      value={formData.primaryColor || '#B8860B'}
+                      onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
+                      className="w-7 h-7 rounded-lg border border-stone-300 cursor-pointer p-0.5"
+                    />
+                    <input
+                      type="text"
+                      value={formData.primaryColor || '#B8860B'}
+                      onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
+                      placeholder="#B8860B"
+                      className="w-24 px-2 py-1 bg-brand-bg border border-stone-300 rounded-lg font-mono text-xs text-stone-800 uppercase"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 10 Luxury Google Fonts */}
+              <div className="p-4 bg-white border border-brand-border-dark rounded-2xl space-y-3">
+                <div>
+                  <span className="text-xs font-bold text-stone-900 block">
+                    Tipografia da Loja (10 Fontes Exclusivas)
+                  </span>
+                  <span className="text-[11px] text-stone-500">
+                    Defina a fonte que compõe os títulos, menus e detalhes do seu catálogo.
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-64 overflow-y-auto pr-1">
+                  {STORE_FONTS.map((font) => {
+                    const isSelected = (formData.fontFamily || 'playfair') === font.id;
+                    return (
+                      <button
+                        key={font.id}
+                        type="button"
+                        onClick={() =>
                           setFormData({
                             ...formData,
-                            minInstallmentAmount: parseFloat(e.target.value) || 10,
+                            fontFamily: font.id,
                           })
                         }
-                        className="w-full px-3 py-2 bg-brand-bg border border-stone-300 rounded-xl text-xs"
-                      />
+                        className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-start justify-between ${
+                          isSelected
+                            ? 'ring-2 ring-stone-900 border-stone-900 bg-stone-50 shadow-sm'
+                            : 'border-stone-200 hover:border-stone-400 bg-white'
+                        }`}
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xs font-bold text-stone-900">
+                              {font.name}
+                            </span>
+                            <span className="text-[9px] px-1.5 py-0.5 bg-stone-100 text-stone-600 rounded font-medium">
+                              {font.category}
+                            </span>
+                          </div>
+                          <p
+                            className="text-sm text-stone-800 font-semibold"
+                            style={{ fontFamily: font.fontFamily }}
+                          >
+                            {font.previewText}
+                          </p>
+                          <p className="text-[10px] text-stone-500">
+                            {font.description}
+                          </p>
+                        </div>
+                        {isSelected && (
+                          <div className="w-5 h-5 rounded-full bg-stone-900 text-white flex items-center justify-center shrink-0 mt-0.5">
+                            <Check className="w-3 h-3" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Section 3: Horários de Funcionamento & Intervalo */}
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2 text-stone-900 border-b border-brand-border pb-2">
+                <Clock className="w-4 h-4 text-brand-primary-dark" />
+                <h3 className="font-semibold text-sm tracking-wide uppercase text-stone-800">
+                  3. Horários de Atendimento & Dias de Abertura
+                </h3>
+              </div>
+
+              <div className="p-4 bg-white border border-brand-border-dark rounded-2xl space-y-4">
+                {/* Weekly Operating Days Selection (Caixas para marcar todos os dias da semana) */}
+                <div className="space-y-2.5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <label className="block text-xs font-bold text-stone-900">
+                        Dias da Semana de Funcionamento
+                      </label>
+                      <span className="text-[11px] text-stone-500">
+                        Marque as caixas dos dias em que sua loja física ou atendimento online está aberto.
+                      </span>
                     </div>
 
-                    <div>
-                      <label className="block text-[11px] font-semibold text-stone-700 mb-1">
-                        Valor Mínimo da Compra (R$)
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={formData.minOrderValueForInstallments || 0}
-                        onChange={(e) =>
+                    {/* Quick Preset Buttons */}
+                    <div className="flex items-center space-x-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newDays = [1, 2, 3, 4, 5, 6];
                           setFormData({
                             ...formData,
-                            minOrderValueForInstallments: parseFloat(e.target.value) || 0,
-                          })
-                        }
-                        className="w-full px-3 py-2 bg-brand-bg border border-stone-300 rounded-xl text-xs"
-                      />
+                            businessDays: newDays,
+                            businessDaysLabel: formatBusinessDaysLabel(newDays),
+                          });
+                        }}
+                        className="px-2 py-1 bg-stone-100 hover:bg-stone-200 text-[10px] font-semibold text-stone-700 rounded-md transition-colors cursor-pointer"
+                      >
+                        Seg a Sáb
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newDays = [1, 2, 3, 4, 5];
+                          setFormData({
+                            ...formData,
+                            businessDays: newDays,
+                            businessDaysLabel: formatBusinessDaysLabel(newDays),
+                          });
+                        }}
+                        className="px-2 py-1 bg-stone-100 hover:bg-stone-200 text-[10px] font-semibold text-stone-700 rounded-md transition-colors cursor-pointer"
+                      >
+                        Seg a Sex
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newDays = [1, 2, 3, 4, 5, 6, 0];
+                          setFormData({
+                            ...formData,
+                            businessDays: newDays,
+                            businessDaysLabel: formatBusinessDaysLabel(newDays),
+                          });
+                        }}
+                        className="px-2 py-1 bg-stone-100 hover:bg-stone-200 text-[10px] font-semibold text-stone-700 rounded-md transition-colors cursor-pointer"
+                      >
+                        Todos os dias
+                      </button>
                     </div>
                   </div>
-                )}
+
+                  {/* 7 Interactive Week Day Checkboxes */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2 pt-1">
+                    {WEEK_DAYS.map((day) => {
+                      const currentDays =
+                        formData.businessDays && formData.businessDays.length > 0
+                          ? formData.businessDays
+                          : [1, 2, 3, 4, 5, 6];
+                      const isChecked = currentDays.includes(day.dayIndex);
+
+                      const handleToggle = () => {
+                        let newDays: number[];
+                        if (isChecked) {
+                          newDays = currentDays.filter((d) => d !== day.dayIndex);
+                          if (newDays.length === 0) newDays = [day.dayIndex]; // Mantém pelo menos um dia ativo
+                        } else {
+                          newDays = [...currentDays, day.dayIndex];
+                        }
+                        setFormData({
+                          ...formData,
+                          businessDays: newDays,
+                          businessDaysLabel: formatBusinessDaysLabel(newDays),
+                        });
+                      };
+
+                      return (
+                        <label
+                          key={day.dayIndex}
+                          onClick={handleToggle}
+                          className={`p-2.5 rounded-xl border flex flex-col items-center justify-center space-y-1.5 cursor-pointer select-none transition-all ${
+                            isChecked
+                              ? 'bg-stone-900 text-white border-stone-900 shadow-2xs'
+                              : 'bg-brand-bg hover:bg-stone-100 text-stone-700 border-stone-200'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-1.5">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => {}} // Controlled by label click
+                              className="w-3.5 h-3.5 rounded accent-stone-900 cursor-pointer pointer-events-none"
+                            />
+                            <span className="font-bold text-xs">{day.shortName}</span>
+                          </div>
+                          <span
+                            className={`text-[9px] truncate max-w-full ${
+                              isChecked ? 'text-stone-300' : 'text-stone-500'
+                            }`}
+                          >
+                            {day.fullName.replace('-feira', '')}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+
+                  {/* Formatted Days Badge */}
+                  <div className="flex items-center space-x-2 text-xs pt-1">
+                    <Calendar className="w-3.5 h-3.5 text-brand-primary-dark shrink-0" />
+                    <span className="text-stone-600">
+                      Resumo da Abertura:{' '}
+                      <strong className="text-stone-900">
+                        {formData.businessDaysLabel ||
+                          formatBusinessDaysLabel(formData.businessDays || [1, 2, 3, 4, 5, 6])}
+                      </strong>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Operating Hours (Abertura e Fechamento) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-stone-100">
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 mb-1">
+                      Horário de Abertura
+                    </label>
+                    <input
+                      type="time"
+                      value={formData.openingTime || '08:00'}
+                      onChange={(e) => setFormData({ ...formData, openingTime: e.target.value })}
+                      className="w-full px-3 py-2 bg-brand-bg border border-stone-300 rounded-xl text-xs text-stone-900 font-semibold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 mb-1">
+                      Horário de Fechamento
+                    </label>
+                    <input
+                      type="time"
+                      value={formData.closingTime || '18:00'}
+                      onChange={(e) => setFormData({ ...formData, closingTime: e.target.value })}
+                      className="w-full px-3 py-2 bg-brand-bg border border-stone-300 rounded-xl text-xs text-stone-900 font-semibold"
+                    />
+                  </div>
+                </div>
+
+                {/* CRITICAL: Pergunta sobre Receber Pedidos Fora dos Dias / Horários de Funcionamento */}
+                <div className="p-4 bg-stone-50 border border-stone-200 rounded-2xl space-y-2.5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <span className="text-xs font-bold text-stone-900 block">
+                        Deseja também receber pedidos fora dos dias ou horários de funcionamento?
+                      </span>
+                      <span className="text-[11px] text-stone-600 leading-tight block mt-1">
+                        {formData.acceptOrdersOutsideHours ?? true
+                          ? '✅ SIM (Recomendado): O cliente pode montar a sacola e enviar o pedido no WhatsApp a qualquer momento. A vitrine avisa que o pedido foi recebido e será preparado no retorno do expediente.'
+                          : '⏸️ NÃO (Pausar pedidos): A sacola avisa que o atendimento está fechado e os pedidos ficam bloqueados até a reabertura.'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center space-x-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, acceptOrdersOutsideHours: true })}
+                        className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          formData.acceptOrdersOutsideHours ?? true
+                            ? 'bg-emerald-600 text-white shadow-xs'
+                            : 'bg-white border border-stone-200 text-stone-600 hover:bg-stone-100'
+                        }`}
+                      >
+                        Sim (Receber)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, acceptOrdersOutsideHours: false })}
+                        className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          formData.acceptOrdersOutsideHours === false
+                            ? 'bg-stone-900 text-white shadow-xs'
+                            : 'bg-white border border-stone-200 text-stone-600 hover:bg-stone-100'
+                        }`}
+                      >
+                        Não (Bloquear)
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Interval / Break Toggle & Configuration */}
+                <div className="p-3.5 bg-amber-50/50 border border-amber-200/80 rounded-2xl space-y-3">
+                  <label className="flex items-center justify-between cursor-pointer">
+                    <div className="flex items-center space-x-2">
+                      <Coffee className="w-4 h-4 text-amber-700" />
+                      <span className="text-xs font-bold text-stone-900">
+                        A loja possui Intervalo / Pausa de Almoço?
+                      </span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={formData.hasBreakInterval ?? true}
+                      onChange={(e) =>
+                        setFormData({ ...formData, hasBreakInterval: e.target.checked })
+                      }
+                      className="w-4 h-4 text-amber-700 rounded focus:ring-amber-600 accent-stone-900"
+                    />
+                  </label>
+
+                  {(formData.hasBreakInterval ?? true) && (
+                    <div className="space-y-3 pt-2 border-t border-amber-200/60">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                            Início do Intervalo
+                          </label>
+                          <input
+                            type="time"
+                            value={formData.breakStartTime || '12:00'}
+                            onChange={(e) =>
+                              setFormData({ ...formData, breakStartTime: e.target.value })
+                            }
+                            className="w-full px-3 py-1.5 bg-white border border-stone-300 rounded-xl text-xs font-semibold text-stone-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                            Fim do Intervalo (Retorno)
+                          </label>
+                          <input
+                            type="time"
+                            value={formData.breakEndTime || '13:30'}
+                            onChange={(e) =>
+                              setFormData({ ...formData, breakEndTime: e.target.value })
+                            }
+                            className="w-full px-3 py-1.5 bg-white border border-stone-300 rounded-xl text-xs font-semibold text-stone-900"
+                          />
+                        </div>
+                      </div>
+
+                      {/* CRITICAL: Highlighted question whether to receive orders during break */}
+                      <div className="p-3 bg-white border border-amber-300 rounded-xl space-y-2">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <span className="text-xs font-bold text-amber-950 block">
+                              Deseja receber pedidos durante o intervalo de almoço?
+                            </span>
+                            <span className="text-[11px] text-stone-600 leading-tight block mt-0.5">
+                              {formData.acceptOrdersDuringBreak ?? true
+                                ? 'SIM: Os clientes podem enviar pedidos normalmente. Será avisado que o preparo inicia no retorno.'
+                                : 'NÃO: O cliente verá aviso de pausa no atendimento e envio será processado após o intervalo.'}
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-2 shrink-0 ml-3">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setFormData({ ...formData, acceptOrdersDuringBreak: true })
+                              }
+                              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                formData.acceptOrdersDuringBreak ?? true
+                                  ? 'bg-emerald-600 text-white shadow-xs'
+                                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                              }`}
+                            >
+                              Sim (Receber)
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setFormData({ ...formData, acceptOrdersDuringBreak: false })
+                              }
+                              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                formData.acceptOrdersDuringBreak === false
+                                  ? 'bg-stone-900 text-white shadow-xs'
+                                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                              }`}
+                            >
+                              Não (Pausa)
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Section 4: Áreas de Entrega & Políticas de Cobertura */}
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2 text-stone-900 border-b border-brand-border pb-2">
+                <Truck className="w-4 h-4 text-brand-primary-dark" />
+                <h3 className="font-semibold text-sm tracking-wide uppercase text-stone-800">
+                  4. Áreas de Entrega & Políticas de Cobertura
+                </h3>
+              </div>
+
+              <div className="p-4 bg-white border border-brand-border-dark rounded-2xl space-y-3.5">
+                <div>
+                  <label className="block text-xs font-semibold text-stone-700 mb-1">
+                    Bairros e Regiões Atendidas com Entrega Direta
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={
+                      formData.deliveryAreasList ||
+                      'Centro, Zona Sul, Jardins, Ponta Negra, Tianguá e Região Metropolitana'
+                    }
+                    onChange={(e) =>
+                      setFormData({ ...formData, deliveryAreasList: e.target.value })
+                    }
+                    placeholder="Ex: Centro, Zona Sul, Jardins, Bairro Alto, Região Metropolitana..."
+                    className="w-full px-3 py-2 bg-brand-bg border border-stone-300 rounded-xl text-xs text-stone-900 leading-relaxed"
+                  />
+                  <span className="text-[10px] text-stone-500">
+                    Estes bairros aparecerão de forma transparente para o cliente ao calcular frete e finalizar o pedido.
+                  </span>
+                </div>
+
+                {/* Toggle: Allow or restrict out of area orders */}
+                <div className="p-3 bg-stone-50 border border-stone-200 rounded-xl flex items-start justify-between gap-3">
+                  <div>
+                    <span className="text-xs font-bold text-stone-900 block">
+                      Permitir pedidos de regiões fora das áreas cadastradas?
+                    </span>
+                    <span className="text-[11px] text-stone-600 block mt-0.5">
+                      {formData.allowOutOfAreaOrders ?? true
+                        ? 'Sim: Clientes de outras regiões podem pedir com consulta de frete via WhatsApp.'
+                        : 'Não: Entrega estritamente restrita aos bairros e regiões especificadas.'}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, allowOutOfAreaOrders: true })}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        formData.allowOutOfAreaOrders ?? true
+                          ? 'bg-stone-900 text-white'
+                          : 'bg-white border border-stone-300 text-stone-600'
+                      }`}
+                    >
+                      Permitir
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, allowOutOfAreaOrders: false })}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        formData.allowOutOfAreaOrders === false
+                          ? 'bg-stone-900 text-white'
+                          : 'bg-white border border-stone-300 text-stone-600'
+                      }`}
+                    >
+                      Restringir
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 

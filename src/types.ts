@@ -19,6 +19,28 @@ export interface StoreSettings {
   address: string;
   cityState: string;
   openingHours: string;
+  
+  // Horários de Funcionamento Avançados & Intervalo
+  openingTime?: string; // Ex: '08:00'
+  closingTime?: string; // Ex: '18:00'
+  hasBreakInterval?: boolean; // Se a loja tem pausa/almoço
+  breakStartTime?: string; // Ex: '12:00'
+  breakEndTime?: string; // Ex: '13:30'
+  acceptOrdersDuringBreak?: boolean; // Se aceita pedidos no intervalo (destacado)
+  businessDays?: number[]; // [0, 1, 2, 3, 4, 5, 6] onde 0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex, 6=Sáb
+  businessDaysLabel?: string; // Formatado automaticamente a partir dos dias marcados
+  acceptOrdersOutsideHours?: boolean; // Se aceita pedidos fora dos dias ou horários de funcionamento
+  breakNoticeMessage?: string;
+
+  // Cores da Interface & 10 Estilos de Fontes
+  primaryColor?: string; // Hex da cor principal da loja (ex: #B8860B, #8B0000, #0F5132...)
+  fontFamily?: string; // 'playfair' | 'cormorant' | 'cinzel' | 'montserrat' | 'plus-jakarta' | 'poppins' | 'raleway' | 'lora' | 'bodoni' | 'outfit'
+
+  // Controle de Pedidos Fora da Área de Entrega
+  allowOutOfAreaOrders?: boolean; // Se permite pedidos fora dos locais cadastrados
+  outOfAreaMessage?: string; // Mensagem informativa para regiões fora de atendimento
+  deliveryAreasList?: string; // Ex: 'Zona Sul, Centro, Ponta Negra, Lagoa Nova'
+
   pixKey?: string;
   pixKeyType?: 'cpf' | 'cnpj' | 'email' | 'phone' | 'random';
   deliveryMode: DeliveryMode; // 'pickup' (apenas retirada), 'delivery' (apenas entrega), 'both' (ambos)
@@ -40,6 +62,12 @@ export interface StoreSettings {
   showAnnouncementBanner: boolean;
 }
 
+export interface ProductColorVariant {
+  name: string;
+  hex: string;
+  imageUrl?: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -53,7 +81,8 @@ export interface Product {
   isAvailable: boolean;
   images: string[];
   sizes: string[]; // e.g. ['PP', 'P', 'M', 'G', 'GG', '38', '40', '42']
-  colors: { name: string; hex: string }[];
+  hasColors?: boolean; // Se o produto utiliza variações de cor ou cor única
+  colors: ProductColorVariant[];
   stock: number;
   tags: string[]; // e.g. ['Alfaiataria', 'Linho Puro', 'Edição Limitada', 'Festa']
   fabricDetails?: string;
@@ -66,7 +95,7 @@ export interface Product {
 export interface CartItem {
   product: Product;
   selectedSize: string;
-  selectedColor: { name: string; hex: string };
+  selectedColor?: ProductColorVariant;
   quantity: number;
 }
 

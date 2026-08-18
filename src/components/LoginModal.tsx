@@ -164,7 +164,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               </div>
               <div>
                 <span className="inline-flex items-center gap-1 text-[11px] font-bold tracking-wider text-brand-primary uppercase">
-                  <Sparkles className="w-3 h-3 text-brand-primary" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-brand-primary" />
                   Sistema Seguro
                 </span>
                 <h2 className="text-xl font-serif-luxury font-bold text-white">
@@ -174,18 +174,18 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             </div>
 
             <p className="text-xs text-stone-300 mt-1">
-              Painel restrito de gestão de sua vitrine virtual personalizada.
+              Painel restrito de gestão da sua vitrine virtual personalizada.
             </p>
           </div>
 
           {/* Form Container */}
-          <div className="p-6">
+          <div className="p-6 space-y-4">
             {/* Error Message */}
             {errorMessage && (
               <motion.div
                 initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs flex items-center gap-2"
+                className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs flex items-center gap-2"
                 id="login-error-alert"
               >
                 <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-500" />
@@ -198,7 +198,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="mb-4 p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold flex items-center gap-2.5"
+                className="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold flex items-center gap-2.5"
               >
                 <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
                 <span>Autenticado com sucesso! Carregando painel...</span>
@@ -317,6 +317,30 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 )}
               </button>
             </form>
+
+            {/* Acquisition Banner & Notice */}
+            <div className="pt-3 border-t border-brand-border space-y-2">
+              <div className="p-3 bg-amber-50/60 border border-amber-200/80 rounded-2xl space-y-1 text-center">
+                <span className="text-[11px] font-bold text-amber-900 block">
+                  Ainda não tem o sistema para a sua loja?
+                </span>
+                <p className="text-[10px] text-stone-600 leading-tight">
+                  Organize seus produtos e receba pedidos no WhatsApp por apenas <strong>R$ 29,99/mês</strong>.
+                  <br />
+                  <span className="text-stone-500 italic">*Não realizamos tráfego pago; fornecemos a plataforma inteligente de vitrine.</span>
+                </p>
+                <a
+                  href="https://wa.me/5584986113980?text=Ol%C3%A1!%20Gostaria%20de%20adquirir%20o%20sistema%20da%20Web%20Vitrine."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-flex items-center justify-center space-x-1.5 w-full py-2 px-3 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl text-xs font-bold shadow-xs transition-colors"
+                  id="btn-adquira-aqui-login-modal"
+                >
+                  <span>Adquira Aqui (WhatsApp)</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            </div>
           </div>
         </motion.div>
       </div>

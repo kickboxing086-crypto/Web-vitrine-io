@@ -6,9 +6,10 @@ import { formatPhone, cleanPhoneForWhatsapp } from '../lib/formatters';
 interface FooterProps {
   settings: StoreSettings;
   onOpenAdmin: () => void;
+  onOpenLanding?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ settings, onOpenAdmin }) => {
+export const Footer: React.FC<FooterProps> = ({ settings, onOpenAdmin, onOpenLanding }) => {
   const whatsappLink = `https://wa.me/${cleanPhoneForWhatsapp(settings.phoneWhatsapp)}`;
   const instagramUrl = settings.instagramHandle
     ? `https://instagram.com/${settings.instagramHandle.replace('@', '')}`
@@ -147,6 +148,16 @@ export const Footer: React.FC<FooterProps> = ({ settings, onOpenAdmin }) => {
           >
             © {new Date().getFullYear()} {settings.storeName}. Todos os direitos reservados.
           </p>
+
+          <button
+            type="button"
+            onClick={onOpenLanding}
+            className="inline-flex items-center space-x-1.5 text-stone-400 hover:text-[#E5C378] transition-colors cursor-pointer text-[11px]"
+            title="Tecnologia Web Vitrine para Lojistas"
+          >
+            <Crown className="w-3.5 h-3.5 text-[#D4AF37]" />
+            <span>Tecnologia <strong>Web Vitrine</strong> (R$ 29,99/mês)</span>
+          </button>
         </div>
       </div>
     </footer>
