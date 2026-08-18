@@ -44,12 +44,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 }) => {
   const [simulatedStock, setSimulatedStock] = useState(3);
   // Support official WhatsApp
-  const officialPhone = '5511999999999';
+  const officialPhone = '5584986113980';
   const whatsappBuyMessage = encodeURIComponent(
-    'Olá! Quero adquirir a Web Vitrine para minha loja pelo plano de R$ 29,99/mês. Como funciona para ativar meu acesso?'
+    'Olá! Quero ativar minha vitrine de luxo agora mesmo pelo plano especial de R$ 29,99/mês para turbinar minhas vendas. Como faço para liberar meu acesso imediato?'
   );
   const whatsappConsultMessage = encodeURIComponent(
-    'Olá! Gostaria de tirar algumas dúvidas sobre o sistema da Web Vitrine.'
+    'Olá! Gostaria de falar com o suporte oficial para ativar a minha vitrine de moda no WhatsApp.'
   );
 
   const buyLink = `https://wa.me/${officialPhone}?text=${whatsappBuyMessage}`;
@@ -904,7 +904,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <span>Quero Minha Vitrine Agora • R$ 29,99/mês</span>
             </a>
             <p className="text-[11px] text-stone-400">
-              Ativação rápida e suporte humano pelo número: <strong>+55 (84) 98611-3980</strong>
+              Ativação rápida e suporte 100% humano diretamente no seu WhatsApp.
             </p>
           </div>
         </div>
@@ -998,7 +998,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <span>Web Vitrine • Plataforma para Lojistas</span>
           </div>
           <p className="text-[11px] text-stone-500">
-            Atendimento e Suporte Oficial: +55 (84) 98611-3980 • Todos os direitos reservados.
+            Atendimento e Suporte Oficial 100% Humano via WhatsApp • Todos os direitos reservados.
           </p>
         </div>
       </footer>

@@ -337,13 +337,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                   <span className="text-stone-500 italic">*Não realizamos tráfego pago; fornecemos a plataforma inteligente de vitrine.</span>
                 </p>
                 <a
-                  href="https://wa.me/5511999999999?text=Ol%C3%A1!%20Gostaria%20de%20adquirir%20o%20sistema%20da%20Web%20Vitrine."
+                  href="https://wa.me/5584986113980?text=Ol%C3%A1!%20Quero%20ativar%20a%20minha%20vitrine%20de%20luxo%20e%20liberar%20meu%20acesso%20agora%20mesmo!"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-2 inline-flex items-center justify-center space-x-1.5 w-full py-2 px-3 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl text-xs font-bold shadow-xs transition-colors"
                   id="btn-adquira-aqui-login-modal"
                 >
-                  <span>Adquira Aqui (WhatsApp)</span>
+                  <span>Ativação Rápida no WhatsApp</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </a>
               </div>
