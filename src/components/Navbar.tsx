@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
 import { StoreSettings } from '../types';
 import {
   ShoppingBag,
@@ -221,7 +222,11 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Categories Bar in Store Mode */}
         {activeView === 'store' && (
           <div className="flex items-center space-x-1.5 overflow-x-auto py-2 scrollbar-none border-t border-brand-bg-alt/70">
-            <button
+            <motion.button
+              type="button"
+              whileHover={{ scale: 1.04, y: -1 }}
+              whileTap={{ scale: 0.96 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 16 }}
               onClick={() => onSelectCategory('all')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                 selectedCategory === 'all'
@@ -230,10 +235,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               Todas as Peças
-            </button>
+            </motion.button>
             {categories.map((cat) => (
-              <button
+              <motion.button
                 key={cat}
+                type="button"
+                whileHover={{ scale: 1.04, y: -1 }}
+                whileTap={{ scale: 0.96 }}
+                transition={{ type: 'spring', stiffness: 450, damping: 16 }}
                 onClick={() => onSelectCategory(cat)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                   selectedCategory === cat
@@ -242,7 +251,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }`}
               >
                 {cat}
-              </button>
+              </motion.button>
             ))}
           </div>
         )}

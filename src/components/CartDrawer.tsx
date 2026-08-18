@@ -490,10 +490,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
                     {settings.deliveryMode === 'both' ? (
                       <div className="grid grid-cols-2 gap-2">
-                        <button
+                        <motion.button
                           type="button"
+                          whileHover={{ scale: 1.03 }}
+                          whileTap={{ scale: 0.97 }}
+                          transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                           onClick={() => setOrderType('delivery')}
-                          className={`p-3 rounded-xl border text-left flex items-center space-x-2 transition-all ${
+                          className={`p-3 rounded-xl border text-left flex items-center space-x-2 transition-all cursor-pointer ${
                             orderType === 'delivery'
                               ? 'bg-brand-bg-alt border-brand-primary-dark ring-1 ring-brand-primary-dark text-stone-900'
                               : 'bg-white border-brand-border text-stone-600 hover:border-stone-400'
@@ -504,12 +507,15 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                             <span className="text-xs font-bold block">Entrega</span>
                             <span className="text-[10px] text-stone-500">No seu endereço</span>
                           </div>
-                        </button>
+                        </motion.button>
 
-                        <button
+                        <motion.button
                           type="button"
+                          whileHover={{ scale: 1.03 }}
+                          whileTap={{ scale: 0.97 }}
+                          transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                           onClick={() => setOrderType('pickup')}
-                          className={`p-3 rounded-xl border text-left flex items-center space-x-2 transition-all ${
+                          className={`p-3 rounded-xl border text-left flex items-center space-x-2 transition-all cursor-pointer ${
                             orderType === 'pickup'
                               ? 'bg-brand-bg-alt border-brand-primary-dark ring-1 ring-brand-primary-dark text-stone-900'
                               : 'bg-white border-brand-border text-stone-600 hover:border-stone-400'
@@ -520,7 +526,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                             <span className="text-xs font-bold block">Retirada</span>
                             <span className="text-[10px] text-stone-500">Na loja física</span>
                           </div>
-                        </button>
+                        </motion.button>
                       </div>
                     ) : settings.deliveryMode === 'pickup' ? (
                       <div className="p-3 bg-stone-100 rounded-xl border border-stone-200 text-xs text-stone-700 flex items-center space-x-2">
@@ -703,9 +709,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                             { id: 'cash', label: 'Dinheiro' },
                             { id: 'other', label: 'A Combinar' },
                           ].map((p) => (
-                            <button
+                            <motion.button
                               key={p.id}
                               type="button"
+                              whileHover={{ scale: 1.03 }}
+                              whileTap={{ scale: 0.97 }}
+                              transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                               onClick={() => setPaymentMethod(p.id as any)}
                               className={`py-2 px-2 text-[11px] rounded-lg border font-medium text-center transition-all cursor-pointer ${
                                 paymentMethod === p.id
@@ -714,7 +723,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                               }`}
                             >
                               {p.label}
-                            </button>
+                            </motion.button>
                           ))}
                         </div>
                         {paymentMethod === 'pix' && settings.pixKey && (

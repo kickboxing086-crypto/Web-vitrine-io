@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  Crown,
+  Gem,
   ShieldCheck,
   CheckCircle2,
   MessageCircle,
@@ -42,6 +42,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onEnterStore,
   onAdminLogin,
 }) => {
+  const [simulatedStock, setSimulatedStock] = useState(3);
   // Support official WhatsApp
   const officialPhone = '5511999999999';
   const whatsappBuyMessage = encodeURIComponent(
@@ -116,7 +117,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#8C6508] p-0.5 shadow-lg shadow-[#D4AF37]/10 flex items-center justify-center">
               <div className="w-full h-full bg-[#121110] rounded-[10px] flex items-center justify-center">
-                <Crown className="w-5 h-5 text-[#E5C378]" />
+                <Gem className="w-5 h-5 text-[#E5C378]" />
               </div>
             </div>
             <div>
@@ -178,7 +179,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             >
               {/* Trust Badge Pill */}
               <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 bg-[#1E1A16] border border-[#4A3E2D] rounded-full text-xs font-bold text-[#E5C378] shadow-sm">
-                <Crown className="w-3.5 h-3.5 text-[#D4AF37]" />
+                <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
                 <span>A Vitrine Mais Elegante & Prática do Brasil</span>
               </div>
 
@@ -569,6 +570,186 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </section>
 
+      {/* Sincronização de Estoque Inteligente Section */}
+      <section className="py-20 bg-stone-900 border-t border-b border-white/5 relative overflow-hidden text-left">
+        {/* Subtle geometric mesh background styling */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(212,175,55,0.04),transparent)] pointer-events-none"></div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            {/* Explanatory Content */}
+            <div className="lg:col-span-6 space-y-6">
+              <div className="inline-flex items-center space-x-2 px-3 py-1 bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-full text-[10px] font-bold text-[#E5C378] uppercase tracking-wider">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-[#D4AF37]" />
+                <span>Novidade Tecnológica</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-serif-luxury font-bold text-white leading-tight">
+                Estoque Sincronizado & <br />
+                <span className="text-[#E5C378]">Gatilho de Escassez Real</span>
+              </h2>
+              <p className="text-stone-300 text-xs sm:text-sm leading-relaxed">
+                Esqueça o constrangimento de vender uma peça que já acabou ou ter que atualizar planilhas o tempo todo. A Web Vitrine conta com um motor inteligente de reserva que sincroniza seu estoque na hora!
+              </p>
+
+              <div className="space-y-4 pt-2">
+                <div className="flex items-start space-x-3">
+                  <div className="p-1 bg-amber-500/10 text-amber-400 rounded-lg mt-0.5">
+                    <Check className="w-4 h-4 text-amber-400" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wider">Baixa Automática no Checkout</h4>
+                    <p className="text-xs text-stone-400 mt-0.5">
+                      No exato instante em que o cliente clica para concluir o pedido no WhatsApp, o estoque diminui automaticamente.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3">
+                  <div className="p-1 bg-amber-500/10 text-amber-400 rounded-lg mt-0.5">
+                    <Check className="w-4 h-4 text-amber-400" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wider">Bloqueio Inteligente de Overselling</h4>
+                    <p className="text-xs text-stone-400 mt-0.5">
+                      Quando o estoque atinge zero, a vitrine ativa o selo <strong>"Sem Estoque"</strong> e impede novas compras, preservando sua reputação.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3">
+                  <div className="p-1 bg-amber-500/10 text-amber-400 rounded-lg mt-0.5">
+                    <Check className="w-4 h-4 text-amber-400" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wider">Reposição Automatizada de Cancelados</h4>
+                    <p className="text-xs text-stone-400 mt-0.5">
+                      Ao cancelar ou reabrir um pedido no painel de controle do CEO, o sistema devolve as peças ao estoque na hora.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Interactive Simulator Widget */}
+            <div className="lg:col-span-6 bg-[#161412] p-6 sm:p-8 rounded-3xl border border-[#3A3024] shadow-2xl relative space-y-6">
+              <div className="absolute top-4 right-4 flex items-center space-x-1.5 bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-1 rounded-full text-[9px] font-bold text-emerald-400 uppercase tracking-widest animate-pulse">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span>Simulador Ativo</span>
+              </div>
+
+              <div className="space-y-1">
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+                  Teste a Experiência do Cliente
+                </h3>
+                <p className="text-[11px] text-stone-400 leading-relaxed">
+                  Clique no botão de simulação para ver como a escassez de estoque gera urgência e como o sistema se comporta quando a peça esgota!
+                </p>
+              </div>
+
+              {/* Simulated Product Card */}
+              <div className="p-4 bg-[#1E1C1A] rounded-2xl border border-[#2E2822] flex items-center gap-4 relative overflow-hidden">
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-tr from-[#3A3024] to-[#1E1C1A] flex items-center justify-center relative flex-shrink-0">
+                  <ShoppingBag className="w-7 h-7 text-[#E5C378]" />
+                  {simulatedStock === 0 && (
+                    <div className="absolute inset-0 bg-red-600/90 flex items-center justify-center rounded-xl text-[9px] font-black text-white uppercase tracking-wider animate-fade-in">
+                      Esgotado
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex-1 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-extrabold text-white uppercase tracking-wider">Vestido Imperial Crepe</span>
+                    <span className="text-xs font-bold text-[#E5C378]">R$ 189,90</span>
+                  </div>
+                  <p className="text-[10px] text-stone-400">Coleção Verão • Exclusivo</p>
+                  
+                  {/* Stock count badge */}
+                  <div className="pt-1 flex items-center justify-between">
+                    <div className="flex items-center space-x-1.5">
+                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                        simulatedStock === 0
+                          ? 'bg-red-500/20 text-red-400 border border-red-500/35'
+                          : simulatedStock <= 1
+                          ? 'bg-amber-500/20 text-amber-400 border border-amber-500/35 animate-bounce'
+                          : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/35'
+                      }`}>
+                        Estoque: {simulatedStock} {simulatedStock === 1 ? 'última unidade!' : simulatedStock === 0 ? 'esgotado' : 'unidades'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Interactive Controls Panel */}
+              <div className="p-4 bg-stone-900/50 rounded-2xl border border-white/5 space-y-3.5 text-center">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  {simulatedStock > 0 ? (
+                    <motion.button
+                      type="button"
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => setSimulatedStock(prev => Math.max(0, prev - 1))}
+                      className="flex-1 py-2.5 px-4 bg-stone-100 hover:bg-white text-stone-950 font-bold text-xs rounded-xl transition-all cursor-pointer shadow-md flex items-center justify-center space-x-1.5"
+                    >
+                      <ShoppingBag className="w-3.5 h-3.5" />
+                      <span>Simular Compra do Cliente (-1)</span>
+                    </motion.button>
+                  ) : (
+                    <motion.button
+                      type="button"
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => setSimulatedStock(3)}
+                      className="flex-1 py-2.5 px-4 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-md flex items-center justify-center space-x-1.5 shadow-amber-600/10"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Repor Estoque (Reabastecer)</span>
+                    </motion.button>
+                  )}
+                </div>
+
+                {/* Simulated Outcome Warning Alert */}
+                <AnimatePresence mode="wait">
+                  {simulatedStock === 0 ? (
+                    <motion.div
+                      key="esgotado"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-[10px] text-red-300 font-medium leading-relaxed"
+                    >
+                      🔥 <strong>Bloqueio de Venda Ativado!</strong> O cliente não consegue mais prosseguir para o checkout com esse produto e vê o selo "Sem Estoque" em destaque, garantindo que você nunca venda o que não possui!
+                    </motion.div>
+                  ) : simulatedStock === 1 ? (
+                    <motion.div
+                      key="urgencia"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-[10px] text-amber-300 font-medium leading-relaxed"
+                    >
+                      ⚡ <strong>Gatilho de Urgência Ativado!</strong> Quando resta apenas 1 peça, o cliente vê em destaque um alerta pulsante gerando escassez genuína para acelerar a decisão de compra.
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="normal"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="p-3 bg-[#1A1816] rounded-xl text-[10px] text-stone-400 font-medium leading-relaxed border border-white/5"
+                    >
+                      ℹ️ Clique para reduzir o estoque até 0 e veja como o sistema reage na tela do cliente.
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Real Testimonials Section */}
       <section className="py-20 bg-[#12110F] border-t border-[#332A20]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
@@ -656,7 +837,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="relative p-8 sm:p-12 bg-gradient-to-b from-[#1C1814] to-[#12100E] rounded-3xl border-2 border-[#D4AF37]/60 shadow-2xl shadow-black space-y-8 text-center">
           {/* Top Tag */}
           <div className="inline-flex items-center space-x-2 px-4 py-1.5 bg-[#D4AF37]/20 border border-[#D4AF37]/40 rounded-full text-xs font-bold text-[#E5C378] uppercase tracking-wider">
-            <Crown className="w-4 h-4 text-[#D4AF37]" />
+            <Gem className="w-4 h-4 text-[#D4AF37]" />
             <span>Plano Oficial Lojista VIP</span>
           </div>
 
@@ -779,7 +960,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* Final High-Converting Bottom Banner */}
       <section className="py-16 bg-gradient-to-r from-stone-950 via-[#1C1814] to-stone-950 border-t border-[#42372A] text-center">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 space-y-6">
-          <Crown className="w-8 h-8 text-[#D4AF37] mx-auto" />
+          <Gem className="w-8 h-8 text-[#D4AF37] mx-auto animate-pulse" />
           <h2 className="text-2xl sm:text-4xl font-serif-luxury font-bold text-white">
             Pronto para profissionalizar as vendas da sua loja?
           </h2>
@@ -813,7 +994,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <footer className="py-8 bg-stone-950 border-t border-white/10 text-center text-xs text-stone-500">
         <div className="max-w-7xl mx-auto px-4 space-y-2">
           <div className="flex items-center justify-center space-x-2 text-stone-400 font-serif-luxury uppercase tracking-widest text-xs">
-            <Crown className="w-4 h-4 text-[#D4AF37]" />
+            <Gem className="w-4 h-4 text-[#D4AF37]" />
             <span>Web Vitrine • Plataforma para Lojistas</span>
           </div>
           <p className="text-[11px] text-stone-500">

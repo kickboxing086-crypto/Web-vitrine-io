@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { motion } from 'motion/react';
 import {
   StoreSettings,
   Product,
@@ -530,10 +531,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           const IconComp = tab.icon;
           const isActive = activeTab === tab.id;
           return (
-            <button
+            <motion.button
               key={tab.id}
+              whileHover={{ scale: 1.03, y: -0.5 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 17 }}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+              className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                 isActive
                   ? 'bg-stone-900 text-white shadow-sm'
                   : 'bg-white/80 hover:bg-white text-stone-700 border border-brand-border'
@@ -544,7 +548,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 className={`w-4 h-4 ${isActive ? 'text-brand-primary' : 'text-stone-500'}`}
               />
               <span>{tab.label}</span>
-            </button>
+            </motion.button>
           );
         })}
       </div>
@@ -2627,19 +2631,57 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         </div>
       )}
 
-      {activeTab === 'stock' && (
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <h2 className="font-serif-luxury text-xl font-bold text-stone-900 flex items-center gap-2">
-                <Sliders className="w-5 h-5 text-brand-primary" />
-                Controle de Estoque Inteligente
-              </h2>
-              <p className="text-xs text-stone-500">
-                Acompanhe os níveis de estoque em tempo real, ajuste quantidades instantaneamente e previna vendas sem estoque na sua vitrine.
-              </p>
+      {activeTab === 'stock' && (() => {
+        const outOfStockCount = products.filter((p) => (p.stock || 0) === 0).length;
+        const criticalStockCount = products.filter((p) => (p.stock || 0) > 0 && (p.stock || 0) <= 3).length;
+
+        return (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="font-serif-luxury text-xl font-bold text-stone-900 flex items-center gap-2">
+                  <Sliders className="w-5 h-5 text-brand-primary" />
+                  Controle de Estoque Inteligente
+                </h2>
+                <p className="text-xs text-stone-500">
+                  Acompanhe os níveis de estoque em tempo real, ajuste quantidades instantaneamente e previna vendas sem estoque na sua vitrine.
+                </p>
+              </div>
             </div>
-          </div>
+
+            {/* Pulsing Intelligent Restock Alert Banner */}
+            {(outOfStockCount > 0 || criticalStockCount > 0) && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-4 bg-red-50/90 border border-red-200 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm"
+              >
+                <div className="flex items-start space-x-3">
+                  <div className="p-2 bg-red-600 text-white rounded-xl shadow-md animate-pulse">
+                    <AlertTriangle className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-red-800 uppercase tracking-wider">Alerta de Reposição Urgente (CEO)</h4>
+                    <p className="text-xs text-red-700 mt-0.5 font-medium leading-relaxed">
+                      Detectamos {outOfStockCount > 0 && <span><span className="font-bold underline">{outOfStockCount}</span> produtos esgotados (sem estoque)</span>}
+                      {outOfStockCount > 0 && criticalStockCount > 0 && " e "}
+                      {criticalStockCount > 0 && <span><span className="font-bold underline">{criticalStockCount}</span> peças em nível crítico (≤ 3 unidades)</span>}.
+                      Por favor, reabasteça os itens abaixo para manter o faturamento da sua vitrine ativo.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStockFilterMode(outOfStockCount > 0 ? 'empty' : 'low');
+                    setStockSearchQuery('');
+                  }}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-red-600/10 whitespace-nowrap cursor-pointer hover:shadow-lg hover:shadow-red-600/20"
+                >
+                  Filtrar e Repor Agora
+                </button>
+              </motion.div>
+            )}
 
           {/* KPI Stock Overview Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -2900,7 +2942,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 };
