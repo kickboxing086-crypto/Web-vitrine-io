@@ -56,6 +56,7 @@ import {
   ArrowRight,
   Sliders,
   Tag as TagIcon,
+  Crown,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -69,6 +70,8 @@ import {
   Cell,
   CartesianGrid,
 } from 'recharts';
+
+import { SubscriptionManager } from './SubscriptionManager';
 
 interface AdminPanelProps {
   currentClient?: any;
@@ -549,6 +552,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           { id: 'orders', label: `Pedidos Recebidos (${orders.length})`, icon: ShoppingBag },
           { id: 'tags', label: 'Tags & Categorias', icon: Tags },
           { id: 'coupons', label: `Cupons & Ofertas (${coupons.length})`, icon: TicketPercent },
+          { id: 'plan', label: 'Meu Plano & Assinatura', icon: Crown },
         ].map((tab) => {
           const IconComp = tab.icon;
           const isActive = activeTab === tab.id;
@@ -562,12 +566,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                 isActive
                   ? 'bg-stone-900 text-white shadow-sm'
+                  : tab.id === 'plan'
+                  ? 'bg-amber-100/50 hover:bg-amber-100 text-amber-900 border border-amber-300'
                   : 'bg-white/80 hover:bg-white text-stone-700 border border-brand-border'
               }`}
               id={`tab-${tab.id}`}
             >
               <IconComp
-                className={`w-4 h-4 ${isActive ? 'text-brand-primary' : 'text-stone-500'}`}
+                className={`w-4 h-4 ${isActive ? (tab.id === 'plan' ? 'text-amber-400' : 'text-brand-primary') : (tab.id === 'plan' ? 'text-amber-600' : 'text-stone-500')}`}
               />
               <span>{tab.label}</span>
             </motion.button>
@@ -3293,6 +3299,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         </div>
         );
       })()}
+
+      {/* ================= TAB 7: MEU PLANO & ASSINATURA ================= */}
+      {activeTab === 'plan' && (
+        <SubscriptionManager settings={settings} />
+      )}
     </div>
   );
 };

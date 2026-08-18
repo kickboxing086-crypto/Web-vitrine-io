@@ -850,19 +850,55 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </p>
           </div>
 
-          {/* Big Price */}
-          <div className="py-4 border-y border-white/10 max-w-md mx-auto">
-            <div className="flex items-baseline justify-center space-x-2">
-              <span className="text-stone-400 text-lg font-medium">Apenas</span>
-              <span className="text-5xl sm:text-6xl font-bold text-[#E5C378] tracking-tight">
-                R$ 29,99
-              </span>
-              <span className="text-stone-400 text-base">/mês</span>
+          {/* Pricing Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto py-8">
+            {/* Mensal */}
+            <div className="bg-[#181614] border border-[#3A3024] rounded-3xl p-6 text-center space-y-4 flex flex-col justify-center">
+              <h3 className="text-sm font-bold text-stone-400 uppercase tracking-widest">Plano Mensal</h3>
+              <div className="flex items-baseline justify-center space-x-1">
+                <span className="text-stone-500">R$</span>
+                <span className="text-4xl font-bold text-white">29,99</span>
+                <span className="text-stone-500">/mês</span>
+              </div>
+              <p className="text-xs text-stone-500">Renovação a cada 30 dias</p>
+              <div className="inline-block mt-2 text-[10px] text-emerald-400 font-semibold bg-emerald-950/30 py-1.5 px-3 rounded-lg border border-emerald-900/50">
+                Apenas R$ 1,00 por dia
+              </div>
             </div>
-            <span className="text-xs text-emerald-400 font-semibold block mt-1">
-              ✓ Menos de R$ 1,00 por dia para ter sua loja no ar
-            </span>
+
+            {/* Trimestral */}
+            <div className="bg-gradient-to-b from-[#2A2318] to-[#181614] border-2 border-[#D4AF37] rounded-3xl p-8 text-center space-y-4 relative md:transform md:scale-110 shadow-2xl z-10 flex flex-col justify-center">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#D4AF37] to-[#E5C378] text-stone-900 text-[10px] font-black uppercase tracking-wider px-4 py-1 rounded-full shadow-lg">
+                Mais Inteligente
+              </div>
+              <h3 className="text-sm font-bold text-[#E5C378] uppercase tracking-widest">Plano Trimestral</h3>
+              <div className="flex items-baseline justify-center space-x-1">
+                <span className="text-[#D4AF37]/70">R$</span>
+                <span className="text-5xl font-bold text-white">49,99</span>
+              </div>
+              <p className="text-xs text-stone-300">Equivale a apenas <strong className="text-white">R$ 16,66/mês</strong></p>
+              <div className="inline-block mt-2 text-xs text-emerald-300 font-bold bg-emerald-900/40 py-2 px-3 rounded-xl border border-emerald-800/50 shadow-inner">
+                Economia de R$ 39,98 • Só R$ 0,55/dia!
+              </div>
+            </div>
+
+            {/* Semestral */}
+            <div className="bg-[#181614] border border-[#3A3024] rounded-3xl p-6 text-center space-y-4 flex flex-col justify-center">
+              <h3 className="text-sm font-bold text-stone-400 uppercase tracking-widest">Plano Semestral</h3>
+              <div className="flex items-baseline justify-center space-x-1">
+                <span className="text-stone-500">R$</span>
+                <span className="text-4xl font-bold text-white">119,99</span>
+              </div>
+              <p className="text-xs text-stone-500">Equivale a <strong className="text-stone-300">R$ 19,99/mês</strong></p>
+              <div className="inline-block mt-2 text-[10px] text-emerald-400 font-semibold bg-emerald-950/30 py-1.5 px-3 rounded-lg border border-emerald-900/50">
+                Economia de R$ 59,95 • Só R$ 0,66/dia!
+              </div>
+            </div>
           </div>
+          
+          <p className="text-[11px] text-stone-500 max-w-lg mx-auto italic mb-10">
+            * A única diferença entre os planos é a economia brutal gerada pelos prazos maiores. Todos liberam 100% dos recursos premium da plataforma.
+          </p>
 
           {/* Included Features Checklist */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs text-left max-w-xl mx-auto">
