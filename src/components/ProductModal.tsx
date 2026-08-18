@@ -89,12 +89,24 @@ export const ProductModal: React.FC<ProductModalProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/75 backdrop-blur-xs overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto">
+        {/* Snack-fast background overlay */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 15 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.12, ease: "easeOut" }}
+          className="fixed inset-0 bg-black/70 backdrop-blur-[2px]"
+          onClick={onClose}
+        />
+
+        {/* Snappy fast content card */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98, y: 8 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="relative w-full max-w-4xl max-h-[92vh] md:max-h-[88vh] bg-brand-bg rounded-3xl border border-[#E3D7CA] shadow-2xl overflow-hidden my-auto flex flex-col"
+          exit={{ opacity: 0, scale: 0.98, y: 8 }}
+          transition={{ type: "tween", ease: "easeOut", duration: 0.12 }}
+          className="relative w-full max-w-4xl max-h-[92vh] md:max-h-[88vh] bg-brand-bg rounded-3xl border border-[#E3D7CA] shadow-2xl overflow-hidden my-auto flex flex-col z-10"
           id="product-modal-container"
         >
           {/* Top Right Actions: Share & Close buttons */}

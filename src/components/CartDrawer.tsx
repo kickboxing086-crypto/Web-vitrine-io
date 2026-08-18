@@ -269,15 +269,23 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 overflow-hidden bg-black/60 backdrop-blur-xs">
-        <div className="absolute inset-0" onClick={onClose} />
+      <div className="fixed inset-0 z-50 overflow-hidden">
+        {/* Snappy fast overlay */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.12, ease: "easeOut" }}
+          className="absolute inset-0 bg-black/60 backdrop-blur-[2px]"
+          onClick={onClose}
+        />
 
         <motion.div
           initial={{ x: '100%' }}
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
-          transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="absolute inset-y-0 right-0 max-w-full flex pl-6"
+          transition={{ type: 'tween', ease: 'easeOut', duration: 0.15 }}
+          className="absolute inset-y-0 right-0 max-w-full flex pl-6 z-10"
         >
           <div className="w-screen max-w-lg bg-brand-bg border-l border-brand-border shadow-2xl flex flex-col justify-between">
             {/* Header */}
