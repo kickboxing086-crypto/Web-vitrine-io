@@ -41,6 +41,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   if (!isOpen || !product) return null;
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isZoomOpen, setIsZoomOpen] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string>(product.sizes[0] || 'M');
   const [selectedColor, setSelectedColor] = useState<{ name: string; hex: string; imageUrl?: string }>(
     product.colors && product.colors[0] ? product.colors[0] : { name: 'Padrão', hex: '#111111' }
@@ -127,7 +128,8 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 <img
                   src={images[activeImageIndex]}
                   alt={product.name}
-                  className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                  onClick={() => setIsZoomOpen(true)}
+                  className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105 cursor-zoom-in"
                 />
 
                 {/* Badge tags */}
@@ -290,7 +292,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                     )}
 
                     <div className="flex flex-wrap gap-2">
-                      {product.sizes.map((size) => (
+                      {Array.from(new Set(product.sizes || [])).map((size) => (
                         <button
                           key={size}
                           type="button"
@@ -509,6 +511,90 @@ export const ProductModal: React.FC<ProductModalProps> = ({
           </div>
         </motion.div>
       </div>
+
+      {/* Interactive Full-Screen Lightbox Zoom Viewer */}
+      <AnimatePresence>
+        {isZoomOpen && (
+          <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-4">
+            {/* Close button */}
+            <button
+              type="button"
+              onClick={() => setIsZoomOpen(false)}
+              className="absolute top-4 right-4 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all cursor-pointer z-50"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            {/* Main Zoomed Image */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="relative max-w-full max-h-[75vh] aspect-[3/4] md:max-w-md rounded-2xl overflow-hidden bg-stone-900 border border-white/10 flex items-center justify-center shadow-2xl"
+            >
+              <img
+                src={images[activeImageIndex]}
+                alt={product.name}
+                className="w-full h-full object-contain"
+              />
+            </motion.div>
+
+            {/* Bottom Selector & Info */}
+            <div className="mt-6 text-center space-y-4 max-w-lg w-full">
+              <div>
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider">{product.name}</h3>
+                <p className="text-xs text-stone-400 mt-1">Navegue pelas fotos da peça bem de perto</p>
+              </div>
+
+              {/* Carousel Navigation */}
+              <div className="flex items-center justify-center space-x-4">
+                <button
+                  type="button"
+                  onClick={() => setActiveImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))}
+                  className="p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all cursor-pointer"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                
+                <div className="flex space-x-1.5 overflow-x-auto max-w-[200px] py-1 justify-center">
+                  {images.map((_, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setActiveImageIndex(idx)}
+                      className={`w-2.5 h-2.5 rounded-full transition-all ${
+                        activeImageIndex === idx ? 'bg-[#D4AF37] scale-125' : 'bg-white/30 hover:bg-white/60'
+                      }`}
+                    />
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))}
+                  className="p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all cursor-pointer"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Selection Action directly inside the Lightbox Zoom! */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsZoomOpen(false);
+                  }}
+                  className="px-6 py-2.5 bg-stone-100 hover:bg-white text-stone-950 rounded-xl font-bold text-xs shadow-md transition-all cursor-pointer flex items-center justify-center space-x-2 mx-auto"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Confirmar Escolha desta Peça</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
     </AnimatePresence>
   );
 };

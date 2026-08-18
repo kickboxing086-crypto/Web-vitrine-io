@@ -346,24 +346,8 @@ export default function App() {
       setOrders(updated);
       await saveOrderToDb(updatedOrder, currentClient?.id);
 
-      // If transition to cancelled, restock products
-      if (status === 'cancelled' && oldStatus !== 'cancelled') {
-        let updatedProducts = [...products];
-        for (const item of targetOrder.items) {
-          const matchIndex = updatedProducts.findIndex((p) => p.id === item.productId);
-          if (matchIndex !== -1) {
-            const p = updatedProducts[matchIndex];
-            const currentStock = p.stock !== undefined ? p.stock : 10;
-            const newStock = currentStock + item.quantity;
-            const updatedProduct = { ...p, stock: newStock };
-            updatedProducts[matchIndex] = updatedProduct;
-            await saveProductToDb(updatedProduct, currentClient?.id);
-          }
-        }
-        setProducts(updatedProducts);
-      }
-      // If transition away from cancelled, reduce stock
-      else if (oldStatus === 'cancelled' && status !== 'cancelled') {
+      // If transition to delivered (Dar Baixa), reduce stock
+      if (status === 'delivered' && oldStatus !== 'delivered') {
         let updatedProducts = [...products];
         for (const item of targetOrder.items) {
           const matchIndex = updatedProducts.findIndex((p) => p.id === item.productId);
@@ -371,6 +355,22 @@ export default function App() {
             const p = updatedProducts[matchIndex];
             const currentStock = p.stock !== undefined ? p.stock : 10;
             const newStock = Math.max(0, currentStock - item.quantity);
+            const updatedProduct = { ...p, stock: newStock };
+            updatedProducts[matchIndex] = updatedProduct;
+            await saveProductToDb(updatedProduct, currentClient?.id);
+          }
+        }
+        setProducts(updatedProducts);
+      }
+      // If transition away from delivered, restore stock
+      else if (oldStatus === 'delivered' && status !== 'delivered') {
+        let updatedProducts = [...products];
+        for (const item of targetOrder.items) {
+          const matchIndex = updatedProducts.findIndex((p) => p.id === item.productId);
+          if (matchIndex !== -1) {
+            const p = updatedProducts[matchIndex];
+            const currentStock = p.stock !== undefined ? p.stock : 10;
+            const newStock = currentStock + item.quantity;
             const updatedProduct = { ...p, stock: newStock };
             updatedProducts[matchIndex] = updatedProduct;
             await saveProductToDb(updatedProduct, currentClient?.id);
@@ -502,7 +502,7 @@ export default function App() {
     setDeleteModalState({
       isOpen: true,
       title: 'Restaurar Dados da Loja',
-      itemName: 'Todos os produtos, pedidos e lançamentos serão restaurados para o padrão no banco de dados em nuvem.',
+      itemName: 'Todos os produtos, pedidos e lançamentos serão restaurados para o padrão.',
       onConfirm: async () => {
         resetAllToDefault();
         await resetDatabaseToDefaults();
@@ -570,23 +570,6 @@ export default function App() {
     setOrders(updatedOrders);
     await saveOrderToDb(newOrder, currentClient?.id);
 
-    // Intelligent stock reduction logic on order checkout
-    let updatedProducts = [...products];
-    for (const item of newOrder.items) {
-      const matchIndex = updatedProducts.findIndex((p) => p.id === item.productId);
-      if (matchIndex !== -1) {
-        const p = updatedProducts[matchIndex];
-        const currentStock = p.stock !== undefined ? p.stock : 10;
-        const newStock = Math.max(0, currentStock - item.quantity);
-        const updatedProduct = { ...p, stock: newStock };
-        updatedProducts[matchIndex] = updatedProduct;
-        
-        // Save updated product to database
-        await saveProductToDb(updatedProduct, currentClient?.id);
-      }
-    }
-    setProducts(updatedProducts);
-
     // Also register income entry in financial dashboard
     const newFinance: FinancialRecord = {
       id: 'fin-' + Date.now(),
@@ -645,8 +628,8 @@ export default function App() {
     return b.viewsCount - a.viewsCount; // default featured
   });
 
-  const categoryNames = categories.map((c) => c.name);
-  const tagNames = tags.map((t) => t.name);
+  const categoryNames = Array.from(new Set(categories.map((c) => c.name).filter(Boolean)));
+  const tagNames = Array.from(new Set(tags.map((t) => t.name).filter(Boolean)));
 
 
   const activeStoreType = currentClient?.storeType || settings.storeType || 'clothing';

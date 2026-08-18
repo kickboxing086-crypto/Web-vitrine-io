@@ -365,7 +365,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                         : item.product.price;
                       return (
                         <div
-                          key={`${item.product.id}-${item.selectedSize}-${item.selectedColor.name}`}
+                          key={`${item.product.id}-${item.selectedSize}-${item.selectedColor.name}-${index}`}
                           className="flex items-center space-x-3.5 p-3 bg-white rounded-2xl border border-brand-border shadow-xs"
                         >
                           <img

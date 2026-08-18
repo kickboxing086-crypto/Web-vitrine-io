@@ -77,7 +77,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <img
           src={mainImage}
           alt={product.name}
-          className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
+          className="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
           loading="lazy"
         />
 
@@ -184,7 +184,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           {/* Sizes & Colors preview */}
           <div className="mt-2.5 flex items-center justify-between gap-2">
             <div className="flex items-center gap-1 flex-wrap">
-              {product.sizes?.slice(0, 4).map((s) => (
+              {Array.from(new Set(product.sizes || [])).slice(0, 4).map((s) => (
                 <span
                   key={s}
                   className="px-1.5 py-0.5 bg-brand-bg-alt border border-brand-border text-stone-700 text-[10px] font-semibold rounded"

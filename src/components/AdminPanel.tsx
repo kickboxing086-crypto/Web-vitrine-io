@@ -438,10 +438,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <span className="text-xs font-bold uppercase tracking-wider text-brand-primary-darker">
                 Painel de Gestão da Boutique
               </span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                Banco em Nuvem Ativo
-              </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-serif-luxury font-bold text-stone-900">
               Controle Geral: {settings.storeName}
@@ -1113,9 +1109,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                               {/* Tags preview */}
                               <div className="mt-1.5 flex items-center gap-1 flex-wrap">
-                                {p.tags?.map((t) => (
+                                {p.tags?.map((t, tIdx) => (
                                   <span
-                                    key={t}
+                                    key={`${t}-${tIdx}`}
                                     className="px-1.5 py-0.2 bg-[#F4ECE1] text-[#7A5734] text-[9px] font-bold rounded"
                                   >
                                     #{t}
@@ -1343,9 +1339,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                         {/* Tags preview */}
                         <div className="mt-2 flex items-center gap-1 flex-wrap">
-                          {p.tags?.map((t) => (
+                          {p.tags?.map((t, tIdx) => (
                             <span
-                              key={t}
+                              key={`${t}-${tIdx}`}
                               className="px-1.5 py-0.2 bg-[#F4ECE1] text-[#7A5734] text-[9px] font-bold rounded"
                             >
                               #{t}
@@ -1704,9 +1700,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </button>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  {productForm.sizes?.map((sz) => (
+                  {productForm.sizes?.map((sz, szIdx) => (
                     <span
-                      key={sz}
+                      key={`${sz}-${szIdx}`}
                       className="inline-flex items-center gap-1 bg-white border border-brand-border-dark text-stone-800 text-xs px-2.5 py-1 rounded-lg"
                     >
                       {sz}

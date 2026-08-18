@@ -47,20 +47,20 @@ export const generateWhatsappOrderMessage = (
 ): string => {
   const isDelivery = order.orderType === 'delivery';
 
-  let msg = `✨ *NOVO PEDIDO - ${settings.storeName.toUpperCase()}* ✨\n`;
+  let msg = `*NOVO PEDIDO - ${settings.storeName.toUpperCase()}*\n`;
   msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
-  msg += `🔖 *Pedido:* #${order.orderNumber}\n`;
-  msg += `👤 *Cliente:* ${order.customerName}\n`;
-  msg += `📱 *WhatsApp:* ${order.customerWhatsapp}\n`;
-  msg += `📦 *Modalidade:* ${isDelivery ? '🚀 Entrega no Endereço' : '🏬 Retirada na Loja'}\n`;
+  msg += `*Pedido:* #${order.orderNumber}\n`;
+  msg += `*Cliente:* ${order.customerName}\n`;
+  msg += `*WhatsApp:* ${order.customerWhatsapp}\n`;
+  msg += `*Modalidade:* ${isDelivery ? 'Entrega no Endereço' : 'Retirada na Loja'}\n`;
 
   if (isDelivery && order.deliveryAddress) {
-    msg += `📍 *Endereço:* ${order.deliveryAddress.street}, ${order.deliveryAddress.number}`;
+    msg += `*Endereço:* ${order.deliveryAddress.street}, ${order.deliveryAddress.number}`;
     if (order.deliveryAddress.complement) msg += ` (${order.deliveryAddress.complement})`;
     msg += ` - ${order.deliveryAddress.neighborhood}, ${order.deliveryAddress.city}\n`;
   }
 
-  msg += `💳 *Forma de Pagamento:* ${
+  msg += `*Forma de Pagamento:* ${
     order.paymentMethod === 'pix'
       ? 'PIX (Chave da Loja)'
       : order.paymentMethod === 'card_delivery'
@@ -73,7 +73,7 @@ export const generateWhatsappOrderMessage = (
   }\n`;
 
   msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
-  msg += `🛍️ *ITENS DO PEDIDO:*\n\n`;
+  msg += `*ITENS DO PEDIDO:*\n\n`;
 
   order.items.forEach((item, index) => {
     msg += `${index + 1}. *${item.productName}*\n`;
@@ -89,13 +89,13 @@ export const generateWhatsappOrderMessage = (
   if (order.deliveryFee > 0 && isDelivery) {
     msg += `Taxa de Entrega: +${formatCurrency(order.deliveryFee)}\n`;
   }
-  msg += `⭐ *TOTAL A PAGAR: ${formatCurrency(order.finalTotal)}*\n`;
+  msg += `*TOTAL A PAGAR: ${formatCurrency(order.finalTotal)}*\n`;
 
   if (order.customerNotes) {
-    msg += `\n📝 *Observações:* ${order.customerNotes}\n`;
+    msg += `\n*Observações:* ${order.customerNotes}\n`;
   }
 
-  msg += `\nObrigado por escolher a ${settings.storeName}! Aguardo a confirmação do pedido. ✨`;
+  msg += `\nObrigado por escolher a ${settings.storeName}! Aguardo a confirmação do pedido.`;
 
   return encodeURIComponent(msg);
 };
@@ -107,18 +107,18 @@ export const generateWhatsappDirectProductMessage = (
   color?: string,
   settings?: StoreSettings
 ): string => {
-  let msg = `Olá! 👋 Vim pela vitrine da *${settings?.storeName || 'Loja'}* e gostaria de informações/comprar a peça:\n\n`;
-  msg += `👗 *${productName}*\n`;
-  msg += `💰 Valor: *${formatCurrency(productPrice)}*\n`;
-  if (size) msg += `📏 Tamanho desejado: *${size}*\n`;
-  if (color) msg += `🎨 Cor: *${color}*\n`;
+  let msg = `Olá! Vim pela vitrine da *${settings?.storeName || 'Loja'}* e gostaria de informações/comprar a peça:\n\n`;
+  msg += `*${productName}*\n`;
+  msg += `Valor: *${formatCurrency(productPrice)}*\n`;
+  if (size) msg += `Tamanho desejado: *${size}*\n`;
+  if (color) msg += `Cor: *${color}*\n`;
   msg += `\nA peça ainda está disponível? Como posso proceder com o pagamento?`;
 
   return encodeURIComponent(msg);
 };
 
 export const generateWhatsappStoreShareMessage = (settings: StoreSettings): string => {
-  let msg = `✨ *${settings.storeName.toUpperCase()}* ✨\n`;
+  let msg = `*${settings.storeName.toUpperCase()}*\n`;
   if (settings.slogan) {
     msg += `_${settings.slogan}_\n`;
   }
@@ -127,8 +127,8 @@ export const generateWhatsappStoreShareMessage = (settings: StoreSettings): stri
     msg += `${settings.description}\n\n`;
   }
   const officialUrl = 'https://web-vitrine-net.vercel.app';
-  msg += `🛍️ *Conheça nossa Vitrine Exclusiva & Lançamentos:* \n${officialUrl}\n\n`;
-  msg += `📲 Atendimento personalizado e pedidos direto pelo WhatsApp!\n`;
-  msg += `Será um prazer vestir você com elegância e exclusividade. ✨`;
+  msg += `*Conheça nossa Vitrine Exclusiva & Lançamentos:* \n${officialUrl}\n\n`;
+  msg += `Atendimento personalizado e pedidos direto pelo WhatsApp!\n`;
+  msg += `Será um prazer vestir você com elegância e exclusividade.`;
   return encodeURIComponent(msg);
 };
