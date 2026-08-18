@@ -124,12 +124,12 @@ export const ProductModal: React.FC<ProductModalProps> = ({
             {/* Gallery Column */}
             <div className="relative bg-[#F2EDE7] flex flex-col justify-between p-4 sm:p-6 overflow-y-auto max-h-[40vh] md:max-h-full">
               {/* Main Image */}
-              <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden bg-stone-200 shadow-inner group">
+              <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden bg-white shadow-inner border border-brand-border/40 group">
                 <img
                   src={images[activeImageIndex]}
                   alt={product.name}
                   onClick={() => setIsZoomOpen(true)}
-                  className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105 cursor-zoom-in"
+                  className="w-full h-full object-contain object-center transition-transform duration-500 group-hover:scale-105 cursor-zoom-in"
                 />
 
                 {/* Badge tags */}
@@ -547,7 +547,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               </div>
 
               {/* Carousel Navigation */}
-              <div className="flex items-center justify-center space-x-4">
+              <div className="flex items-center justify-center space-x-6">
                 <button
                   type="button"
                   onClick={() => setActiveImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))}
@@ -556,18 +556,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                   <ChevronLeft className="w-5 h-5" />
                 </button>
                 
-                <div className="flex space-x-1.5 overflow-x-auto max-w-[200px] py-1 justify-center">
-                  {images.map((_, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setActiveImageIndex(idx)}
-                      className={`w-2.5 h-2.5 rounded-full transition-all ${
-                        activeImageIndex === idx ? 'bg-[#D4AF37] scale-125' : 'bg-white/30 hover:bg-white/60'
-                      }`}
-                    />
-                  ))}
-                </div>
+                <span className="text-xs font-semibold text-stone-300 tracking-wider">
+                  Foto {activeImageIndex + 1} de {images.length}
+                </span>
 
                 <button
                   type="button"
