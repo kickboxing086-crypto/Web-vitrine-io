@@ -28,6 +28,7 @@ import {
   ShieldAlert,
   ArrowRight,
   Sparkles,
+  ChevronDown,
 } from 'lucide-react';
 import { StoreClient } from '../types';
 import { getClients, saveClient, deleteClient } from '../lib/firestoreService';
@@ -52,6 +53,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
   const [deleteConfirmationInput, setDeleteConfirmationInput] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [feedbackToast, setFeedbackToast] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
+  const [isStoreTypeOpen, setIsStoreTypeOpen] = useState(false);
 
   // Form State for Adding / Editing
   const [formData, setFormData] = useState<{
@@ -1037,19 +1039,66 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                   </div>
 
                   {/* Tipo de Vitrine */}
-                  <div>
+                  <div className="relative">
                     <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
                       Segmento / Modelo da Vitrine
                     </label>
-                    <select
-                      value={formData.storeType}
-                      onChange={(e) => setFormData({ ...formData, storeType: e.target.value as any })}
-                      className="w-full px-4 py-2.5 bg-[#0B0F19] border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-amber-500 transition-colors"
-                      id="select-form-storetype"
+                    <button
+                      type="button"
+                      onClick={() => setIsStoreTypeOpen(!isStoreTypeOpen)}
+                      className="w-full px-4 py-2.5 bg-[#0B0F19] border border-slate-700 rounded-xl text-sm text-white focus:outline-none flex items-center justify-between shadow-2xs cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all text-left"
+                      id="select-form-storetype-btn"
                     >
-                      <option value="clothing">👗 Vitrine de Moda & Roupas</option>
-                      <option value="natural">🌿 Loja Verde - Produtos Naturais</option>
-                    </select>
+                      <span>
+                        {formData.storeType === 'clothing' ? '👗 Vitrine de Moda & Roupas' : '🌿 Loja Verde - Produtos Naturais'}
+                      </span>
+                      <ChevronDown className="w-4 h-4 opacity-70 shrink-0" />
+                    </button>
+
+                    <AnimatePresence>
+                      {isStoreTypeOpen && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-40"
+                            onClick={() => setIsStoreTypeOpen(false)}
+                          />
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 5 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 5 }}
+                            transition={{ duration: 0.12, ease: "easeOut" }}
+                            className="absolute left-0 right-0 top-full mt-2 bg-slate-900 border border-slate-700 shadow-xl rounded-2xl p-2 z-50 space-y-1 text-left"
+                          >
+                            {[
+                              { value: 'clothing', label: '👗 Vitrine de Moda & Roupas' },
+                              { value: 'natural', label: '🌿 Loja Verde - Produtos Naturais' }
+                            ].map((item) => {
+                              const isSelected = formData.storeType === item.value;
+                              return (
+                                <button
+                                  key={item.value}
+                                  type="button"
+                                  onClick={() => {
+                                    setFormData({ ...formData, storeType: item.value as any });
+                                    setIsStoreTypeOpen(false);
+                                  }}
+                                  className={`w-full text-left px-3 py-2 text-sm rounded-xl transition-all flex items-center justify-between cursor-pointer ${
+                                    isSelected
+                                      ? 'bg-slate-800 text-amber-500 font-bold shadow-xs'
+                                      : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
+                                  }`}
+                                >
+                                  <span>{item.label}</span>
+                                  {isSelected && (
+                                    <Check className="w-4 h-4 text-amber-500" />
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </motion.div>
+                        </>
+                      )}
+                    </AnimatePresence>
                   </div>
 
                   {/* WhatsApp do Cliente */}

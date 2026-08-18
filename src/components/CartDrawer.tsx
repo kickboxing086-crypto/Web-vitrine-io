@@ -22,6 +22,8 @@ import {
   Phone,
   Clock,
   ArrowLeft,
+  ChevronDown,
+  CheckCircle2 as Check,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'motion/react';
@@ -63,6 +65,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const [street, setStreet] = useState('');
   const [number, setNumber] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
+  const [isNeighborhoodOpen, setIsNeighborhoodOpen] = useState(false);
   const getInitialCityAndState = () => {
     const val = settings.cityState || '';
     if (val.includes('-')) {
@@ -637,28 +640,111 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                             {settings.deliveryFeeType === 'custom' &&
                             settings.customDeliveryRates &&
                             settings.customDeliveryRates.length > 0 ? (
-                              <select
-                                required
-                                value={neighborhood}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  setNeighborhood(val);
-                                  const rate = settings.customDeliveryRates?.find(r => r.neighborhood === val);
-                                  if (rate) {
-                                    if (rate.city) setCity(rate.city);
-                                    if (rate.state) setAddressState(rate.state);
-                                  }
-                                }}
-                                className="px-2.5 py-2 bg-brand-bg border border-brand-border-dark rounded-xl text-xs text-stone-900 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark"
-                              >
-                                <option value="">Selecione o Bairro *</option>
-                                {settings.customDeliveryRates.map((r) => (
-                                  <option key={r.id} value={r.neighborhood}>
-                                    {r.neighborhood} - {r.city}/{r.state || 'SP'} (R$ {r.fee.toFixed(2)})
-                                  </option>
-                                ))}
-                                <option value="Outro">Outro Bairro</option>
-                              </select>
+                              <div className="relative">
+                                <button
+                                  type="button"
+                                  onClick={() => setIsNeighborhoodOpen(!isNeighborhoodOpen)}
+                                  className="w-full px-2.5 py-2 bg-brand-bg border border-brand-border-dark rounded-xl text-xs text-stone-900 focus:outline-none flex items-center justify-between shadow-2xs cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all"
+                                  id="select-neighborhood-btn"
+                                >
+                                  <span className="truncate">
+                                    {neighborhood ? (
+                                      <>
+                                        {neighborhood}
+                                        {(() => {
+                                          const rate = settings.customDeliveryRates?.find(r => r.neighborhood === neighborhood);
+                                          return rate ? ` (R$ ${rate.fee.toFixed(2)})` : '';
+                                        })()}
+                                      </>
+                                    ) : (
+                                      'Selecione o Bairro *'
+                                    )}
+                                  </span>
+                                  <ChevronDown className="w-3.5 h-3.5 opacity-70 shrink-0" />
+                                </button>
+
+                                <AnimatePresence>
+                                  {isNeighborhoodOpen && (
+                                    <>
+                                      <div
+                                        className="fixed inset-0 z-40"
+                                        onClick={() => setIsNeighborhoodOpen(false)}
+                                      />
+                                      <motion.div
+                                        initial={{ opacity: 0, scale: 0.95, y: 5 }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.95, y: 5 }}
+                                        transition={{ duration: 0.12, ease: "easeOut" }}
+                                        className="absolute left-0 right-0 bottom-full mb-2 max-h-60 overflow-y-auto bg-stone-900 border border-brand-border-dark shadow-xl rounded-2xl p-2 z-50 space-y-1"
+                                      >
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setNeighborhood('');
+                                            setIsNeighborhoodOpen(false);
+                                          }}
+                                          className={`w-full text-left px-3 py-2 text-xs rounded-xl transition-all flex items-center justify-between cursor-pointer ${
+                                            !neighborhood
+                                              ? 'bg-stone-800 text-brand-primary font-bold shadow-xs'
+                                              : 'text-stone-300 hover:bg-stone-800/60 hover:text-white'
+                                          }`}
+                                        >
+                                          <span>Selecione o Bairro *</span>
+                                          {!neighborhood && (
+                                            <Check className="w-3.5 h-3.5 text-brand-primary" />
+                                          )}
+                                        </button>
+
+                                        {settings.customDeliveryRates.map((r) => {
+                                          const isSelected = neighborhood === r.neighborhood;
+                                          return (
+                                            <button
+                                              key={r.id}
+                                              type="button"
+                                              onClick={() => {
+                                                setNeighborhood(r.neighborhood);
+                                                if (r.city) setCity(r.city);
+                                                if (r.state) setAddressState(r.state);
+                                                setIsNeighborhoodOpen(false);
+                                              }}
+                                              className={`w-full text-left px-3 py-2 text-xs rounded-xl transition-all flex items-center justify-between cursor-pointer ${
+                                                isSelected
+                                                  ? 'bg-stone-800 text-brand-primary font-bold shadow-xs'
+                                                  : 'text-stone-300 hover:bg-stone-800/60 hover:text-white'
+                                              }`}
+                                            >
+                                              <span className="truncate">
+                                                {r.neighborhood} - {r.city}/{r.state || 'SP'} (R$ {r.fee.toFixed(2)})
+                                              </span>
+                                              {isSelected && (
+                                                <Check className="w-3.5 h-3.5 text-brand-primary" />
+                                              )}
+                                            </button>
+                                          );
+                                        })}
+
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setNeighborhood('Outro');
+                                            setIsNeighborhoodOpen(false);
+                                          }}
+                                          className={`w-full text-left px-3 py-2 text-xs rounded-xl transition-all flex items-center justify-between cursor-pointer ${
+                                            neighborhood === 'Outro'
+                                              ? 'bg-stone-800 text-brand-primary font-bold shadow-xs'
+                                              : 'text-stone-300 hover:bg-stone-800/60 hover:text-white'
+                                          }`}
+                                        >
+                                          <span>Outro Bairro</span>
+                                          {neighborhood === 'Outro' && (
+                                            <Check className="w-3.5 h-3.5 text-brand-primary" />
+                                          )}
+                                        </button>
+                                      </motion.div>
+                                    </>
+                                  )}
+                                </AnimatePresence>
+                              </div>
                             ) : (
                               <input
                                 type="text"

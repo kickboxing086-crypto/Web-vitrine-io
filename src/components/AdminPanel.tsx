@@ -157,6 +157,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [couponMaxUses, setCouponMaxUses] = useState<number>(0);
   const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
   const [activeStatusSelectorOrderId, setActiveStatusSelectorOrderId] = useState<string | null>(null);
+  const [isFinTypeOpen, setIsFinTypeOpen] = useState(false);
+  const [isProductCategoryOpen, setIsProductCategoryOpen] = useState(false);
+  const [isColorImageOpen, setIsColorImageOpen] = useState(false);
+  const [isNewTagTypeOpen, setIsNewTagTypeOpen] = useState(false);
+  const [isCouponTypeOpen, setIsCouponTypeOpen] = useState(false);
 
   // Finance Manual Entry state
   const [isAddingFinance, setIsAddingFinance] = useState(false);
@@ -795,19 +800,64 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     />
                   </div>
 
-                  <div className="flex gap-2">
-                    <select
-                      value={finType}
-                      onChange={(e) => setFinType(e.target.value as any)}
-                      className="w-full px-3 py-2 bg-white border border-brand-border-dark rounded-xl text-xs text-stone-900"
+                  <div className="flex gap-2 relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsFinTypeOpen(!isFinTypeOpen)}
+                      className="w-full px-3 py-2 bg-white border border-brand-border-dark rounded-xl text-xs text-stone-900 flex items-center justify-between shadow-2xs cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all"
                     >
-                      <option value="income">Entrada (+)</option>
-                      <option value="expense">Saída (-)</option>
-                    </select>
+                      <span>{finType === 'income' ? 'Entrada (+)' : 'Saída (-)'}</span>
+                      <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+                    </button>
+
+                    <AnimatePresence>
+                      {isFinTypeOpen && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-40"
+                            onClick={() => setIsFinTypeOpen(false)}
+                          />
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 5 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 5 }}
+                            transition={{ duration: 0.12, ease: "easeOut" }}
+                            className="absolute left-0 right-0 top-full mt-2 bg-stone-900 border border-brand-border-dark shadow-xl rounded-2xl p-2 z-50 space-y-1"
+                          >
+                            {[
+                              { value: 'income', label: 'Entrada (+)' },
+                              { value: 'expense', label: 'Saída (-)' }
+                            ].map((item) => {
+                              const isSelected = finType === item.value;
+                              return (
+                                <button
+                                  key={item.value}
+                                  type="button"
+                                  onClick={() => {
+                                    setFinType(item.value as any);
+                                    setIsFinTypeOpen(false);
+                                  }}
+                                  className={`w-full text-left px-3 py-2 text-xs rounded-xl transition-all flex items-center justify-between cursor-pointer ${
+                                    isSelected
+                                      ? 'bg-stone-800 text-brand-primary font-bold shadow-xs'
+                                      : 'text-stone-300 hover:bg-stone-800/60 hover:text-white'
+                                  }`}
+                                >
+                                  <span>{item.label}</span>
+                                  {isSelected && (
+                                    <Check className="w-3.5 h-3.5 text-brand-primary" />
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </motion.div>
+                        </>
+                      )}
+                    </AnimatePresence>
 
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-stone-900 text-white rounded-xl text-xs font-bold"
+                      className="px-4 py-2 bg-stone-900 text-white rounded-xl text-xs font-bold shrink-0"
                     >
                       Confirmar Alterações
                     </button>
@@ -1455,21 +1505,60 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
+                <div className="relative">
                   <label className="block text-xs font-semibold text-stone-700 mb-1">
                     Categoria *
                   </label>
-                  <select
-                    value={productForm.category || categories[0]?.name}
-                    onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-white border border-brand-border-dark rounded-xl text-xs text-stone-900 font-medium"
+                  <button
+                    type="button"
+                    onClick={() => setIsProductCategoryOpen(!isProductCategoryOpen)}
+                    className="w-full px-3.5 py-2.5 bg-white border border-brand-border-dark rounded-xl text-xs text-stone-900 font-medium flex items-center justify-between shadow-2xs cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all"
                   >
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.name}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
+                    <span>{productForm.category || categories[0]?.name || 'Selecione a Categoria'}</span>
+                    <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+                  </button>
+
+                  <AnimatePresence>
+                    {isProductCategoryOpen && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-40"
+                          onClick={() => setIsProductCategoryOpen(false)}
+                        />
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95, y: 5 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95, y: 5 }}
+                          transition={{ duration: 0.12, ease: "easeOut" }}
+                          className="absolute left-0 right-0 top-full mt-2 max-h-60 overflow-y-auto bg-stone-900 border border-brand-border-dark shadow-xl rounded-2xl p-2 z-50 space-y-1"
+                        >
+                          {categories.map((c) => {
+                            const isSelected = (productForm.category || categories[0]?.name) === c.name;
+                            return (
+                              <button
+                                key={c.id}
+                                type="button"
+                                onClick={() => {
+                                  setProductForm({ ...productForm, category: c.name });
+                                  setIsProductCategoryOpen(false);
+                                }}
+                                className={`w-full text-left px-3 py-2 text-xs rounded-xl transition-all flex items-center justify-between cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-stone-800 text-brand-primary font-bold shadow-xs'
+                                    : 'text-stone-300 hover:bg-stone-800/60 hover:text-white'
+                                }`}
+                              >
+                                <span>{c.name}</span>
+                                {isSelected && (
+                                  <Check className="w-3.5 h-3.5 text-brand-primary" />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 <div>
@@ -1848,23 +1937,88 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           </div>
                         </div>
 
-                        <div className="sm:col-span-1">
+                        <div className="sm:col-span-1 relative">
                           <label className="block text-[11px] font-semibold text-stone-700 mb-1">
                             Vincular Foto da Cor
                           </label>
                           {/* Choose from existing photos or paste URL */}
-                          <select
-                            value={newColorImageUrl}
-                            onChange={(e) => setNewColorImageUrl(e.target.value)}
-                            className="w-full px-2 py-1.5 bg-white border border-stone-300 rounded-lg text-xs"
+                          <button
+                            type="button"
+                            onClick={() => setIsColorImageOpen(!isColorImageOpen)}
+                            className="w-full px-2 py-1.5 bg-white border border-stone-300 rounded-lg text-xs flex items-center justify-between shadow-2xs cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all text-left font-medium text-stone-800"
                           >
-                            <option value="">(Usar foto principal)</option>
-                            {(productForm.images || []).map((img, i) => (
-                              <option key={i} value={img}>
-                                Foto {i + 1} {i === 0 ? '(Capa)' : ''}
-                              </option>
-                            ))}
-                          </select>
+                            <span>
+                              {newColorImageUrl ? (
+                                <>
+                                  Foto {((productForm.images || []).indexOf(newColorImageUrl) + 1) || 'URL'} 
+                                  {((productForm.images || []).indexOf(newColorImageUrl) === 0) ? ' (Capa)' : ''}
+                                </>
+                              ) : (
+                                '(Usar foto principal)'
+                              )}
+                            </span>
+                            <ChevronDown className="w-3.5 h-3.5 opacity-70 shrink-0" />
+                          </button>
+
+                          <AnimatePresence>
+                            {isColorImageOpen && (
+                              <>
+                                <div
+                                  className="fixed inset-0 z-40"
+                                  onClick={() => setIsColorImageOpen(false)}
+                                />
+                                <motion.div
+                                  initial={{ opacity: 0, scale: 0.95, y: 5 }}
+                                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                                  exit={{ opacity: 0, scale: 0.95, y: 5 }}
+                                  transition={{ duration: 0.12, ease: "easeOut" }}
+                                  className="absolute left-0 right-0 top-full mt-2 max-h-60 overflow-y-auto bg-stone-900 border border-brand-border-dark shadow-xl rounded-2xl p-2 z-50 space-y-1 text-left"
+                                >
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setNewColorImageUrl('');
+                                      setIsColorImageOpen(false);
+                                    }}
+                                    className={`w-full text-left px-3 py-2 text-xs rounded-xl transition-all flex items-center justify-between cursor-pointer ${
+                                      !newColorImageUrl
+                                        ? 'bg-stone-800 text-brand-primary font-bold shadow-xs'
+                                        : 'text-stone-300 hover:bg-stone-800/60 hover:text-white'
+                                    }`}
+                                  >
+                                    <span>(Usar foto principal)</span>
+                                    {!newColorImageUrl && (
+                                      <Check className="w-3.5 h-3.5 text-brand-primary" />
+                                    )}
+                                  </button>
+
+                                  {(productForm.images || []).map((img, i) => {
+                                    const isSelected = newColorImageUrl === img;
+                                    return (
+                                      <button
+                                        key={i}
+                                        type="button"
+                                        onClick={() => {
+                                          setNewColorImageUrl(img);
+                                          setIsColorImageOpen(false);
+                                        }}
+                                        className={`w-full text-left px-3 py-2 text-xs rounded-xl transition-all flex items-center justify-between cursor-pointer ${
+                                          isSelected
+                                            ? 'bg-stone-800 text-brand-primary font-bold shadow-xs'
+                                            : 'text-stone-300 hover:bg-stone-800/60 hover:text-white'
+                                        }`}
+                                      >
+                                        <span>Foto {i + 1} {i === 0 ? '(Capa)' : ''}</span>
+                                        {isSelected && (
+                                          <Check className="w-3.5 h-3.5 text-brand-primary" />
+                                        )}
+                                      </button>
+                                    );
+                                  })}
+                                </motion.div>
+                              </>
+                            )}
+                          </AnimatePresence>
                         </div>
                       </div>
 
@@ -2360,15 +2514,60 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 />
               </div>
 
-              <div>
-                <select
-                  value={newTagType}
-                  onChange={(e) => setNewTagType(e.target.value as any)}
-                  className="w-full px-3.5 py-2.5 bg-brand-bg border border-brand-border-dark rounded-xl text-xs text-stone-900 font-medium"
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsNewTagTypeOpen(!isNewTagTypeOpen)}
+                  className="w-full px-3.5 py-2.5 bg-brand-bg border border-brand-border-dark rounded-xl text-xs text-stone-900 font-medium flex items-center justify-between shadow-2xs cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all"
                 >
-                  <option value="category">Categoria do Catálogo</option>
-                  <option value="tag">Tag de Destaque / Selo</option>
-                </select>
+                  <span>{newTagType === 'category' ? 'Categoria do Catálogo' : 'Tag de Destaque / Selo'}</span>
+                  <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+                </button>
+
+                <AnimatePresence>
+                  {isNewTagTypeOpen && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setIsNewTagTypeOpen(false)}
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 5 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 5 }}
+                        transition={{ duration: 0.12, ease: "easeOut" }}
+                        className="absolute left-0 right-0 top-full mt-2 bg-stone-900 border border-brand-border-dark shadow-xl rounded-2xl p-2 z-50 space-y-1"
+                      >
+                        {[
+                          { value: 'category', label: 'Categoria do Catálogo' },
+                          { value: 'tag', label: 'Tag de Destaque / Selo' }
+                        ].map((item) => {
+                          const isSelected = newTagType === item.value;
+                          return (
+                            <button
+                              key={item.value}
+                              type="button"
+                              onClick={() => {
+                                setNewTagType(item.value as any);
+                                setIsNewTagTypeOpen(false);
+                              }}
+                              className={`w-full text-left px-3 py-2 text-xs rounded-xl transition-all flex items-center justify-between cursor-pointer ${
+                                isSelected
+                                  ? 'bg-stone-800 text-brand-primary font-bold shadow-xs'
+                                  : 'text-stone-300 hover:bg-stone-800/60 hover:text-white'
+                              }`}
+                            >
+                              <span>{item.label}</span>
+                              {isSelected && (
+                                <Check className="w-3.5 h-3.5 text-brand-primary" />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
               </div>
 
               <button
@@ -2609,16 +2808,61 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   />
                 </div>
 
-                <div>
+                <div className="relative">
                   <label className="block text-[10px] uppercase font-bold text-stone-500 mb-1">Tipo</label>
-                  <select
-                    value={couponType}
-                    onChange={(e) => setCouponType(e.target.value as any)}
-                    className="w-full px-3 py-2 bg-brand-bg border border-brand-border-dark rounded-xl text-xs font-medium text-stone-900"
+                  <button
+                    type="button"
+                    onClick={() => setIsCouponTypeOpen(!isCouponTypeOpen)}
+                    className="w-full px-3 py-2 bg-brand-bg border border-brand-border-dark rounded-xl text-xs font-medium text-stone-900 flex items-center justify-between shadow-2xs cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all text-left"
                   >
-                    <option value="percentage">Porcentagem (%)</option>
-                    <option value="fixed">Valor Fixo (R$)</option>
-                  </select>
+                    <span>{couponType === 'percentage' ? 'Porcentagem (%)' : 'Valor Fixo (R$)'}</span>
+                    <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+                  </button>
+
+                  <AnimatePresence>
+                    {isCouponTypeOpen && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-40"
+                          onClick={() => setIsCouponTypeOpen(false)}
+                        />
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95, y: 5 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95, y: 5 }}
+                          transition={{ duration: 0.12, ease: "easeOut" }}
+                          className="absolute left-0 right-0 top-full mt-2 bg-stone-900 border border-brand-border-dark shadow-xl rounded-2xl p-2 z-50 space-y-1 text-left"
+                        >
+                          {[
+                            { value: 'percentage', label: 'Porcentagem (%)' },
+                            { value: 'fixed', label: 'Valor Fixo (R$)' }
+                          ].map((item) => {
+                            const isSelected = couponType === item.value;
+                            return (
+                              <button
+                                key={item.value}
+                                type="button"
+                                onClick={() => {
+                                  setCouponType(item.value as any);
+                                  setIsCouponTypeOpen(false);
+                                }}
+                                className={`w-full text-left px-3 py-2 text-xs rounded-xl transition-all flex items-center justify-between cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-stone-800 text-brand-primary font-bold shadow-xs'
+                                    : 'text-stone-300 hover:bg-stone-800/60 hover:text-white'
+                                }`}
+                              >
+                                <span>{item.label}</span>
+                                {isSelected && (
+                                  <Check className="w-3.5 h-3.5 text-brand-primary" />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 <div>

@@ -62,7 +62,7 @@ import { LandingPage } from './components/LandingPage';
 import { LandingHeroModal } from './components/LandingHeroModal';
 import { StoreHoursModal } from './components/StoreHoursModal';
 import { ShareProductModal } from './components/ShareProductModal';
-import { SlidersHorizontal, AlertCircle, Tag as TagIcon, ShoppingBag, ArrowLeft, MessageCircle } from 'lucide-react';
+import { SlidersHorizontal, AlertCircle, Tag as TagIcon, ShoppingBag, ArrowLeft, MessageCircle, ChevronDown, Check } from 'lucide-react';
 import { getFontFamilyCss } from './lib/themeUtils';
 import { formatCurrency } from './lib/formatters';
 import { motion, AnimatePresence } from 'motion/react';
@@ -131,6 +131,7 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedTag, setSelectedTag] = useState('all');
   const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc' | 'newest'>('featured');
+  const [isSortOpen, setIsSortOpen] = useState(false);
 
   // Interactive Modals / Drawers
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -766,20 +767,70 @@ export default function App() {
               </div>
 
               {/* Sort selector */}
-              <div className="flex items-center space-x-2 self-start sm:self-auto">
+              <div className="flex items-center space-x-2 self-start sm:self-auto relative">
                 <SlidersHorizontal className="w-3.5 h-3.5 text-stone-400" />
                 <span className="text-xs font-semibold text-stone-600">Ordenar por:</span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
-                  className="bg-white border border-brand-border-dark rounded-xl px-3 py-1.5 text-xs font-medium text-stone-800 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark shadow-2xs cursor-pointer"
-                  id="select-sort-vitrine"
+                <button
+                  type="button"
+                  onClick={() => setIsSortOpen(!isSortOpen)}
+                  className="bg-white border border-brand-border-dark rounded-xl px-3 py-1.5 text-xs font-medium text-stone-800 focus:outline-none flex items-center gap-1.5 shadow-2xs cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all"
+                  id="select-sort-vitrine-btn"
                 >
-                  <option value="featured">Mais Procurados / Destaques</option>
-                  <option value="price-asc">Menor Preço</option>
-                  <option value="price-desc">Maior Preço</option>
-                  <option value="newest">Lançamentos Recentes</option>
-                </select>
+                  <span>
+                    {sortBy === 'featured' && 'Mais Procurados / Destaques'}
+                    {sortBy === 'price-asc' && 'Menor Preço'}
+                    {sortBy === 'price-desc' && 'Maior Preço'}
+                    {sortBy === 'newest' && 'Lançamentos Recentes'}
+                  </span>
+                  <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+                </button>
+
+                <AnimatePresence>
+                  {isSortOpen && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setIsSortOpen(false)}
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 5 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 5 }}
+                        transition={{ duration: 0.12, ease: "easeOut" }}
+                        className="absolute right-0 top-full mt-2 w-64 bg-stone-900 border border-brand-border-dark shadow-xl rounded-2xl p-2 z-50 space-y-1"
+                      >
+                        {[
+                          { value: 'featured', label: 'Mais Procurados / Destaques' },
+                          { value: 'price-asc', label: 'Menor Preço' },
+                          { value: 'price-desc', label: 'Maior Preço' },
+                          { value: 'newest', label: 'Lançamentos Recentes' }
+                        ].map((item) => {
+                          const isSelected = sortBy === item.value;
+                          return (
+                            <button
+                              key={item.value}
+                              type="button"
+                              onClick={() => {
+                                setSortBy(item.value as any);
+                                setIsSortOpen(false);
+                              }}
+                              className={`w-full text-left px-3 py-2 text-xs rounded-xl transition-all flex items-center justify-between cursor-pointer ${
+                                isSelected
+                                  ? 'bg-stone-800 text-brand-primary font-bold shadow-xs'
+                                  : 'text-stone-300 hover:bg-stone-800/60 hover:text-white'
+                              }`}
+                            >
+                              <span>{item.label}</span>
+                              {isSelected && (
+                                <Check className="w-3.5 h-3.5 text-brand-primary" />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
 
