@@ -82,7 +82,32 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       return;
     }
 
-    // Test Client video recording bypass
+    // Authenticate actual client first to ensure custom database configurations are respected
+    const client = await authenticateClient(cleanUser, cleanPass);
+    
+    // Check fallback for original adminUser config if client not found
+    const isFallbackAdmin = cleanUser === adminUser.username && cleanPass === adminUser.password;
+
+    if (client || isFallbackAdmin) {
+      setIsSuccess(true);
+      setIsLoading(false);
+      setTimeout(() => {
+        onLoginSuccess('store_admin', client || {
+          id: 'admin-fallback',
+          name: settings.storeName || 'Sua Vitrine',
+          username: adminUser.username,
+          password: adminUser.password,
+          storeType: settings.storeType || 'clothing'
+        });
+        setIsSuccess(false);
+        setUsername('');
+        setPassword('');
+        onClose();
+      }, 600);
+      return;
+    }
+
+    // Fallback Test Client bypass only if no matching client is found in the database
     if (cleanUser === 'Teste@123' && cleanPass === '01020304') {
       setIsSuccess(true);
       setIsLoading(false);
@@ -102,26 +127,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       return;
     }
 
-    // Authenticate actual client
-    const client = await authenticateClient(cleanUser, cleanPass);
-    
-    // Check fallback for original adminUser config if client not found
-    const isFallbackAdmin = cleanUser === adminUser.username && cleanPass === adminUser.password;
-
-    if (client || isFallbackAdmin) {
-      setIsSuccess(true);
-      setIsLoading(false);
-      setTimeout(() => {
-        onLoginSuccess('store_admin', client);
-        setIsSuccess(false);
-        setUsername('');
-        setPassword('');
-        onClose();
-      }, 600);
-    } else {
-      setIsLoading(false);
-      setErrorMessage('Usuário ou senha incorretos. Verifique os dados digitados.');
-    }
+    setIsLoading(false);
+    setErrorMessage('Usuário ou senha incorretos. Verifique os dados digitados.');
   };
 
   const handleFillCredentials = () => {
