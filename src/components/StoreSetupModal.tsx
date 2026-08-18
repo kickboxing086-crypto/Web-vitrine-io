@@ -522,7 +522,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                             className="flex items-center justify-between p-2 bg-brand-bg border border-stone-200 rounded-xl text-xs"
                           >
                             <span className="font-semibold text-stone-800">
-                              {rate.neighborhood} ({rate.city})
+                              {rate.neighborhood} ({rate.city} - {rate.state || 'SP'})
                             </span>
                             <div className="flex items-center space-x-2">
                               <span className="font-bold text-brand-primary-darker">
@@ -549,7 +549,14 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                       </div>
 
                       {/* Form to add rate */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-stone-100">
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-2 border-t border-stone-100">
+                        <input
+                          type="text"
+                          placeholder="UF (ex: SP)"
+                          id="input-rate-state"
+                          maxLength={2}
+                          className="px-2.5 py-1.5 bg-brand-bg border border-stone-300 rounded-lg text-xs uppercase"
+                        />
                         <input
                           type="text"
                           placeholder="Cidade (ex: São Paulo)"
@@ -573,13 +580,15 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                           <button
                             type="button"
                             onClick={() => {
+                              const stateInput = (document.getElementById('input-rate-state') as HTMLInputElement)?.value.toUpperCase();
                               const cityInput = (document.getElementById('input-rate-city') as HTMLInputElement)?.value;
                               const neighInput = (document.getElementById('input-rate-neighborhood') as HTMLInputElement)?.value;
                               const feeInput = parseFloat((document.getElementById('input-rate-fee') as HTMLInputElement)?.value || '0');
                               if (neighInput && feeInput >= 0) {
                                 const newRate = {
                                   id: 'rate-' + Date.now(),
-                                  city: cityInput || formData.cityState || 'Sua Cidade',
+                                  state: stateInput || formData.cityState || 'SP',
+                                  city: cityInput || 'Sua Cidade',
                                   neighborhood: neighInput,
                                   fee: feeInput,
                                 };
@@ -587,6 +596,9 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                                   ...formData,
                                   customDeliveryRates: [...(formData.customDeliveryRates || []), newRate],
                                 });
+                                if (document.getElementById('input-rate-state')) {
+                                  (document.getElementById('input-rate-state') as HTMLInputElement).value = '';
+                                }
                                 (document.getElementById('input-rate-city') as HTMLInputElement).value = '';
                                 (document.getElementById('input-rate-neighborhood') as HTMLInputElement).value = '';
                                 (document.getElementById('input-rate-fee') as HTMLInputElement).value = '';
@@ -897,7 +909,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                       };
 
                       return (
-                        <label
+                        <div
                           key={day.dayIndex}
                           onClick={handleToggle}
                           className={`p-2.5 rounded-xl border flex flex-col items-center justify-center space-y-1.5 cursor-pointer select-none transition-all ${
@@ -910,7 +922,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                             <input
                               type="checkbox"
                               checked={isChecked}
-                              onChange={() => {}} // Controlled by label click
+                              onChange={() => {}} // Controlled by click handler
                               className="w-3.5 h-3.5 rounded accent-stone-900 cursor-pointer pointer-events-none"
                             />
                             <span className="font-bold text-xs">{day.shortName}</span>
@@ -922,7 +934,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                           >
                             {day.fullName.replace('-feira', '')}
                           </span>
-                        </label>
+                        </div>
                       );
                     })}
                   </div>

@@ -347,36 +347,53 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 )}
 
                 {/* Quantity */}
-                <div className="pt-2 flex items-center justify-between">
-                  <span className="text-xs font-bold text-stone-800 uppercase tracking-wider">
-                    Quantidade
-                  </span>
-                  <div className="flex items-center border border-brand-border-dark rounded-xl bg-brand-bg-alt">
-                    <button
-                      type="button"
-                      onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                      className="px-3 py-1.5 text-stone-600 hover:text-stone-900 font-bold"
-                    >
-                      -
-                    </button>
-                    <span className="px-3 text-xs font-bold text-stone-900 min-w-[28px] text-center">
-                      {quantity}
+                {/* Quantity */}
+                {product.stock > 0 ? (
+                  <div className="pt-2 flex items-center justify-between">
+                    <span className="text-xs font-bold text-stone-800 uppercase tracking-wider">
+                      Quantidade
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => setQuantity((q) => q + 1)}
-                      className="px-3 py-1.5 text-stone-600 hover:text-stone-900 font-bold"
-                    >
-                      +
-                    </button>
+                    <div className="flex items-center border border-brand-border-dark rounded-xl bg-brand-bg-alt">
+                      <button
+                        type="button"
+                        onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                        className="px-3 py-1.5 text-stone-600 hover:text-stone-900 font-bold"
+                      >
+                        -
+                      </button>
+                      <span className="px-3 text-xs font-bold text-stone-900 min-w-[28px] text-center">
+                        {quantity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setQuantity((q) => {
+                          const maxStock = product.stock || 1;
+                          return q >= maxStock ? maxStock : q + 1;
+                        })}
+                        className="px-3 py-1.5 text-stone-600 hover:text-stone-900 font-bold"
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="pt-2 flex items-center justify-between text-stone-400">
+                    <span className="text-xs font-bold uppercase tracking-wider">
+                      Quantidade
+                    </span>
+                    <span className="text-xs font-bold italic">Sem estoque</span>
+                  </div>
+                )}
 
                 {/* Stock info */}
-                <div className="flex items-center space-x-2 text-xs text-stone-500 pt-1">
+                <div className="flex items-center space-x-2 text-xs pt-1">
                   <Tag className="w-3.5 h-3.5 text-brand-primary-dark" />
-                  <span>
-                    {product.stock > 0 ? `${product.stock} peças disponíveis no estoque` : 'Disponível sob encomenda'}
+                  <span className={product.stock === 0 ? "text-red-600 font-bold" : product.stock <= 3 ? "text-amber-600 font-bold" : "text-stone-500"}>
+                    {product.stock === 0
+                      ? 'Produto esgotado (Sem estoque disponível)'
+                      : product.stock <= 3
+                      ? `Últimas peças! Apenas ${product.stock} unidades disponíveis`
+                      : `${product.stock} peças disponíveis no estoque`}
                   </span>
                 </div>
 
@@ -442,17 +459,22 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                   {/* Add to Bag or Go to Cart */}
                   <button
                     type="button"
+                    disabled={product.stock === 0}
                     onClick={handleAddBag}
-                    className={`w-full flex items-center justify-center space-x-2 py-3 rounded-xl font-bold text-xs transition-all shadow-md cursor-pointer ${
-                      addedAnimation
-                        ? 'bg-emerald-700 hover:bg-emerald-800 text-white shadow-emerald-700/20'
-                        : 'bg-stone-900 hover:bg-stone-800 text-white shadow-stone-900/15'
+                    className={`w-full flex items-center justify-center space-x-2 py-3 rounded-xl font-bold text-xs transition-all shadow-md ${
+                      product.stock === 0
+                        ? 'bg-stone-200 text-stone-400 cursor-not-allowed border border-stone-300'
+                        : addedAnimation
+                        ? 'bg-emerald-700 hover:bg-emerald-800 text-white shadow-emerald-700/20 cursor-pointer'
+                        : 'bg-stone-900 hover:bg-stone-800 text-white shadow-stone-900/15 cursor-pointer'
                     }`}
                     id="btn-fixed-add-to-bag-modal"
                   >
                     <ShoppingBag className="w-4 h-4 text-brand-primary" />
                     <span>
-                      {addedAnimation
+                      {product.stock === 0
+                        ? 'Indisponível (Sem Estoque)'
+                        : addedAnimation
                         ? `Adicionar Mais (${quantity}) • ${formatCurrency(currentPrice * quantity)}`
                         : `Adicionar à Sacola • ${formatCurrency(currentPrice * quantity)}`}
                     </span>

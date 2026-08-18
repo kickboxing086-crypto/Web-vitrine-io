@@ -32,7 +32,7 @@ export const LandingHeroModal: React.FC<LandingHeroModalProps> = ({
   if (!isOpen) return null;
 
   const handleAcquireWhatsapp = () => {
-    const phone = '5584986113980';
+    const phone = '5511999999999';
     const message = encodeURIComponent('Olá! Gostaria de adquirir o sistema da Web Vitrine por R$ 29,99/mês.');
     window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
   };

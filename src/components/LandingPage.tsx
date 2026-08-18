@@ -43,7 +43,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onAdminLogin,
 }) => {
   // Support official WhatsApp
-  const officialPhone = '5584986113980';
+  const officialPhone = '5511999999999';
   const whatsappBuyMessage = encodeURIComponent(
     'Olá! Quero adquirir a Web Vitrine para minha loja pelo plano de R$ 29,99/mês. Como funciona para ativar meu acesso?'
   );

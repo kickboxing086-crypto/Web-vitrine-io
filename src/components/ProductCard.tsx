@@ -81,6 +81,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           loading="lazy"
         />
 
+        {/* Esgotado Overlay */}
+        {(product.stock === 0 || product.stock === undefined) && (
+          <div className="absolute inset-0 bg-white/60 backdrop-blur-3xs flex items-center justify-center z-10">
+            <span className="px-4 py-2 bg-red-600 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg border border-red-500">
+              Sem Estoque
+            </span>
+          </div>
+        )}
+
         {/* Gradient overlay on bottom */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
@@ -258,12 +267,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
             <button
               type="button"
+              disabled={product.stock === 0}
               onClick={(e) => {
                 e.stopPropagation();
-                onQuickAddToCart(product);
+                if (product.stock > 0) {
+                  onQuickAddToCart(product);
+                }
               }}
-              className="p-2.5 bg-stone-100 hover:bg-stone-900 text-stone-700 hover:text-white rounded-xl transition-all cursor-pointer"
-              title="Adicionar à Sacola"
+              className={`p-2.5 rounded-xl transition-all ${
+                product.stock === 0
+                  ? 'bg-stone-100 text-stone-300 cursor-not-allowed border border-stone-200/50'
+                  : 'bg-stone-100 hover:bg-stone-900 text-stone-700 hover:text-white cursor-pointer'
+              }`}
+              title={product.stock === 0 ? 'Produto temporariamente sem estoque' : 'Adicionar à Sacola'}
             >
               <ShoppingBag className="w-4 h-4" />
             </button>

@@ -51,6 +51,7 @@ import {
   Layers,
   ArrowLeft,
   ArrowRight,
+  Sliders,
   Tag as TagIcon,
 } from 'lucide-react';
 import {
@@ -118,8 +119,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   onShareProduct,
 }) => {
   const [activeTab, setActiveTab] = useState<
-    'dashboard' | 'products' | 'orders' | 'tags' | 'coupons' | 'settings'
+    'dashboard' | 'products' | 'orders' | 'tags' | 'coupons' | 'settings' | 'stock'
   >('dashboard');
+
+  // Intelligent Stock Control states
+  const [stockSearchQuery, setStockSearchQuery] = useState('');
+  const [stockFilterMode, setStockFilterMode] = useState<'all' | 'empty' | 'low' | 'healthy'>('all');
 
   // Product Search & Tag Organization states
   const [productSearchQuery, setProductSearchQuery] = useState('');
@@ -517,6 +522,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         {[
           { id: 'dashboard', label: 'Controlador Financeiro & Dashboard', icon: DollarSign },
           { id: 'products', label: `Catálogo de Peças (${products.length})`, icon: Package },
+          { id: 'stock', label: 'Estoque Inteligente', icon: Sliders },
           { id: 'orders', label: `Pedidos Recebidos (${orders.length})`, icon: ShoppingBag },
           { id: 'tags', label: 'Tags & Categorias', icon: Tags },
           { id: 'coupons', label: `Cupons & Ofertas (${coupons.length})`, icon: TicketPercent },
@@ -2617,6 +2623,281 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Restaurar Padrão</span>
             </button>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'stock' && (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="font-serif-luxury text-xl font-bold text-stone-900 flex items-center gap-2">
+                <Sliders className="w-5 h-5 text-brand-primary" />
+                Controle de Estoque Inteligente
+              </h2>
+              <p className="text-xs text-stone-500">
+                Acompanhe os níveis de estoque em tempo real, ajuste quantidades instantaneamente e previna vendas sem estoque na sua vitrine.
+              </p>
+            </div>
+          </div>
+
+          {/* KPI Stock Overview Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Total items in stock */}
+            <div className="p-4 bg-white rounded-2xl border border-brand-border shadow-xs">
+              <span className="text-[10px] uppercase font-extrabold text-stone-400 block tracking-wider">Peças Totais no Estoque</span>
+              <div className="flex items-baseline space-x-1.5 mt-1">
+                <span className="text-2xl font-bold text-stone-900">
+                  {products.reduce((acc, p) => acc + (p.stock || 0), 0)}
+                </span>
+                <span className="text-xs text-stone-500 font-semibold">unidades</span>
+              </div>
+            </div>
+
+            {/* Total value of stock */}
+            <div className="p-4 bg-white rounded-2xl border border-brand-border shadow-xs">
+              <span className="text-[10px] uppercase font-extrabold text-stone-400 block tracking-wider">Valor Estimado do Estoque</span>
+              <div className="flex items-baseline space-x-1.5 mt-1">
+                <span className="text-2xl font-bold text-stone-900">
+                  {formatCurrency(products.reduce((acc, p) => acc + ((p.stock || 0) * (p.promotionalPrice && p.isOnSale ? p.promotionalPrice : p.price)), 0))}
+                </span>
+              </div>
+            </div>
+
+            {/* Esgotados */}
+            <div className="p-4 bg-white rounded-2xl border border-brand-border shadow-xs">
+              <span className="text-[10px] uppercase font-extrabold text-stone-400 block tracking-wider">Produtos Esgotados</span>
+              <div className="flex items-center space-x-2 mt-1">
+                <span className="text-2xl font-bold text-red-600">
+                  {products.filter((p) => (p.stock || 0) === 0).length}
+                </span>
+                {products.filter((p) => (p.stock || 0) === 0).length > 0 && (
+                  <span className="px-2 py-0.5 bg-red-50 text-red-700 text-[10px] font-bold rounded-md">Reabastecer urgente</span>
+                )}
+              </div>
+            </div>
+
+            {/* Estoque Crítico */}
+            <div className="p-4 bg-white rounded-2xl border border-brand-border shadow-xs">
+              <span className="text-[10px] uppercase font-extrabold text-stone-400 block tracking-wider">Estoque Crítico (≤ 3 un.)</span>
+              <div className="flex items-center space-x-2 mt-1">
+                <span className="text-2xl font-bold text-amber-600">
+                  {products.filter((p) => (p.stock || 0) > 0 && (p.stock || 0) <= 3).length}
+                </span>
+                {products.filter((p) => (p.stock || 0) > 0 && (p.stock || 0) <= 3).length > 0 && (
+                  <span className="px-2 py-0.5 bg-amber-50 text-amber-700 text-[10px] font-bold rounded-md">Nível baixo</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Filter and Search Bar */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-brand-border shadow-xs">
+            {/* Search */}
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-stone-400" />
+              <input
+                type="text"
+                placeholder="Pesquisar produto ou categoria no estoque..."
+                value={stockSearchQuery}
+                onChange={(e) => setStockSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 bg-brand-bg border border-brand-border-dark rounded-xl text-xs text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-primary"
+              />
+            </div>
+
+            {/* Quick Filter tabs */}
+            <div className="flex items-center space-x-1 overflow-x-auto no-scrollbar">
+              {[
+                { id: 'all', label: 'Todos os Itens' },
+                { id: 'empty', label: 'Sem Estoque (Esgotados)' },
+                { id: 'low', label: 'Estoque Crítico (≤ 3)' },
+                { id: 'healthy', label: 'Estoque Saudável (> 3)' },
+              ].map((filt) => (
+                <button
+                  key={filt.id}
+                  onClick={() => setStockFilterMode(filt.id as any)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap cursor-pointer ${
+                    stockFilterMode === filt.id
+                      ? 'bg-stone-900 text-white shadow-3xs'
+                      : 'bg-brand-bg text-stone-600 hover:text-stone-900'
+                  }`}
+                >
+                  {filt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Stock Table List */}
+          <div className="bg-white border border-brand-border rounded-2xl shadow-xs overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-stone-50 border-b border-stone-200 text-[10px] uppercase font-bold text-stone-500 tracking-wider">
+                    <th className="py-3 px-4">Produto</th>
+                    <th className="py-3 px-4">Categoria</th>
+                    <th className="py-3 px-4">Preço</th>
+                    <th className="py-3 px-4">Disponibilidade</th>
+                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4 text-center w-48">Ajuste de Estoque</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-stone-100">
+                  {products
+                    .filter((p) => {
+                      const matchSearch = p.name.toLowerCase().includes(stockSearchQuery.toLowerCase()) || 
+                                          p.category.toLowerCase().includes(stockSearchQuery.toLowerCase());
+                      if (!matchSearch) return false;
+
+                      const qty = p.stock || 0;
+                      if (stockFilterMode === 'empty') return qty === 0;
+                      if (stockFilterMode === 'low') return qty > 0 && qty <= 3;
+                      if (stockFilterMode === 'healthy') return qty > 3;
+                      return true;
+                    })
+                    .map((prod) => {
+                      const currentQty = prod.stock || 0;
+                      let statusBadge = (
+                        <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-100">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                          <span>Esgotado</span>
+                        </span>
+                      );
+                      if (currentQty > 0 && currentQty <= 3) {
+                        statusBadge = (
+                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                            <span>Crítico ({currentQty} un.)</span>
+                          </span>
+                        );
+                      } else if (currentQty > 3) {
+                        statusBadge = (
+                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                            <span>Saudável ({currentQty} un.)</span>
+                          </span>
+                        );
+                      }
+
+                      const handleUpdateStock = (newQty: number) => {
+                        const validatedQty = Math.max(0, newQty);
+                        onSaveProduct({
+                          ...prod,
+                          stock: validatedQty,
+                        });
+                      };
+
+                      return (
+                        <tr key={prod.id} className="hover:bg-stone-50/50 transition-colors">
+                          {/* Name & Avatar */}
+                          <td className="py-3 px-4">
+                            <div className="flex items-center space-x-3">
+                              <img
+                                src={prod.images[0] || 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=200'}
+                                alt={prod.name}
+                                className="w-10 h-10 object-cover rounded-xl border border-stone-200"
+                                referrerPolicy="no-referrer"
+                              />
+                              <div>
+                                <span className="font-semibold text-xs text-stone-900 block max-w-[200px] truncate">{prod.name}</span>
+                                <span className="text-[10px] text-stone-400 block">ID: {prod.id}</span>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Category */}
+                          <td className="py-3 px-4">
+                            <span className="text-xs text-stone-600">{prod.category}</span>
+                          </td>
+
+                          {/* Price */}
+                          <td className="py-3 px-4">
+                            <span className="font-bold text-xs text-stone-900">
+                              {formatCurrency(prod.promotionalPrice && prod.isOnSale ? prod.promotionalPrice : prod.price)}
+                            </span>
+                          </td>
+
+                          {/* Available Toggle */}
+                          <td className="py-3 px-4">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onSaveProduct({
+                                  ...prod,
+                                  isAvailable: !prod.isAvailable,
+                                });
+                              }}
+                              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors cursor-pointer ${
+                                prod.isAvailable
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : 'bg-stone-100 text-stone-600'
+                              }`}
+                            >
+                              {prod.isAvailable ? 'Disponível na Vitrine' : 'Pausado / Oculto'}
+                            </button>
+                          </td>
+
+                          {/* Status */}
+                          <td className="py-3 px-4">{statusBadge}</td>
+
+                          {/* Adjust Stock Counter */}
+                          <td className="py-3 px-4">
+                            <div className="flex items-center justify-center space-x-2">
+                              {/* Minus Button */}
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateStock(currentQty - 1)}
+                                className="w-7 h-7 bg-stone-100 hover:bg-stone-200 active:bg-stone-300 text-stone-700 rounded-lg flex items-center justify-center text-sm font-bold transition-all cursor-pointer select-none"
+                              >
+                                -
+                              </button>
+
+                              {/* Stock input value */}
+                              <input
+                                type="number"
+                                min="0"
+                                value={currentQty}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value);
+                                  if (!isNaN(val)) {
+                                    handleUpdateStock(val);
+                                  }
+                                }}
+                                className="w-16 py-1 bg-brand-bg border border-brand-border-dark rounded-lg text-center text-xs font-bold text-stone-900"
+                              />
+
+                              {/* Plus Button */}
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateStock(currentQty + 1)}
+                                className="w-7 h-7 bg-stone-900 hover:bg-stone-800 active:bg-black text-white rounded-lg flex items-center justify-center text-sm font-bold transition-all cursor-pointer select-none"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+
+              {products.filter((p) => {
+                const matchSearch = p.name.toLowerCase().includes(stockSearchQuery.toLowerCase()) || 
+                                    p.category.toLowerCase().includes(stockSearchQuery.toLowerCase());
+                if (!matchSearch) return false;
+
+                const qty = p.stock || 0;
+                if (stockFilterMode === 'empty') return qty === 0;
+                if (stockFilterMode === 'low') return qty > 0 && qty <= 3;
+                if (stockFilterMode === 'healthy') return qty > 3;
+                return true;
+              }).length === 0 && (
+                <div className="p-8 text-center text-xs text-stone-400 italic">
+                  Nenhum produto correspondente aos filtros de estoque ativos foi encontrado.
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

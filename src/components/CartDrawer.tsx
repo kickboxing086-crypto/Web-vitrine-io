@@ -63,7 +63,21 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const [street, setStreet] = useState('');
   const [number, setNumber] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
-  const [city, setCity] = useState(settings.cityState || '');
+  const getInitialCityAndState = () => {
+    const val = settings.cityState || '';
+    if (val.includes('-')) {
+      const parts = val.split('-');
+      return { city: parts[0].trim(), state: parts[1]?.trim() || '' };
+    }
+    if (val.length === 2) {
+      return { city: '', state: val.toUpperCase() };
+    }
+    return { city: val, state: '' };
+  };
+  const initialAddr = getInitialCityAndState();
+
+  const [city, setCity] = useState(initialAddr.city);
+  const [addressState, setAddressState] = useState(initialAddr.state);
   const [complement, setComplement] = useState('');
   const [customerNotes, setCustomerNotes] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'card_delivery' | 'card_pickup' | 'cash' | 'other' | 'pix'>(
@@ -81,7 +95,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         if (!data.erro) {
           if (data.logradouro) setStreet(data.logradouro);
           if (data.bairro) setNeighborhood(data.bairro);
-          if (data.localidade) setCity(`${data.localidade} - ${data.uf}`);
+          if (data.localidade) setCity(data.localidade);
+          if (data.uf) setAddressState(data.uf);
         }
       } catch (err) {
         console.error('Erro ao buscar CEP:', err);
@@ -127,10 +142,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       settings.customDeliveryRates &&
       settings.customDeliveryRates.length > 0
     ) {
-      const matchedRate = settings.customDeliveryRates.find(
-        (r) =>
-          (neighborhood && r.neighborhood.toLowerCase().trim() === neighborhood.toLowerCase().trim()) ||
-          (city && r.city.toLowerCase().trim() === city.toLowerCase().trim())
+      const matchedRate = settings.customDeliveryRates.find((r) => {
+        const matchNeigh = neighborhood && r.neighborhood.toLowerCase().trim() === neighborhood.toLowerCase().trim();
+        const matchCity = !city || !r.city || r.city.toLowerCase().trim() === city.toLowerCase().trim();
+        const matchState = !addressState || !r.state || r.state.toLowerCase().trim() === addressState.toLowerCase().trim();
+        return matchNeigh && matchCity && matchState;
+      }) || settings.customDeliveryRates.find((r) => 
+        neighborhood && r.neighborhood.toLowerCase().trim() === neighborhood.toLowerCase().trim()
       );
       deliveryFee = matchedRate ? matchedRate.fee : settings.deliveryFee || 0;
     } else {
@@ -206,7 +224,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             street: street.trim(),
             number: number.trim(),
             neighborhood: neighborhood.trim(),
-            city: city.trim(),
+            city: addressState ? `${city.trim()} - ${addressState.trim()}` : city.trim(),
             complement: complement.trim(),
           }
         : undefined,
@@ -601,20 +619,28 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                             />
                           </div>
 
-                          <div className="grid grid-cols-2 gap-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                             {settings.deliveryFeeType === 'custom' &&
                             settings.customDeliveryRates &&
                             settings.customDeliveryRates.length > 0 ? (
                               <select
                                 required
                                 value={neighborhood}
-                                onChange={(e) => setNeighborhood(e.target.value)}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setNeighborhood(val);
+                                  const rate = settings.customDeliveryRates?.find(r => r.neighborhood === val);
+                                  if (rate) {
+                                    if (rate.city) setCity(rate.city);
+                                    if (rate.state) setAddressState(rate.state);
+                                  }
+                                }}
                                 className="px-2.5 py-2 bg-brand-bg border border-brand-border-dark rounded-xl text-xs text-stone-900 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark"
                               >
                                 <option value="">Selecione o Bairro *</option>
                                 {settings.customDeliveryRates.map((r) => (
                                   <option key={r.id} value={r.neighborhood}>
-                                    {r.neighborhood} (R$ {r.fee.toFixed(2)})
+                                    {r.neighborhood} - {r.city}/{r.state || 'SP'} (R$ {r.fee.toFixed(2)})
                                   </option>
                                 ))}
                                 <option value="Outro">Outro Bairro</option>
@@ -632,10 +658,31 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
                             <input
                               type="text"
+                              required
+                              value={city}
+                              onChange={(e) => setCity(e.target.value)}
+                              placeholder="Cidade *"
+                              className="px-3 py-2 bg-brand-bg border border-brand-border-dark rounded-xl text-xs text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark"
+                            />
+
+                            <input
+                              type="text"
+                              required
+                              maxLength={2}
+                              value={addressState}
+                              onChange={(e) => setAddressState(e.target.value.toUpperCase())}
+                              placeholder="Estado (UF) *"
+                              className="px-3 py-2 bg-brand-bg border border-brand-border-dark rounded-xl text-xs text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark uppercase"
+                            />
+                          </div>
+
+                          <div>
+                            <input
+                              type="text"
                               value={complement}
                               onChange={(e) => setComplement(e.target.value)}
                               placeholder="Complemento / Apto"
-                              className="px-3 py-2 bg-brand-bg border border-brand-border-dark rounded-xl text-xs text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark"
+                              className="w-full px-3 py-2 bg-brand-bg border border-brand-border-dark rounded-xl text-xs text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark"
                             />
                           </div>
                         </div>

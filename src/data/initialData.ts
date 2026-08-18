@@ -15,7 +15,7 @@ export const initialStoreSettings: StoreSettings = {
   description: 'Catálogo de moda exclusivo com tecidos nobres, alta costura e atendimento personalizado via WhatsApp.',
   logoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
   bannerUrl: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1600&auto=format&fit=crop&q=80',
-  phoneWhatsapp: '5584986113980',
+  phoneWhatsapp: '5511999999999',
   instagramHandle: 'webvitrine_oficial',
   facebookUrl: '',
   address: 'Centro',

@@ -340,10 +340,44 @@ export default function App() {
   const handleUpdateOrderStatus = async (orderId: string, status: OrderStatus) => {
     const targetOrder = orders.find((o) => o.id === orderId);
     if (targetOrder) {
+      const oldStatus = targetOrder.status;
       const updatedOrder: Order = { ...targetOrder, status };
       const updated = orders.map((o) => (o.id === orderId ? updatedOrder : o));
       setOrders(updated);
       await saveOrderToDb(updatedOrder, currentClient?.id);
+
+      // If transition to cancelled, restock products
+      if (status === 'cancelled' && oldStatus !== 'cancelled') {
+        let updatedProducts = [...products];
+        for (const item of targetOrder.items) {
+          const matchIndex = updatedProducts.findIndex((p) => p.id === item.productId);
+          if (matchIndex !== -1) {
+            const p = updatedProducts[matchIndex];
+            const currentStock = p.stock !== undefined ? p.stock : 10;
+            const newStock = currentStock + item.quantity;
+            const updatedProduct = { ...p, stock: newStock };
+            updatedProducts[matchIndex] = updatedProduct;
+            await saveProductToDb(updatedProduct, currentClient?.id);
+          }
+        }
+        setProducts(updatedProducts);
+      }
+      // If transition away from cancelled, reduce stock
+      else if (oldStatus === 'cancelled' && status !== 'cancelled') {
+        let updatedProducts = [...products];
+        for (const item of targetOrder.items) {
+          const matchIndex = updatedProducts.findIndex((p) => p.id === item.productId);
+          if (matchIndex !== -1) {
+            const p = updatedProducts[matchIndex];
+            const currentStock = p.stock !== undefined ? p.stock : 10;
+            const newStock = Math.max(0, currentStock - item.quantity);
+            const updatedProduct = { ...p, stock: newStock };
+            updatedProducts[matchIndex] = updatedProduct;
+            await saveProductToDb(updatedProduct, currentClient?.id);
+          }
+        }
+        setProducts(updatedProducts);
+      }
     }
   };
 
@@ -535,6 +569,23 @@ export default function App() {
     const updatedOrders = [newOrder, ...orders];
     setOrders(updatedOrders);
     await saveOrderToDb(newOrder, currentClient?.id);
+
+    // Intelligent stock reduction logic on order checkout
+    let updatedProducts = [...products];
+    for (const item of newOrder.items) {
+      const matchIndex = updatedProducts.findIndex((p) => p.id === item.productId);
+      if (matchIndex !== -1) {
+        const p = updatedProducts[matchIndex];
+        const currentStock = p.stock !== undefined ? p.stock : 10;
+        const newStock = Math.max(0, currentStock - item.quantity);
+        const updatedProduct = { ...p, stock: newStock };
+        updatedProducts[matchIndex] = updatedProduct;
+        
+        // Save updated product to database
+        await saveProductToDb(updatedProduct, currentClient?.id);
+      }
+    }
+    setProducts(updatedProducts);
 
     // Also register income entry in financial dashboard
     const newFinance: FinancialRecord = {
