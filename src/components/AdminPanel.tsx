@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   StoreSettings,
   Product,
@@ -29,6 +29,8 @@ import {
   Edit3,
   Save,
   Trash2,
+  Check,
+  ChevronDown,
   DollarSign,
   TrendingUp,
   ArrowUpRight,
@@ -154,6 +156,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [couponMinOrder, setCouponMinOrder] = useState<number>(0);
   const [couponMaxUses, setCouponMaxUses] = useState<number>(0);
   const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
+  const [activeStatusSelectorOrderId, setActiveStatusSelectorOrderId] = useState<string | null>(null);
 
   // Finance Manual Entry state
   const [isAddingFinance, setIsAddingFinance] = useState(false);
@@ -2184,27 +2187,81 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     {/* Status badge & selector */}
                     <div className="flex items-center space-x-2">
                       <span className="text-xs text-stone-500">Status:</span>
-                      <select
-                        value={ord.status}
-                        onChange={(e) => onUpdateOrderStatus(ord.id, e.target.value as OrderStatus)}
-                        className={`text-xs font-bold px-3 py-1 rounded-xl border focus:outline-none ${
-                          ord.status === 'delivered'
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                            : ord.status === 'ready'
-                            ? 'bg-blue-50 text-blue-800 border-blue-300'
-                            : ord.status === 'preparing'
-                            ? 'bg-amber-50 text-amber-800 border-amber-300'
-                            : ord.status === 'cancelled'
-                            ? 'bg-red-50 text-red-800 border-red-300'
-                            : 'bg-stone-100 text-stone-800 border-stone-300'
-                        }`}
-                      >
-                        <option value="pending">Pendente (Recebido)</option>
-                        <option value="preparing">Em Separação</option>
-                        <option value="ready">Pronto p/ Retirada / Envio</option>
-                        <option value="delivered">Concluído / Entregue</option>
-                        <option value="cancelled">Cancelado</option>
-                      </select>
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setActiveStatusSelectorOrderId(activeStatusSelectorOrderId === ord.id ? null : ord.id)}
+                          className={`text-xs font-bold px-3 py-1.5 rounded-xl border flex items-center gap-1.5 cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xs ${
+                            ord.status === 'delivered'
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                              : ord.status === 'ready'
+                              ? 'bg-blue-50 text-blue-800 border-blue-300'
+                              : ord.status === 'preparing'
+                              ? 'bg-amber-50 text-amber-800 border-amber-300'
+                              : ord.status === 'cancelled'
+                              ? 'bg-red-50 text-red-800 border-red-300'
+                              : 'bg-stone-50 text-stone-800 border-stone-300'
+                          }`}
+                        >
+                          <span>
+                            {ord.status === 'pending' && 'Pendente (Recebido)'}
+                            {ord.status === 'preparing' && 'Em Separação'}
+                            {ord.status === 'ready' && 'Pronto p/ Retirada / Envio'}
+                            {ord.status === 'delivered' && 'Concluído / Entregue'}
+                            {ord.status === 'cancelled' && 'Cancelado'}
+                          </span>
+                          <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+                        </button>
+
+                        <AnimatePresence>
+                          {activeStatusSelectorOrderId === ord.id && (
+                            <>
+                              {/* Overlay for mobile outside click */}
+                              <div
+                                className="fixed inset-0 z-40 bg-black/10 sm:hidden"
+                                onClick={() => setActiveStatusSelectorOrderId(null)}
+                              />
+                              <motion.div
+                                initial={{ opacity: 0, scale: 0.95, y: 5 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, y: 5 }}
+                                transition={{ duration: 0.12, ease: "easeOut" }}
+                                className="absolute right-0 mt-2 w-64 bg-stone-900 border border-brand-border-dark shadow-xl rounded-2xl p-2 z-50 space-y-1"
+                              >
+                                {[
+                                  { value: 'pending', label: 'Pendente (Recebido)', color: 'border-l-stone-500' },
+                                  { value: 'preparing', label: 'Em Separação', color: 'border-l-amber-500' },
+                                  { value: 'ready', label: 'Pronto p/ Retirada / Envio', color: 'border-l-blue-500' },
+                                  { value: 'delivered', label: 'Concluído / Entregue', color: 'border-l-emerald-500' },
+                                  { value: 'cancelled', label: 'Cancelado', color: 'border-l-red-500' }
+                                ].map((item) => {
+                                  const isSelected = ord.status === item.value;
+                                  return (
+                                    <button
+                                      key={item.value}
+                                      type="button"
+                                      onClick={() => {
+                                        onUpdateOrderStatus(ord.id, item.value as OrderStatus);
+                                        setActiveStatusSelectorOrderId(null);
+                                      }}
+                                      className={`w-full text-left px-3 py-2 text-xs rounded-xl transition-all border-l-2 ${item.color} flex items-center justify-between cursor-pointer ${
+                                        isSelected
+                                          ? 'bg-stone-800 text-brand-primary font-bold shadow-xs'
+                                          : 'text-stone-300 hover:bg-stone-800/60 hover:text-white'
+                                      }`}
+                                    >
+                                      <span>{item.label}</span>
+                                      {isSelected && (
+                                        <Check className="w-3.5 h-3.5 text-brand-primary" />
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                              </motion.div>
+                            </>
+                          )}
+                        </AnimatePresence>
+                      </div>
 
                       <button
                         type="button"
