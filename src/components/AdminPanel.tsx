@@ -153,6 +153,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [couponValue, setCouponValue] = useState<number>(10);
   const [couponMinOrder, setCouponMinOrder] = useState<number>(0);
   const [couponMaxUses, setCouponMaxUses] = useState<number>(0);
+  const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
 
   // Finance Manual Entry state
   const [isAddingFinance, setIsAddingFinance] = useState(false);
@@ -347,21 +348,38 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const handleCreateCoupon = (e: React.FormEvent) => {
     e.preventDefault();
     if (!couponCode.trim() || couponValue <= 0) return;
-    onSaveCoupon({
-      id: 'coup-' + Date.now(),
-      code: couponCode.trim().toUpperCase(),
-      discountType: couponType,
-      discountValue: couponValue,
-      minOrderValue: couponMinOrder > 0 ? couponMinOrder : undefined,
-      maxUses: couponMaxUses > 0 ? couponMaxUses : undefined,
-      isActive: true,
-      usageCount: 0,
-    });
+    
+    if (editingCouponId) {
+      const existing = coupons.find(c => c.id === editingCouponId);
+      onSaveCoupon({
+        id: editingCouponId,
+        code: couponCode.trim().toUpperCase(),
+        discountType: couponType,
+        discountValue: couponValue,
+        minOrderValue: couponMinOrder > 0 ? couponMinOrder : undefined,
+        maxUses: couponMaxUses > 0 ? couponMaxUses : undefined,
+        isActive: existing ? existing.isActive : true,
+        usageCount: existing ? (existing.usageCount || 0) : 0,
+      });
+    } else {
+      onSaveCoupon({
+        id: 'coup-' + Date.now(),
+        code: couponCode.trim().toUpperCase(),
+        discountType: couponType,
+        discountValue: couponValue,
+        minOrderValue: couponMinOrder > 0 ? couponMinOrder : undefined,
+        maxUses: couponMaxUses > 0 ? couponMaxUses : undefined,
+        isActive: true,
+        usageCount: 0,
+      });
+    }
+    
     setCouponCode('');
     setCouponValue(10);
     setCouponMinOrder(0);
     setCouponMaxUses(0);
     setIsAddingCoupon(false);
+    setEditingCouponId(null);
   };
 
   const handleCreateFinanceRecord = (e: React.FormEvent) => {
@@ -2481,7 +2499,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
             <button
               type="button"
-              onClick={() => setIsAddingCoupon(true)}
+              onClick={() => {
+                setEditingCouponId(null);
+                setCouponCode('');
+                setCouponValue(10);
+                setCouponMinOrder(0);
+                setCouponMaxUses(0);
+                setIsAddingCoupon(true);
+              }}
               className="flex items-center space-x-2 px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer self-start"
               id="btn-add-coupon"
             >
@@ -2497,10 +2522,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               className="p-5 bg-white rounded-2xl border border-brand-border shadow-xs space-y-3"
             >
               <div className="flex items-center justify-between text-xs font-bold text-stone-800">
-                <span>Criar Novo Cupom de Desconto</span>
+                <span>{editingCouponId ? 'Editar Cupom de Desconto' : 'Criar Novo Cupom de Desconto'}</span>
                 <button
                   type="button"
-                  onClick={() => setIsAddingCoupon(false)}
+                  onClick={() => {
+                    setIsAddingCoupon(false);
+                    setEditingCouponId(null);
+                    setCouponCode('');
+                    setCouponValue(10);
+                    setCouponMinOrder(0);
+                    setCouponMaxUses(0);
+                  }}
                   className="text-stone-400 hover:text-stone-700"
                 >
                   <X className="w-4 h-4" />
@@ -2597,14 +2629,34 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   )}
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => onRequestDeleteCoupon(coup)}
-                  className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
-                  title="Excluir Cupom"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                <div className="flex items-center space-x-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingCouponId(coup.id);
+                      setCouponCode(coup.code);
+                      setCouponType(coup.discountType);
+                      setCouponValue(coup.discountValue);
+                      setCouponMinOrder(coup.minOrderValue || 0);
+                      setCouponMaxUses(coup.maxUses || 0);
+                      setIsAddingCoupon(true);
+                      document.getElementById('btn-add-coupon')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="p-2 text-stone-400 hover:text-brand-primary-darker hover:bg-stone-50 rounded-xl transition-colors"
+                    title="Editar Cupom"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onRequestDeleteCoupon(coup)}
+                    className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                    title="Excluir Cupom"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
