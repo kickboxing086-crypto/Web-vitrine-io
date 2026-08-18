@@ -46,7 +46,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     e.preventDefault();
     setErrorMessage('');
 
-    const cleanUser = username.trim();
+    const cleanUser = username.trim().toLowerCase();
     const cleanPass = password.trim();
 
     if (!cleanUser) {
@@ -108,14 +108,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     }
 
     // Fallback Test Client bypass only if no matching client is found in the database
-    if (cleanUser === 'Teste@123' && cleanPass === '01020304') {
+    if (cleanUser === 'teste@123' && cleanPass === '01020304') {
       setIsSuccess(true);
       setIsLoading(false);
       setTimeout(() => {
         onLoginSuccess('store_admin', {
           id: 'client-test-natural',
           name: 'Elite Fashion Vitrine',
-          username: 'Teste@123',
+          username: 'teste@123',
           password: '01020304',
           storeType: 'clothing',
         });
@@ -138,7 +138,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   };
 
   const handleFillNaturalCredentials = () => {
-    setUsername('Teste@123');
+    setUsername('teste@123');
     setPassword('01020304');
     setErrorMessage('');
   };

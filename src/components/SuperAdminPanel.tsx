@@ -997,20 +997,24 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                   <div>
                     <label className="block text-xs font-bold text-amber-300 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                       <DollarSign className="w-3.5 h-3.5 text-amber-400" />
-                      Valor do Plano Mensal (R$) *
+                      Plano Contratado *
                     </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      required
-                      value={formData.planPrice}
-                      onChange={(e) => setFormData({ ...formData, planPrice: e.target.value })}
-                      placeholder="Ex: 89.90"
-                      className="w-full px-4 py-2.5 bg-[#0B0F19] border border-amber-500/40 rounded-xl text-sm font-bold text-amber-300 focus:outline-none focus:border-amber-400 transition-colors"
-                      id="input-form-planprice"
-                    />
-                    <p className="text-[11px] text-slate-500 mt-1">Editável livremente por você para cada cliente.</p>
+                    <div className="relative">
+                      <select
+                        required
+                        value={formData.planPrice}
+                        onChange={(e) => setFormData({ ...formData, planPrice: e.target.value })}
+                        className="w-full px-4 py-2.5 bg-[#0B0F19] border border-amber-500/40 rounded-xl text-sm font-bold text-amber-300 focus:outline-none focus:border-amber-400 transition-colors appearance-none"
+                        id="input-form-planprice"
+                      >
+                        <option value="29.99">Plano Mensal - R$ 29,99</option>
+                        <option value="49.99">Plano Trimestral - R$ 49,99</option>
+                        <option value="119.99">Plano Semestral - R$ 119,99</option>
+                      </select>
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <ChevronDown className="w-4 h-4 text-amber-500/70" />
+                      </div>
+                    </div>
                   </div>
 
                   {/* Data de Vencimento */}

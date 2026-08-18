@@ -247,13 +247,22 @@ export default function App() {
 
   // Real-time Cloud Firestore synchronization
   useEffect(() => {
+    setIsCloudSyncing(true);
+
+    // Clear local states immediately to prevent flashing data from previous client
+    setProducts([]);
+    setCategories([]);
+    setTags([]);
+    setCoupons([]);
+    setOrders([]);
+    setFinance([]);
+
     // Seed initial data if database collections are empty
-    seedInitialDataIfEmpty().then(() => {
-      setIsCloudSyncing(false);
-    });
+    seedInitialDataIfEmpty().catch(console.error);
 
     const unsubSettings = subscribeToSettings((data) => {
       setSettings(data);
+      setIsCloudSyncing(false);
     }, currentClient?.id, currentClient?.storeName);
 
     const unsubProducts = subscribeToProducts((data) => {
@@ -639,6 +648,17 @@ export default function App() {
     return <SuperAdminPanel onLogout={handleLogout} />;
   }
 
+  if (isCloudSyncing) {
+    return (
+      <div className="min-h-screen bg-[#12110F] flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-[#D4AF37] text-sm font-bold animate-pulse">Sincronizando Vitrine...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (activeView === 'landing') {
     return (
       <>
@@ -661,36 +681,38 @@ export default function App() {
 
   return (
     <div className={`min-h-screen bg-brand-bg text-stone-900 flex flex-col selection:bg-brand-border ${activeStoreType === 'natural' ? 'theme-natural' : ''}`}>
-      {/* Top Global Announcement Switcher */}
-      <div className="bg-gradient-to-r from-stone-950 via-[#1C1814] to-stone-950 text-white text-xs py-2 px-4 border-b border-[#3D3328] shadow-xs">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center space-x-2">
-            <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse" />
-            <span className="text-stone-300 text-[11px] sm:text-xs">
-              Você está na <strong className="text-white">Vitrine de Demonstração</strong> • Plataforma por <strong className="text-[#E5C378]">R$ 29,99/mês</strong>
-            </span>
-          </div>
+      {/* Top Global Announcement Switcher - Only show for test account */}
+      {(!currentClient || currentClient.username === 'teste@123') && (
+        <div className="bg-gradient-to-r from-stone-950 via-[#1C1814] to-stone-950 text-white text-xs py-2 px-4 border-b border-[#3D3328] shadow-xs">
+          <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center space-x-2">
+              <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse" />
+              <span className="text-stone-300 text-[11px] sm:text-xs">
+                Você está na <strong className="text-white">Vitrine de Demonstração</strong> • Plataforma por <strong className="text-[#E5C378]">R$ 29,99/mês</strong>
+              </span>
+            </div>
 
-          <div className="flex items-center space-x-2">
-            <button
-              type="button"
-              onClick={() => setActiveView('landing')}
-              className="px-2.5 py-0.5 sm:px-3 sm:py-1 bg-[#D4AF37] hover:bg-[#c59e2a] text-black font-bold text-[11px] rounded-lg transition-colors cursor-pointer shadow-xs"
-              id="btn-topbar-landing"
-            >
-              Conhecer Página Oficial
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsLoginModalOpen(true)}
-              className="px-2.5 py-0.5 sm:px-3 sm:py-1 bg-stone-800 hover:bg-stone-700 text-stone-200 text-[11px] font-semibold rounded-lg border border-white/10 transition-colors cursor-pointer"
-              id="btn-topbar-admin-login"
-            >
-              Área do Lojista
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                type="button"
+                onClick={() => setActiveView('landing')}
+                className="px-2.5 py-0.5 sm:px-3 sm:py-1 bg-[#D4AF37] hover:bg-[#c59e2a] text-black font-bold text-[11px] rounded-lg transition-colors cursor-pointer shadow-xs"
+                id="btn-topbar-landing"
+              >
+                Conhecer Página Oficial
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsLoginModalOpen(true)}
+                className="px-2.5 py-0.5 sm:px-3 sm:py-1 bg-stone-800 hover:bg-stone-700 text-stone-200 text-[11px] font-semibold rounded-lg border border-white/10 transition-colors cursor-pointer"
+                id="btn-topbar-admin-login"
+              >
+                Área do Lojista
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Top Navbar */}
       <Navbar

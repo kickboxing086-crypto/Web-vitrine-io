@@ -57,6 +57,8 @@ import {
   Sliders,
   Tag as TagIcon,
   Crown,
+  Menu,
+  CreditCard,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -125,8 +127,26 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   onShareProduct,
 }) => {
   const [activeTab, setActiveTab] = useState<
-    'dashboard' | 'products' | 'orders' | 'tags' | 'coupons' | 'settings' | 'stock'
+    'dashboard' | 'products' | 'orders' | 'tags' | 'coupons' | 'settings' | 'stock' | 'plan'
   >('dashboard');
+
+  const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
+  const settingsMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close settings menu when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (settingsMenuRef.current && !settingsMenuRef.current.contains(event.target as Node)) {
+        setIsSettingsMenuOpen(false);
+      }
+    };
+    if (isSettingsMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSettingsMenuOpen]);
 
   // Intelligent Stock Control states
   const [stockSearchQuery, setStockSearchQuery] = useState('');
@@ -459,9 +479,117 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       {/* Admin Top Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-brand-border">
         <div className="flex items-center space-x-3">
-          <div className="p-3 bg-brand-secondary text-brand-primary rounded-2xl shadow-sm">
-            <LayoutDashboard className="w-6 h-6" />
+          {/* Hamburger Menu on the left */}
+          <div className="relative" ref={settingsMenuRef}>
+            <button
+              onClick={() => setIsSettingsMenuOpen(!isSettingsMenuOpen)}
+              className="p-3 bg-stone-900 hover:bg-stone-800 text-white rounded-2xl shadow-sm transition-colors cursor-pointer"
+            >
+              <Menu className="w-6 h-6 text-brand-primary" />
+            </button>
+            
+            <AnimatePresence>
+              {isSettingsMenuOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  className="absolute left-0 top-14 w-64 bg-white border border-brand-border-dark rounded-2xl shadow-2xl overflow-hidden z-50 flex flex-col"
+                >
+                  <div className="p-3 bg-stone-50 border-b border-brand-border-dark">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500">
+                      Configurações e Ações
+                    </span>
+                  </div>
+                  
+                  <div className="p-2 space-y-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsSettingsMenuOpen(false);
+                        setActiveTab('plan');
+                      }}
+                      className="w-full flex items-center space-x-3 px-3 py-2.5 hover:bg-stone-100 text-stone-800 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                    >
+                      <CreditCard className="w-4 h-4 text-stone-500" />
+                      <span>Meu Plano & Assinatura</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsSettingsMenuOpen(false);
+                        onOpenSettingsModal();
+                      }}
+                      className="w-full flex items-center space-x-3 px-3 py-2.5 hover:bg-stone-100 text-stone-800 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                    >
+                      <Settings className="w-4 h-4 text-stone-500" />
+                      <span>Dados da Loja</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsSettingsMenuOpen(false);
+                        handleCopyInvite();
+                      }}
+                      className="w-full flex items-center space-x-3 px-3 py-2.5 hover:bg-stone-100 text-stone-800 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                    >
+                      {copiedLink ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      ) : (
+                        <Share2 className="w-4 h-4 text-stone-500" />
+                      )}
+                      <span>{copiedLink ? 'Link Copiado!' : 'Link da Loja (Clientes)'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsSettingsMenuOpen(false);
+                        const msg = generateWhatsappStoreShareMessage(settings);
+                        window.open(`https://wa.me/?text=${msg}`, '_blank');
+                      }}
+                      className="w-full flex items-center space-x-3 px-3 py-2.5 hover:bg-stone-100 text-emerald-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      <span>Divulgar Loja (WhatsApp)</span>
+                    </button>
+
+                    {onViewStore && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsSettingsMenuOpen(false);
+                          onViewStore();
+                        }}
+                        className="w-full flex items-center space-x-3 px-3 py-2.5 hover:bg-stone-100 text-stone-800 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                      >
+                        <ExternalLink className="w-4 h-4 text-stone-500" />
+                        <span>Ver Vitrine</span>
+                      </button>
+                    )}
+                  </div>
+                  
+                  {onLogout && (
+                    <div className="p-2 border-t border-brand-border-dark bg-stone-50">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsSettingsMenuOpen(false);
+                          onLogout();
+                        }}
+                        className="w-full flex items-center space-x-3 px-3 py-2.5 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                      >
+                        <span>Sair / Bloquear Painel</span>
+                      </button>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
+
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold uppercase tracking-wider text-brand-primary-darker">
@@ -472,74 +600,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               Controle Geral: {settings.storeName}
             </h1>
           </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={handleCopyInvite}
-            className="flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-brand-bg-alt text-stone-800 border border-brand-border-dark rounded-xl text-xs font-semibold shadow-2xs transition-colors"
-            id="btn-admin-copy-invite"
-          >
-            {copiedLink ? (
-              <>
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span className="text-emerald-700">Link Copiado!</span>
-              </>
-            ) : (
-              <>
-                <Share2 className="w-4 h-4 text-brand-primary-darker" />
-                <span>Link da Loja (Clientes)</span>
-              </>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={onOpenSettingsModal}
-            className="flex items-center space-x-1.5 px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold shadow-sm transition-colors cursor-pointer"
-            id="btn-admin-open-settings"
-          >
-            <Settings className="w-4 h-4 text-brand-primary" />
-            <span>Dados da Loja</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              const msg = generateWhatsappStoreShareMessage(settings);
-              window.open(`https://wa.me/?text=${msg}`, '_blank');
-            }}
-            className="flex items-center space-x-1.5 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold shadow-sm transition-colors cursor-pointer"
-            id="btn-share-store-whatsapp"
-            title="Enviar Link e Abertura Bonita da Loja no WhatsApp"
-          >
-            <MessageCircle className="w-4 h-4 fill-white text-white" />
-            <span>Divulgar Loja (WhatsApp)</span>
-          </button>
-
-          {onViewStore && (
-            <button
-              type="button"
-              onClick={onViewStore}
-              className="flex items-center space-x-1.5 px-3 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold transition-colors cursor-pointer"
-              title="Acessar a Vitrine"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Ver Vitrine</span>
-            </button>
-          )}
-          {onLogout && (
-            <button
-              type="button"
-              onClick={onLogout}
-              className="flex items-center space-x-1.5 px-3 py-2 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
-              id="btn-admin-logout"
-              title="Sair / Bloquear Painel"
-            >
-              <span>Sair</span>
-            </button>
-          )}
         </div>
       </div>
 
