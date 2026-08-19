@@ -63,6 +63,7 @@ import { LandingHeroModal } from './components/LandingHeroModal';
 import { StoreHoursModal } from './components/StoreHoursModal';
 import { ShareProductModal } from './components/ShareProductModal';
 import { PaymentSuccessModal } from './components/PaymentSuccessModal';
+import { PwaInstallBanner } from './components/PwaInstallBanner';
 import { SlidersHorizontal, AlertCircle, Tag as TagIcon, ShoppingBag, ArrowLeft, MessageCircle, ChevronDown, Check, Instagram, MapPin, Clock } from 'lucide-react';
 import { getFontFamilyCss, checkStoreHoursStatus, applyStoreTheme } from './lib/themeUtils';
 import { formatCurrency, cleanPhoneForWhatsapp } from './lib/formatters';
@@ -1266,6 +1267,9 @@ export default function App() {
           setPaymentSuccessInfo((prev) => ({ ...prev, isOpen: false }));
         }}
       />
+
+      {/* PWA Install Notification Prompt */}
+      <PwaInstallBanner storeName={settings.storeName || 'Web Vitrine'} />
     </div>
   );
 }
