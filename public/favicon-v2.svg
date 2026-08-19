@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F3E5AB" />
+      <stop offset="30%" stop-color="#D4AF37" />
+      <stop offset="70%" stop-color="#AA7A1E" />
+      <stop offset="100%" stop-color="#8C6214" />
+    </linearGradient>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1F1E22" />
+      <stop offset="100%" stop-color="#0E0D10" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)" />
+  <!-- Outer Gold Border -->
+  <rect x="24" y="24" width="464" height="464" rx="104" fill="none" stroke="url(#goldGrad)" stroke-width="4" opacity="0.6" />
+  <!-- Stylized Shopping Bag & Luxury V Monogram -->
+  <path d="M192 192 V160 C192 124 220 96 256 96 C292 96 320 124 320 160 V192" fill="none" stroke="url(#goldGrad)" stroke-width="20" stroke-linecap="round" />
+  <path d="M136 192 H376 L352 400 H160 Z" fill="none" stroke="url(#goldGrad)" stroke-width="20" stroke-linejoin="round" />
+  <!-- Diamond Monogram V inside -->
+  <path d="M216 256 L256 344 L296 256" fill="none" stroke="url(#goldGrad)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="256" cy="236" r="10" fill="url(#goldGrad)" />
+</svg>
