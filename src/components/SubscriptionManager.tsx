@@ -4,9 +4,11 @@ import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Crown, Check, AlertCircle, Clock, Copy, ArrowRight, ShieldCheck } from 'lucide-react';
 import { generatePixPayload } from '../lib/pixUtils';
+import { saveClient } from '../lib/firestoreService';
 
 interface SubscriptionManagerProps {
   settings: StoreSettings;
+  currentClient?: any;
 }
 
 const PLANS = [
@@ -16,7 +18,7 @@ const PLANS = [
   { id: 'semiannual', title: 'Plano Semestral', price: 119.99, period: '6 meses', popular: false, saveAmount: 'R$ 59,95' },
 ];
 
-export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settings }) => {
+export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settings, currentClient }) => {
   const [selectedPlan, setSelectedPlan] = useState<typeof PLANS[0] | null>(null);
   const [step, setStep] = useState<'plans' | 'confirm' | 'payment' | 'expired' | 'success'>('plans');
   const [pixString, setPixString] = useState('');
@@ -24,8 +26,20 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settin
   const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
   const [isSimulatingPayment, setIsSimulatingPayment] = useState(false);
   
-  // Mock days remaining for demonstration
-  const daysRemaining = 5; 
+  // Calculate days remaining from client or default
+  const daysRemaining = (() => {
+    if (!currentClient?.dueDate) return 30;
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const due = new Date(currentClient.dueDate + 'T00:00:00');
+      if (isNaN(due.getTime())) return 30;
+      const diffTime = due.getTime() - today.getTime();
+      return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+    } catch {
+      return 30;
+    }
+  })();
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -55,6 +69,20 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settin
     );
     setPixString(payload);
     setTimeLeft(300); // Reset timer to 5 minutes
+    
+    // Save pending session in case user navigates away to bank app
+    localStorage.setItem(
+      'store_pending_pix_payment',
+      JSON.stringify({
+        planId: selectedPlan.id,
+        planTitle: selectedPlan.title,
+        period: selectedPlan.period,
+        price: selectedPlan.price,
+        storeName: currentClient?.storeName || settings.storeName,
+        createdAt: Date.now(),
+      })
+    );
+
     setStep('payment');
   };
 
@@ -64,12 +92,51 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settin
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
-  const handleSimulatePayment = () => {
+  const handleSimulatePayment = async () => {
     setIsSimulatingPayment(true);
+
+    let daysToAdd = 30;
+    if (selectedPlan?.id === 'test') daysToAdd = 1;
+    if (selectedPlan?.id === 'monthly') daysToAdd = 30;
+    if (selectedPlan?.id === 'quarterly') daysToAdd = 90;
+    if (selectedPlan?.id === 'semiannual') daysToAdd = 180;
+
+    if (currentClient) {
+      try {
+        const currentDue = currentClient.dueDate ? new Date(currentClient.dueDate + 'T00:00:00') : new Date();
+        const today = new Date();
+        const baseDate = isNaN(currentDue.getTime()) || currentDue < today ? today : currentDue;
+        const nextDue = new Date(baseDate);
+        nextDue.setDate(nextDue.getDate() + daysToAdd);
+        const nextDueDateStr = nextDue.toISOString().split('T')[0];
+
+        const updatedClient = {
+          ...currentClient,
+          dueDate: nextDueDateStr,
+          status: 'active',
+          lastRenewedAt: new Date().toISOString(),
+        };
+        await saveClient(updatedClient);
+        localStorage.setItem('store_current_client', JSON.stringify(updatedClient));
+      } catch (err) {
+        console.error('Error renewing client on payment:', err);
+      }
+    }
+
+    // Save payment success state so returning to the account displays the centered popup message
+    const paymentData = {
+      planTitle: selectedPlan?.title || 'Plano Mensal',
+      period: selectedPlan?.period || `${daysToAdd} dias`,
+      storeName: currentClient?.storeName || settings.storeName || 'Sua Vitrine',
+      timestamp: Date.now(),
+    };
+    localStorage.setItem('store_payment_success_data', JSON.stringify(paymentData));
+    localStorage.removeItem('store_pending_pix_payment');
+
     setTimeout(() => {
       setIsSimulatingPayment(false);
       setStep('success');
-    }, 2000);
+    }, 1500);
   };
 
   const handleCopyPix = () => {

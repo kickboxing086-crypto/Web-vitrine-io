@@ -615,16 +615,28 @@ export const resetDatabaseToDefaults = async (): Promise<void> => {
 
 export const authenticateClient = async (username: string, password: string): Promise<any | null> => {
   try {
+    const cleanUser = username.trim().toLowerCase();
+    const cleanPass = password.trim();
+
     const clientsCol = collection(db, COLLECTIONS.CLIENTS);
-    const q = query(clientsCol, where('username', '==', username), where('password', '==', password));
-    const snapshot = await getDocs(q);
+    const snapshot = await getDocs(clientsCol);
     
     if (snapshot.empty) {
       return null;
     }
     
-    const doc = snapshot.docs[0];
-    return { id: doc.id, ...doc.data() };
+    const matchedDoc = snapshot.docs.find((docSnap) => {
+      const data = docSnap.data();
+      const u = (data.username || '').toString().trim().toLowerCase();
+      const p = (data.password || '').toString().trim();
+      return u === cleanUser && p === cleanPass;
+    });
+
+    if (matchedDoc) {
+      return { id: matchedDoc.id, ...matchedDoc.data() };
+    }
+
+    return null;
   } catch (error) {
     console.error('Error authenticating client:', error);
     return null;
@@ -677,22 +689,23 @@ export const deleteClient = async (id: string) => {
 
 export const getClientByUsername = async (slugOrUsername: string): Promise<any | null> => {
   try {
+    const clean = slugOrUsername.trim().toLowerCase();
     const clientsCol = collection(db, COLLECTIONS.CLIENTS);
-    
-    // Check by username
-    const qUsername = query(clientsCol, where('username', '==', slugOrUsername));
-    const snapshotUsername = await getDocs(qUsername);
-    if (!snapshotUsername.empty) {
-      const docSnap = snapshotUsername.docs[0];
-      return { id: docSnap.id, ...docSnap.data() };
+    const snapshot = await getDocs(clientsCol);
+
+    if (snapshot.empty) {
+      return null;
     }
 
-    // Check by custom storeSlug
-    const qSlug = query(clientsCol, where('storeSlug', '==', slugOrUsername));
-    const snapshotSlug = await getDocs(qSlug);
-    if (!snapshotSlug.empty) {
-      const docSnap = snapshotSlug.docs[0];
-      return { id: docSnap.id, ...docSnap.data() };
+    const matchedDoc = snapshot.docs.find((docSnap) => {
+      const data = docSnap.data();
+      const u = (data.username || '').toString().trim().toLowerCase();
+      const s = (data.storeSlug || '').toString().trim().toLowerCase();
+      return u === clean || s === clean;
+    });
+
+    if (matchedDoc) {
+      return { id: matchedDoc.id, ...matchedDoc.data() };
     }
 
     return null;

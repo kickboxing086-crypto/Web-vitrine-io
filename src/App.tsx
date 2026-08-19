@@ -62,6 +62,7 @@ import { LandingPage } from './components/LandingPage';
 import { LandingHeroModal } from './components/LandingHeroModal';
 import { StoreHoursModal } from './components/StoreHoursModal';
 import { ShareProductModal } from './components/ShareProductModal';
+import { PaymentSuccessModal } from './components/PaymentSuccessModal';
 import { SlidersHorizontal, AlertCircle, Tag as TagIcon, ShoppingBag, ArrowLeft, MessageCircle, ChevronDown, Check } from 'lucide-react';
 import { getFontFamilyCss } from './lib/themeUtils';
 import { formatCurrency } from './lib/formatters';
@@ -82,6 +83,17 @@ export default function App() {
   const [isStoreHoursModalOpen, setIsStoreHoursModalOpen] = useState<boolean>(false);
   const [isLandingHeroModalOpen, setIsLandingHeroModalOpen] = useState<boolean>(false);
   const [isCloudSyncing, setIsCloudSyncing] = useState<boolean>(true);
+  const [paymentSuccessInfo, setPaymentSuccessInfo] = useState<{
+    isOpen: boolean;
+    planTitle: string;
+    period: string;
+    storeName: string;
+  }>({
+    isOpen: false,
+    planTitle: 'Plano Mensal',
+    period: '30 dias',
+    storeName: 'Sua Vitrine',
+  });
 
   // View state: 'store' (Vitrine do Cliente) | 'landing' (Página Oficial) | 'admin' (Painel do Dono) | 'super_admin' (Painel SaaS)
   const [activeView, setActiveView] = useState<'store' | 'admin' | 'super_admin' | 'landing'>(() => {
@@ -244,6 +256,34 @@ export default function App() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [settings.isFirstSetupDone, isAdminAuthenticated]);
+
+  // Listener for Post-Payment Success Message (even after closing the tab and returning)
+  useEffect(() => {
+    const checkPaymentSuccess = () => {
+      try {
+        const raw = localStorage.getItem('store_payment_success_data');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          setPaymentSuccessInfo({
+            isOpen: true,
+            planTitle: parsed.planTitle || 'Plano Mensal',
+            period: parsed.period || '30 dias',
+            storeName: parsed.storeName || settings.storeName || 'Sua Vitrine',
+          });
+        }
+      } catch (err) {
+        console.error('Error checking payment success data:', err);
+      }
+    };
+
+    checkPaymentSuccess();
+    window.addEventListener('focus', checkPaymentSuccess);
+    window.addEventListener('storage', checkPaymentSuccess);
+    return () => {
+      window.removeEventListener('focus', checkPaymentSuccess);
+      window.removeEventListener('storage', checkPaymentSuccess);
+    };
+  }, [settings.storeName]);
 
   // Real-time Cloud Firestore synchronization
   useEffect(() => {
@@ -645,7 +685,21 @@ export default function App() {
   const activeStoreType = currentClient?.storeType || settings.storeType || 'clothing';
 
   if (activeView === 'super_admin') {
-    return <SuperAdminPanel onLogout={handleLogout} />;
+    return (
+      <>
+        <SuperAdminPanel onLogout={handleLogout} />
+        <PaymentSuccessModal
+          isOpen={paymentSuccessInfo.isOpen}
+          planTitle={paymentSuccessInfo.planTitle}
+          period={paymentSuccessInfo.period}
+          storeName={paymentSuccessInfo.storeName}
+          onClose={() => {
+            localStorage.removeItem('store_payment_success_data');
+            setPaymentSuccessInfo((prev) => ({ ...prev, isOpen: false }));
+          }}
+        />
+      </>
+    );
   }
 
   if (isCloudSyncing) {
@@ -674,6 +728,16 @@ export default function App() {
           onLoginSuccess={handleLoginSuccess}
           adminUser={adminUser}
           settings={settings}
+        />
+        <PaymentSuccessModal
+          isOpen={paymentSuccessInfo.isOpen}
+          planTitle={paymentSuccessInfo.planTitle}
+          period={paymentSuccessInfo.period}
+          storeName={paymentSuccessInfo.storeName}
+          onClose={() => {
+            localStorage.removeItem('store_payment_success_data');
+            setPaymentSuccessInfo((prev) => ({ ...prev, isOpen: false }));
+          }}
         />
       </>
     );
@@ -1086,6 +1150,18 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Centered Post-Payment Success Notification Modal */}
+      <PaymentSuccessModal
+        isOpen={paymentSuccessInfo.isOpen}
+        planTitle={paymentSuccessInfo.planTitle}
+        period={paymentSuccessInfo.period}
+        storeName={paymentSuccessInfo.storeName}
+        onClose={() => {
+          localStorage.removeItem('store_payment_success_data');
+          setPaymentSuccessInfo((prev) => ({ ...prev, isOpen: false }));
+        }}
+      />
     </div>
   );
 }

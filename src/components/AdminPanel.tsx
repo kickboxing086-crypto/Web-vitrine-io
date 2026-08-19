@@ -3362,7 +3362,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
       {/* ================= TAB 7: MEU PLANO & ASSINATURA ================= */}
       {activeTab === 'plan' && (
-        <SubscriptionManager settings={settings} />
+        <SubscriptionManager settings={settings} currentClient={currentClient} />
       )}
     </div>
   );
