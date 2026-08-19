@@ -10,11 +10,15 @@ import {
   Copy,
   ArrowRight,
   ShieldCheck,
-  Sparkles,
-  Zap,
   CheckCircle2,
-  Calendar,
   Lock,
+  QrCode,
+  Receipt,
+  Building2,
+  Wallet,
+  CreditCard,
+  HelpCircle,
+  ExternalLink,
 } from 'lucide-react';
 import { generatePixPayload } from '../lib/pixUtils';
 import { saveClient } from '../lib/firestoreService';
@@ -46,12 +50,12 @@ const COMMERCIAL_PLANS: PlanOption[] = [
     monthsCount: 1,
     price: 29.99,
     monthlyEquivalent: 'R$ 29,99/mês',
-    description: 'Renovação flexível ideal para manter sua boutique ativa mês a mês.',
+    description: 'Renovação flexível ideal para manter sua vitrine ativa mês a mês.',
     features: [
       'Vitrine online 24h por dia',
       'Pedidos ilimitados no WhatsApp',
       'Painel financeiro e estoque completo',
-      '0% de comissões sobre suas vendas',
+      '0% de taxas ou comissões sobre suas vendas',
     ],
   },
   {
@@ -61,12 +65,12 @@ const COMMERCIAL_PLANS: PlanOption[] = [
     monthsCount: 3,
     price: 49.99,
     monthlyEquivalent: 'R$ 16,66/mês',
-    saveAmount: 'R$ 39,98 de economia',
+    saveAmount: 'Economia de R$ 39,98',
     popular: true,
-    badge: '💎 Mais Escolhido',
+    badge: 'Mais Escolhido',
     description: 'Excelente custo-benefício para manter sua loja faturando no trimestre.',
     features: [
-      'Tudo do plano mensal',
+      'Tudo do plano mensal incluído',
       'Economia imediata de 44%',
       'Estabilidade garantida por 90 dias',
       'Suporte prioritário de atendimento',
@@ -79,14 +83,14 @@ const COMMERCIAL_PLANS: PlanOption[] = [
     monthsCount: 6,
     price: 119.99,
     monthlyEquivalent: 'R$ 19,99/mês',
-    saveAmount: 'R$ 59,95 de economia',
-    badge: '⭐ Super Econômico',
+    saveAmount: 'Economia de R$ 59,95',
+    badge: 'Alta Economia',
     description: 'Tranquilidade semestral para focar exclusivamente no crescimento das vendas.',
     features: [
-      'Tudo do plano trimestral',
+      'Tudo do plano trimestral incluído',
       '6 meses completos de vitrine ativa',
       'Economia de R$ 59,95 acumulada',
-      'Backups automáticos na nuvem',
+      'Sincronização em nuvem e backups automáticos',
     ],
   },
   {
@@ -96,30 +100,17 @@ const COMMERCIAL_PLANS: PlanOption[] = [
     monthsCount: 12,
     price: 199.99,
     monthlyEquivalent: 'R$ 16,66/mês',
-    saveAmount: 'R$ 159,89 de economia',
-    badge: '👑 Máxima Vantagem',
+    saveAmount: 'Economia de R$ 159,89',
+    badge: 'Maior Vantagem',
     description: 'O ano inteiro garantido com a menor tarifa mensal e suporte preferencial.',
     features: [
-      '365 dias de operação sem interrupções',
-      'Maior taxa de economia anual',
-      'Acesso antecipado a novos recursos',
-      'Consultoria para otimização da vitrine',
+      '365 dias de operação contínua sem interrupções',
+      'Maior taxa de economia anual da plataforma',
+      'Acesso preferencial a atualizações e novos recursos',
+      'Consultoria para personalização e catálogo',
     ],
   },
 ];
-
-const TEST_PLAN: PlanOption = {
-  id: 'test',
-  title: 'Micro-Teste Rápido',
-  period: '1 dia',
-  monthsCount: 0,
-  price: 0.80,
-  description: 'Validação instantânea do sistema por 24 horas.',
-  features: [
-    'Acesso completo por 24h',
-    'Teste de checkout e sincronização Pix',
-  ],
-};
 
 export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settings, currentClient }) => {
   const [selectedPlan, setSelectedPlan] = useState<PlanOption>(COMMERCIAL_PLANS[1]);
@@ -199,8 +190,7 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settin
     setIsSimulatingPayment(true);
 
     let daysToAdd = 30;
-    if (selectedPlan.id === 'test') daysToAdd = 1;
-    else if (selectedPlan.id === 'monthly') daysToAdd = 30;
+    if (selectedPlan.id === 'monthly') daysToAdd = 30;
     else if (selectedPlan.id === 'quarterly') daysToAdd = 90;
     else if (selectedPlan.id === 'semiannual') daysToAdd = 180;
     else if (selectedPlan.id === 'annual') daysToAdd = 365;
@@ -250,23 +240,19 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settin
   };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6 max-w-5xl mx-auto" id="subscription-manager-container">
       {/* Top Status Card */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="bg-gradient-to-r from-stone-900 via-[#2A231C] to-stone-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-brand-primary-dark/30"
+        className="bg-stone-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-stone-800"
       >
-        <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
-          <Crown className="w-56 h-56 text-brand-primary" />
-        </div>
-        
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-primary-dark/30 border border-brand-primary/40 text-brand-primary text-xs font-bold uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5" />
-              Gestão de Assinatura
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-stone-800 border border-stone-700 text-stone-300 text-xs font-bold uppercase tracking-wider">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              Gestão de Assinatura & Planos
             </div>
             <h2 className="text-2xl sm:text-3xl font-serif-luxury font-bold text-white">
               Status da sua Vitrine Virtual
@@ -276,15 +262,15 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settin
             </p>
           </div>
           
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 sm:p-5 flex items-center gap-4 min-w-[220px] shadow-lg">
+          <div className="bg-stone-800/90 border border-stone-700 rounded-2xl p-4 sm:p-5 flex items-center gap-4 min-w-[220px] shadow-lg">
             <div className={`p-3 rounded-2xl ${daysRemaining <= 5 ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'}`}>
               {daysRemaining <= 5 ? <AlertCircle className="w-7 h-7" /> : <Clock className="w-7 h-7" />}
             </div>
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-stone-300">Tempo Restante</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-stone-400">Tempo Restante</p>
               <p className="text-2xl sm:text-3xl font-black text-white">{daysRemaining} {daysRemaining === 1 ? 'dia' : 'dias'}</p>
               {currentClient?.dueDate && (
-                <p className="text-[10px] text-stone-400 mt-0.5">
+                <p className="text-[10px] text-stone-400 mt-0.5 font-medium">
                   Vence: {new Date(currentClient.dueDate + 'T00:00:00').toLocaleDateString('pt-BR')}
                 </p>
               )}
@@ -309,10 +295,10 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settin
                   Selecione o Período de Renovação
                 </h3>
                 <p className="text-xs text-stone-500 mt-0.5">
-                  Escolha quantos meses deseja estender a operação da sua loja virtual.
+                  Escolha a duração desejada para estender a operação e visibilidade da sua loja virtual.
                 </p>
               </div>
-              <div className="inline-flex items-center gap-1 text-xs text-stone-600 font-semibold bg-white px-3 py-1.5 rounded-xl border border-brand-border shadow-2xs">
+              <div className="inline-flex items-center gap-1.5 text-xs text-stone-700 font-semibold bg-white px-3.5 py-1.5 rounded-xl border border-brand-border shadow-2xs">
                 <Lock className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Liberação instantânea via Pix</span>
               </div>
@@ -334,14 +320,14 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settin
                       isSelected
                         ? 'border-stone-900 ring-2 ring-stone-900/10 shadow-lg bg-gradient-to-b from-stone-50/80 to-white'
                         : plan.popular
-                        ? 'border-[#D4AF37] hover:border-[#b89528]'
+                        ? 'border-amber-600 hover:border-amber-700'
                         : 'border-brand-border hover:border-stone-400'
                     }`}
                   >
                     {/* Badge */}
                     {plan.badge && (
                       <div className="absolute -top-3.5 inset-x-0 flex justify-center">
-                        <span className="bg-stone-900 text-[#E5C378] text-[10px] font-extrabold uppercase tracking-wider px-3.5 py-1 rounded-full shadow-md border border-[#D4AF37]/30">
+                        <span className="bg-stone-900 text-amber-300 text-[10px] font-extrabold uppercase tracking-wider px-3.5 py-1 rounded-full shadow-md border border-stone-700">
                           {plan.badge}
                         </span>
                       </div>
@@ -354,7 +340,7 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settin
                       <div className={`w-5 h-5 rounded-full flex items-center justify-center border transition-colors ${
                         isSelected ? 'bg-stone-900 border-stone-900 text-white' : 'border-stone-300'
                       }`}>
-                        {isSelected && <Check className="w-3 h-3 text-brand-primary" />}
+                        {isSelected && <Check className="w-3 h-3 text-emerald-400" />}
                       </div>
                     </div>
 
@@ -419,36 +405,6 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settin
                 );
               })}
             </div>
-
-            {/* Test Plan Option in dedicated subtle section */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="p-4 sm:p-5 bg-white/70 rounded-2xl border border-brand-border flex flex-col sm:flex-row items-center justify-between gap-4"
-            >
-              <div className="flex items-center gap-3 text-left">
-                <div className="w-10 h-10 rounded-xl bg-amber-100/80 text-amber-800 flex items-center justify-center flex-shrink-0">
-                  <Zap className="w-5 h-5" />
-                </div>
-                <div>
-                  <h5 className="text-xs font-bold text-stone-900">
-                    Apenas testando o sistema? {TEST_PLAN.title} por R$ {TEST_PLAN.price.toFixed(2).replace('.', ',')}
-                  </h5>
-                  <p className="text-[11px] text-stone-500">
-                    Liberação de 24 horas para validação técnica da vitrine e fluxo de pagamentos.
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleSelectPlan(TEST_PLAN)}
-                className="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer shadow-xs flex items-center gap-1.5"
-              >
-                <span>Ativar 1 Dia de Teste</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </motion.div>
           </motion.div>
         )}
 
@@ -460,28 +416,35 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settin
             exit={{ opacity: 0, scale: 0.96 }}
             className="bg-white border border-brand-border-dark rounded-3xl p-6 sm:p-8 shadow-xl max-w-lg mx-auto text-center"
           >
-            <div className="w-16 h-16 bg-amber-50 border border-amber-200 text-amber-700 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xs">
-              <ShieldCheck className="w-8 h-8" />
+            <div className="w-16 h-16 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xs">
+              <Receipt className="w-8 h-8" />
             </div>
             
-            <span className="text-[11px] font-bold uppercase tracking-wider text-brand-primary-dark">
-              Confirmação de Pedido
+            <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500">
+              Resumo da Contratação
             </span>
             <h3 className="text-2xl font-serif-luxury font-bold text-stone-900 mb-2">
-              Renovação: {selectedPlan.title}
+              {selectedPlan.title}
             </h3>
             
-            <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200/80 my-5 text-left space-y-2 text-xs">
+            <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200/80 my-5 text-left space-y-2.5 text-xs">
               <div className="flex justify-between text-stone-600">
-                <span>Período contratado:</span>
-                <strong className="text-stone-900">{selectedPlan.period}</strong>
+                <span>Período de Acesso:</span>
+                <strong className="text-stone-900 font-bold">{selectedPlan.period} ({selectedPlan.monthsCount * 30} dias)</strong>
               </div>
               <div className="flex justify-between text-stone-600">
-                <span>Loja beneficiada:</span>
-                <strong className="text-stone-900">{currentClient?.storeName || settings.storeName}</strong>
+                <span>Loja Beneficiada:</span>
+                <strong className="text-stone-900 font-bold">{currentClient?.storeName || settings.storeName}</strong>
               </div>
-              <div className="flex justify-between text-stone-600 border-t border-stone-200 pt-2 text-sm">
-                <span className="font-bold text-stone-800">Total a pagar:</span>
+              <div className="flex justify-between text-stone-600">
+                <span>Método de Pagamento:</span>
+                <strong className="text-stone-900 font-bold flex items-center gap-1">
+                  <QrCode className="w-3.5 h-3.5 text-emerald-600" />
+                  Pix Instantâneo
+                </strong>
+              </div>
+              <div className="flex justify-between text-stone-600 border-t border-stone-200 pt-2.5 text-sm">
+                <span className="font-bold text-stone-800">Total a Pagar:</span>
                 <span className="font-black text-emerald-700 text-base">
                   R$ {selectedPlan.price.toFixed(2).replace('.', ',')}
                 </span>
@@ -499,10 +462,10 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settin
               <button
                 type="button"
                 onClick={handleConfirmPayment}
-                className="flex-1 py-3 px-4 bg-stone-900 hover:bg-stone-800 text-white rounded-2xl text-xs font-bold transition-all shadow-md shadow-stone-900/10 flex items-center justify-center gap-2 cursor-pointer"
+                className="flex-1 py-3 px-4 bg-stone-900 hover:bg-stone-800 text-white rounded-2xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Check className="w-4 h-4 text-emerald-400" />
-                <span>Gerar Pix Imediato</span>
+                <span>Prosseguir para o Pix</span>
               </button>
             </div>
           </motion.div>
@@ -514,99 +477,162 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settin
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
-            className="bg-white border border-brand-border-dark rounded-3xl p-6 sm:p-8 shadow-xl max-w-2xl mx-auto"
+            className="bg-white border border-brand-border-dark rounded-3xl p-6 sm:p-8 shadow-xl max-w-3xl mx-auto space-y-6"
           >
-            <div className="flex items-center justify-between border-b border-brand-border-dark pb-4 mb-6">
+            {/* Header with Title and Countdown */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-brand-border pb-5">
               <div>
-                <h3 className="text-lg font-serif-luxury font-bold text-stone-900 flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                  Chave Pix de Renovação Gerada
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-bold uppercase tracking-wider mb-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  Ambiente Seguro de Pagamento Pix
+                </div>
+                <h3 className="text-xl font-serif-luxury font-bold text-stone-900">
+                  Efetue o Pagamento para Concluir a Renovação
                 </h3>
-                <p className="text-xs text-stone-500">Transação instantânea para liberação automática</p>
+                <p className="text-xs text-stone-500">
+                  Liberação automática e imediata assim que a transferência for confirmada.
+                </p>
               </div>
-              <img src="https://logospng.org/download/pix/logo-pix-icone-1024.png" alt="Pix" className="h-6" />
+
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-2 flex items-center gap-2.5 text-amber-900 shrink-0 self-start sm:self-auto">
+                <Clock className="w-4 h-4 text-amber-700 shrink-0" />
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-amber-800 block">Tempo Restante:</span>
+                  <span className="text-sm font-mono font-black text-amber-950">{formatTime(timeLeft)}</span>
+                </div>
+              </div>
             </div>
 
-            <div className="flex flex-col md:flex-row gap-8 items-center">
-              <div className="bg-stone-50 p-4 rounded-2xl border border-brand-border-dark shrink-0 shadow-xs">
-                <QRCodeSVG value={pixString} size={190} level="M" includeMargin={true} className="rounded-xl" />
+            {/* QR Code and Copy Block */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+              <div className="md:col-span-5 bg-stone-50 p-5 rounded-2xl border border-stone-200 flex flex-col items-center justify-center text-center">
+                <span className="text-xs font-bold text-stone-700 mb-3 flex items-center gap-1.5">
+                  <QrCode className="w-4 h-4 text-stone-800" />
+                  QR Code Oficial
+                </span>
+                <div className="bg-white p-3 rounded-xl border border-stone-300 shadow-2xs">
+                  <QRCodeSVG value={pixString} size={180} level="M" includeMargin={true} />
+                </div>
+                <p className="text-[10px] text-stone-500 mt-2.5">
+                  Aponte a câmera no aplicativo do seu banco para ler o QR Code.
+                </p>
               </div>
               
-              <div className="flex-1 space-y-4 w-full">
-                <div className="bg-stone-50 p-3.5 rounded-2xl border border-stone-200 text-xs space-y-1.5">
-                  <div className="flex justify-between">
-                    <span className="text-stone-500">Plano Selecionado:</span>
-                    <strong className="text-stone-900">{selectedPlan.title} ({selectedPlan.period})</strong>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-stone-500">Valor Total:</span>
-                    <strong className="text-emerald-700 text-sm">R$ {selectedPlan.price.toFixed(2).replace('.', ',')}</strong>
-                  </div>
-                </div>
-
+              <div className="md:col-span-7 space-y-4">
+                {/* Pix String Field with 1-Click Copy */}
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-stone-700 mb-1.5">
-                    Pix Copia e Cola (BR Code)
+                    Código Pix Copia e Cola
                   </label>
                   <div className="flex gap-2">
                     <input 
                       type="text" 
                       readOnly 
                       value={pixString}
-                      className="flex-1 px-3 py-2.5 bg-stone-100 border border-stone-300 rounded-xl text-xs text-stone-600 font-mono focus:outline-none"
+                      className="flex-1 px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs text-stone-700 font-mono focus:outline-none select-all"
                     />
                     <button
                       type="button"
                       onClick={handleCopyPix}
-                      className="px-4 py-2.5 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 cursor-pointer shadow-xs"
+                      className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 cursor-pointer shadow-xs ${
+                        copied
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-stone-900 hover:bg-stone-800 text-white'
+                      }`}
                     >
-                      {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                      {copied ? 'Copiado!' : 'Copiar'}
+                      {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      <span>{copied ? 'Chave Copiada!' : 'Copiar Código'}</span>
                     </button>
                   </div>
                 </div>
 
-                <div className="bg-amber-50 text-amber-900 text-xs p-3.5 rounded-2xl border border-amber-200/80">
-                  <div className="flex justify-between items-center mb-1">
-                    <p className="font-bold">Aguardando Pagamento</p>
-                    <div className="flex items-center gap-1 font-mono bg-amber-200/60 px-2 py-0.5 rounded-lg text-amber-950 font-bold">
-                      <Clock className="w-3.5 h-3.5 text-amber-900" />
-                      <span>{formatTime(timeLeft)}</span>
-                    </div>
+                {/* Detailed Invoice Breakdown */}
+                <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200 text-xs space-y-2">
+                  <div className="flex justify-between items-center text-stone-600">
+                    <span>Plano Contratado:</span>
+                    <strong className="text-stone-900">{selectedPlan.title} ({selectedPlan.period})</strong>
                   </div>
-                  <p className="text-[11px] text-amber-800 leading-tight">
-                    Abra o app do seu banco, escolha Pix Copia e Cola e conclua o pagamento.
-                  </p>
+                  <div className="flex justify-between items-center text-stone-600">
+                    <span>Loja / Titular:</span>
+                    <strong className="text-stone-900">{currentClient?.storeName || settings.storeName}</strong>
+                  </div>
+                  <div className="flex justify-between items-center text-stone-600">
+                    <span>Dias Adicionados:</span>
+                    <strong className="text-emerald-700 font-bold">+{selectedPlan.monthsCount * 30} dias de operação</strong>
+                  </div>
+                  <div className="flex justify-between items-center text-stone-600 border-t border-stone-200 pt-2 text-sm">
+                    <span className="font-bold text-stone-900">Valor Total:</span>
+                    <strong className="text-emerald-700 font-black text-base">
+                      R$ {selectedPlan.price.toFixed(2).replace('.', ',')}
+                    </strong>
+                  </div>
                 </div>
-                
+
+                {/* Confirm Button */}
                 <button
                   type="button"
                   onClick={handleSimulatePayment}
                   disabled={isSimulatingPayment}
-                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-600/50 text-white rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 cursor-pointer"
+                  className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-600/50 text-white rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 cursor-pointer"
                 >
                   {isSimulatingPayment ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Confirmando pagamento...</span>
+                      <span>Identificando pagamento...</span>
                     </>
                   ) : (
                     <>
-                      <Check className="w-4 h-4" />
+                      <CheckCircle2 className="w-4 h-4" />
                       <span>Já realizei o pagamento</span>
                     </>
                   )}
                 </button>
-
-                <button
-                  type="button"
-                  onClick={() => setStep('plans')}
-                  disabled={isSimulatingPayment}
-                  className="w-full py-2 text-xs font-bold text-stone-500 hover:text-stone-800 transition-colors disabled:opacity-50 cursor-pointer"
-                >
-                  Cancelar e trocar de plano
-                </button>
               </div>
+            </div>
+
+            {/* Step-by-Step Payment Instructions */}
+            <div className="pt-4 border-t border-brand-border">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-stone-700 mb-3 flex items-center gap-1.5">
+                <HelpCircle className="w-3.5 h-3.5 text-stone-500" />
+                Como efetuar o pagamento pelo seu banco:
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div className="p-3 bg-stone-50 rounded-xl border border-stone-200/80 space-y-1">
+                  <span className="w-5 h-5 rounded-full bg-stone-900 text-white font-bold flex items-center justify-center text-[10px]">1</span>
+                  <p className="font-bold text-stone-800">Copie o Código</p>
+                  <p className="text-[11px] text-stone-500 leading-tight">
+                    Clique no botão &quot;Copiar Código&quot; acima ou aponte a câmera para o QR Code.
+                  </p>
+                </div>
+
+                <div className="p-3 bg-stone-50 rounded-xl border border-stone-200/80 space-y-1">
+                  <span className="w-5 h-5 rounded-full bg-stone-900 text-white font-bold flex items-center justify-center text-[10px]">2</span>
+                  <p className="font-bold text-stone-800">Abra o App do seu Banco</p>
+                  <p className="text-[11px] text-stone-500 leading-tight">
+                    Selecione a opção <strong>Pix Copia e Cola</strong>, cole o código e confirme os dados.
+                  </p>
+                </div>
+
+                <div className="p-3 bg-stone-50 rounded-xl border border-stone-200/80 space-y-1">
+                  <span className="w-5 h-5 rounded-full bg-stone-900 text-white font-bold flex items-center justify-center text-[10px]">3</span>
+                  <p className="font-bold text-stone-800">Ativação Imediata</p>
+                  <p className="text-[11px] text-stone-500 leading-tight">
+                    Após transferir, clique em &quot;Já realizei o pagamento&quot; para atualizar sua loja.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Back Button */}
+            <div className="text-center pt-2">
+              <button
+                type="button"
+                onClick={() => setStep('plans')}
+                disabled={isSimulatingPayment}
+                className="text-xs font-bold text-stone-500 hover:text-stone-800 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                Trocar de plano ou cancelar
+              </button>
             </div>
           </motion.div>
         )}
@@ -648,7 +674,7 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settin
               transition={{ type: "spring", stiffness: 200, damping: 15 }}
               className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xs"
             >
-              <Check className="w-10 h-10" />
+              <CheckCircle2 className="w-10 h-10" />
             </motion.div>
             <motion.h3 
               initial={{ opacity: 0, y: 10 }}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle2, Crown, Sparkles, X, ArrowRight, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, Crown, X, ArrowRight, ShieldCheck } from 'lucide-react';
 
 interface PaymentSuccessModalProps {
   isOpen: boolean;
@@ -68,7 +68,7 @@ export const PaymentSuccessModal: React.FC<PaymentSuccessModalProps> = ({
 
             {/* Title & Badge */}
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-3">
-              <Sparkles className="w-3.5 h-3.5" />
+              <ShieldCheck className="w-3.5 h-3.5" />
               <span>Pagamento Confirmado</span>
             </div>
 
