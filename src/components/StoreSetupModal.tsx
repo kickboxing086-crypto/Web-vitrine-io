@@ -51,10 +51,8 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
   const [storeSlug, setStoreSlug] = useState(currentClient?.storeSlug || currentClient?.username || '');
   const [copiedInvite, setCopiedInvite] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
-  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
 
   const logoInputRef = useRef<HTMLInputElement>(null);
-  const bannerInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -76,20 +74,6 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
       console.error('Erro ao converter logo para base64:', err);
     } finally {
       setIsUploadingLogo(false);
-    }
-  };
-
-  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      setIsUploadingBanner(true);
-      const base64 = await fileToBase64(file, 1600, 900, 0.85);
-      setFormData((prev) => ({ ...prev, bannerUrl: base64 }));
-    } catch (err) {
-      console.error('Erro ao converter banner para base64:', err);
-    } finally {
-      setIsUploadingBanner(false);
     }
   };
 
@@ -221,125 +205,73 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                 />
               </div>
 
-              {/* Logo e Banner com suporte a Base64 e preview */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                {/* Logo / Perfil Base64 */}
-                <div className="p-3.5 bg-white border border-brand-border-dark rounded-2xl space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-stone-800 flex items-center gap-1.5">
-                      <ImageIcon className="w-3.5 h-3.5 text-brand-primary-dark" />
-                      <span>Logo / Foto de Perfil</span>
+              {/* Logo da Loja / Foto de Perfil no Estilo Instagram (Grande e Centralizado) */}
+              <div className="pt-2">
+                <div className="p-6 bg-white border border-brand-border-dark rounded-3xl space-y-4 text-center shadow-xs">
+                  <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                    <label className="text-xs font-bold text-stone-800 uppercase tracking-wider flex items-center gap-1.5 mx-auto">
+                      <ImageIcon className="w-4 h-4 text-amber-600" />
+                      <span>Foto de Perfil & Logo da Loja (Estilo Instagram)</span>
                     </label>
                     {formData.logoUrl && (
                       <button
                         type="button"
                         onClick={() => setFormData({ ...formData, logoUrl: '' })}
-                        className="text-[10px] text-red-500 hover:text-red-700 flex items-center gap-0.5"
+                        className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 font-semibold transition-colors cursor-pointer"
                       >
-                        <Trash2 className="w-3 h-3" /> Remover
+                        <Trash2 className="w-3.5 h-3.5" /> Remover
                       </button>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <div className="w-16 h-16 rounded-xl border border-[#E3D7CA] overflow-hidden bg-brand-bg flex-shrink-0 flex items-center justify-center relative">
-                      {formData.logoUrl ? (
-                        <img
-                          src={formData.logoUrl}
-                          alt="Logo Preview"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <Store className="w-6 h-6 text-stone-300" />
-                      )}
+                  {/* Big Centered Avatar Preview */}
+                  <div className="flex flex-col items-center justify-center py-2">
+                    <div className="relative p-1 bg-gradient-to-tr from-amber-600 via-amber-400 to-amber-200 rounded-full shadow-lg">
+                      <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden bg-stone-100 border-2 border-white flex items-center justify-center relative">
+                        {formData.logoUrl ? (
+                          <img
+                            src={formData.logoUrl}
+                            alt="Logo da Loja"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center text-stone-400">
+                            <Store className="w-12 h-12 text-stone-300 mb-1" />
+                            <span className="text-[10px] font-bold uppercase">Sem Logo</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-
-                    <div className="flex-1 space-y-1.5">
-                      <input
-                        type="file"
-                        ref={logoInputRef}
-                        accept="image/*"
-                        onChange={handleLogoUpload}
-                        className="hidden"
-                        id="file-input-logo"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => logoInputRef.current?.click()}
-                        disabled={isUploadingLogo}
-                        className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-brand-bg-alt hover:bg-brand-bg-alt text-stone-800 rounded-xl text-xs font-semibold border border-brand-border-dark transition-all cursor-pointer"
-                      >
-                        <Upload className="w-3.5 h-3.5 text-brand-primary-dark" />
-                        <span>{isUploadingLogo ? 'Processando...' : 'Carregar Foto (Base64)'}</span>
-                      </button>
-                      <input
-                        type="text"
-                        value={formData.logoUrl.startsWith('data:') ? '' : formData.logoUrl}
-                        onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
-                        placeholder="ou cole o link da foto..."
-                        className="w-full px-2.5 py-1 text-[11px] bg-brand-bg border border-stone-200 rounded-lg text-stone-700 placeholder:text-stone-400 focus:outline-none"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Banner / Capa Base64 */}
-                <div className="p-3.5 bg-white border border-brand-border-dark rounded-2xl space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-stone-800 flex items-center gap-1.5">
-                      <ImageIcon className="w-3.5 h-3.5 text-brand-primary-dark" />
-                      <span>Capa Principal / Banner</span>
-                    </label>
-                    {formData.bannerUrl && (
-                      <button
-                        type="button"
-                        onClick={() => setFormData({ ...formData, bannerUrl: '' })}
-                        className="text-[10px] text-red-500 hover:text-red-700 flex items-center gap-0.5"
-                      >
-                        <Trash2 className="w-3 h-3" /> Remover
-                      </button>
-                    )}
+                    <p className="text-[11px] text-stone-500 mt-2">
+                      Essa foto será exibida em destaque no centro da sua vitrine para todos os clientes.
+                    </p>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <div className="w-20 h-16 rounded-xl border border-[#E3D7CA] overflow-hidden bg-brand-bg flex-shrink-0 flex items-center justify-center relative">
-                      {formData.bannerUrl ? (
-                        <img
-                          src={formData.bannerUrl}
-                          alt="Banner Preview"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <ImageIcon className="w-6 h-6 text-stone-300" />
-                      )}
-                    </div>
-
-                    <div className="flex-1 space-y-1.5">
-                      <input
-                        type="file"
-                        ref={bannerInputRef}
-                        accept="image/*"
-                        onChange={handleBannerUpload}
-                        className="hidden"
-                        id="file-input-banner"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => bannerInputRef.current?.click()}
-                        disabled={isUploadingBanner}
-                        className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-brand-bg-alt hover:bg-brand-bg-alt text-stone-800 rounded-xl text-xs font-semibold border border-brand-border-dark transition-all cursor-pointer"
-                      >
-                        <Upload className="w-3.5 h-3.5 text-brand-primary-dark" />
-                        <span>{isUploadingBanner ? 'Processando...' : 'Carregar Capa (Base64)'}</span>
-                      </button>
-                      <input
-                        type="text"
-                        value={formData.bannerUrl.startsWith('data:') ? '' : formData.bannerUrl}
-                        onChange={(e) => setFormData({ ...formData, bannerUrl: e.target.value })}
-                        placeholder="ou cole o link do banner..."
-                        className="w-full px-2.5 py-1 text-[11px] bg-brand-bg border border-stone-200 rounded-lg text-stone-700 placeholder:text-stone-400 focus:outline-none"
-                      />
-                    </div>
+                  <div className="max-w-md mx-auto space-y-2">
+                    <input
+                      type="file"
+                      ref={logoInputRef}
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      className="hidden"
+                      id="file-input-logo"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => logoInputRef.current?.click()}
+                      disabled={isUploadingLogo}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-stone-900 hover:bg-stone-800 text-white rounded-2xl text-xs font-bold transition-all shadow-md cursor-pointer"
+                    >
+                      <Upload className="w-4 h-4 text-amber-400" />
+                      <span>{isUploadingLogo ? 'Processando Imagem...' : 'Escolher Foto do Dispositivo (Galeria)'}</span>
+                    </button>
+                    <input
+                      type="text"
+                      value={formData.logoUrl.startsWith('data:') ? '' : formData.logoUrl}
+                      onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+                      placeholder="ou cole o link da foto de perfil..."
+                      className="w-full px-3.5 py-2 text-xs bg-brand-bg border border-stone-200 rounded-xl text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30 text-center"
+                    />
                   </div>
                 </div>
               </div>

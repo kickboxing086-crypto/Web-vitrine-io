@@ -63,9 +63,9 @@ import { LandingHeroModal } from './components/LandingHeroModal';
 import { StoreHoursModal } from './components/StoreHoursModal';
 import { ShareProductModal } from './components/ShareProductModal';
 import { PaymentSuccessModal } from './components/PaymentSuccessModal';
-import { SlidersHorizontal, AlertCircle, Tag as TagIcon, ShoppingBag, ArrowLeft, MessageCircle, ChevronDown, Check } from 'lucide-react';
-import { getFontFamilyCss } from './lib/themeUtils';
-import { formatCurrency } from './lib/formatters';
+import { SlidersHorizontal, AlertCircle, Tag as TagIcon, ShoppingBag, ArrowLeft, MessageCircle, ChevronDown, Check, Instagram, MapPin, Clock } from 'lucide-react';
+import { getFontFamilyCss, checkStoreHoursStatus } from './lib/themeUtils';
+import { formatCurrency, cleanPhoneForWhatsapp } from './lib/formatters';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function App() {
@@ -784,6 +784,112 @@ export default function App() {
       <main className="flex-1">
         {activeView === 'store' ? (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+            {/* Instagram-Style Centered Store Profile Header */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35 }}
+              className="pt-2 pb-6 text-center max-w-2xl mx-auto border-b border-brand-border/60 mb-6"
+              id="storefront-instagram-profile-header"
+            >
+              {/* Big Centered Avatar with Instagram Gradient Ring */}
+              <div className="flex justify-center mb-3.5">
+                <div className="relative p-1 sm:p-1.5 bg-gradient-to-tr from-amber-600 via-amber-400 to-amber-200 rounded-full shadow-xl transition-transform hover:scale-105 duration-300">
+                  <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full overflow-hidden bg-stone-100 border-2 sm:border-4 border-white flex items-center justify-center shadow-inner">
+                    {settings.logoUrl ? (
+                      <img
+                        src={settings.logoUrl}
+                        alt={settings.storeName}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-brand-secondary text-brand-primary flex items-center justify-center font-serif-luxury font-bold text-3xl sm:text-4xl md:text-5xl">
+                        {settings.storeName ? settings.storeName.charAt(0) : 'V'}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Store Title */}
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif-luxury font-bold text-stone-900 tracking-tight">
+                {settings.storeName || 'Web Vitrine'}
+              </h1>
+
+              {/* Slogan */}
+              {settings.slogan && (
+                <p className="text-xs sm:text-sm font-semibold text-amber-700 tracking-wide mt-1 uppercase">
+                  {settings.slogan}
+                </p>
+              )}
+
+              {/* Bio / Description */}
+              {settings.description && (
+                <p className="text-xs sm:text-sm text-stone-600 mt-2 max-w-lg mx-auto leading-relaxed px-4">
+                  {settings.description}
+                </p>
+              )}
+
+              {/* Contact & Meta Pills (Instagram-style bio links) */}
+              <div className="flex flex-wrap items-center justify-center gap-2 mt-4 px-2">
+                {/* Instagram link */}
+                {settings.instagramHandle && (
+                  <a
+                    href={`https://instagram.com/${settings.instagramHandle.replace('@', '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-stone-200 text-stone-800 text-xs font-semibold hover:border-amber-400 hover:text-amber-700 transition-colors shadow-2xs cursor-pointer"
+                  >
+                    <Instagram className="w-3.5 h-3.5 text-pink-600" />
+                    <span>@{settings.instagramHandle.replace('@', '')}</span>
+                  </a>
+                )}
+
+                {/* WhatsApp contact */}
+                {settings.phoneWhatsapp && (
+                  <a
+                    href={`https://wa.me/${cleanPhoneForWhatsapp(settings.phoneWhatsapp)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold hover:bg-emerald-100 transition-colors shadow-2xs cursor-pointer"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5 fill-emerald-600 text-emerald-600" />
+                    <span>WhatsApp</span>
+                  </a>
+                )}
+
+                {/* Hours status badge */}
+                <button
+                  type="button"
+                  onClick={() => setIsStoreHoursModalOpen(true)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold transition-all cursor-pointer shadow-2xs ${
+                    checkStoreHoursStatus(settings).isBreakNow
+                      ? 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100'
+                      : checkStoreHoursStatus(settings).isOpenNow
+                      ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                      : 'bg-stone-100 text-stone-700 border-stone-300 hover:bg-stone-200'
+                  }`}
+                >
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>
+                    {checkStoreHoursStatus(settings).isBreakNow
+                      ? 'Em Intervalo'
+                      : checkStoreHoursStatus(settings).isOpenNow
+                      ? 'Loja Aberta'
+                      : 'Fechado no Momento'}
+                  </span>
+                </button>
+
+                {/* Location / City */}
+                {(settings.cityState || settings.address) && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-stone-200 text-stone-600 text-xs font-medium shadow-2xs">
+                    <MapPin className="w-3.5 h-3.5 text-stone-400" />
+                    <span>{settings.cityState || settings.address}</span>
+                  </span>
+                )}
+              </div>
+            </motion.div>
+
             {/* Quick Tag Pills (if tags exist) */}
             {tagNames.length > 0 && (
               <div className="flex items-center gap-1.5 overflow-x-auto pb-3 pt-1 scrollbar-none text-xs mb-3">

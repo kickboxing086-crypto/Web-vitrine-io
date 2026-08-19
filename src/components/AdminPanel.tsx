@@ -592,6 +592,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </AnimatePresence>
           </div>
 
+          {/* Store Logo Avatar (Estilo Instagram) */}
+          <button
+            type="button"
+            onClick={onOpenSettingsModal}
+            title="Clique para alterar a Logo da Loja"
+            className="relative p-1 bg-gradient-to-tr from-amber-600 via-amber-400 to-amber-200 rounded-full shadow-md hover:scale-105 transition-transform cursor-pointer shrink-0"
+          >
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden bg-stone-100 border-2 border-white flex items-center justify-center">
+              {settings.logoUrl ? (
+                <img
+                  src={settings.logoUrl}
+                  alt={settings.storeName}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-stone-900 text-amber-400 flex items-center justify-center font-serif-luxury font-bold text-lg sm:text-xl">
+                  {settings.storeName ? settings.storeName.charAt(0) : 'L'}
+                </div>
+              )}
+            </div>
+          </button>
+
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-bold uppercase tracking-wider text-brand-primary-darker">
@@ -609,7 +631,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </span>
               )}
             </div>
-            <h1 className="text-2xl sm:text-3xl font-serif-luxury font-bold text-stone-900">
+            <h1 className="text-xl sm:text-3xl font-serif-luxury font-bold text-stone-900">
               Controle Geral: {settings.storeName}
             </h1>
             {currentClient && currentClient.username !== 'teste@123' && (
