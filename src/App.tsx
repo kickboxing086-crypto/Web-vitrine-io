@@ -745,8 +745,41 @@ export default function App() {
 
   return (
     <div className={`min-h-screen bg-brand-bg text-stone-900 flex flex-col selection:bg-brand-border ${activeStoreType === 'natural' ? 'theme-natural' : ''}`}>
-      {/* Top Global Announcement Switcher - Only show for test account */}
-      {(!currentClient || currentClient.username === 'teste@123') && (
+      {/* Top Global Announcement Switcher */}
+      {currentClient && currentClient.username !== 'teste@123' && currentClient.id !== 'client-test-natural' ? (
+        <div className="bg-gradient-to-r from-[#141F16] via-stone-950 to-[#141F16] text-white text-xs py-2 px-4 border-b border-emerald-900/40 shadow-xs">
+          <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center space-x-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-stone-200 text-[11px] sm:text-xs">
+                Vitrine Oficial de <strong className="text-white">{currentClient.storeName || settings.storeName}</strong> • <span className="text-emerald-400 font-bold">Conta Ativa & Verificada</span>
+              </span>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              {activeView === 'store' ? (
+                <button
+                  type="button"
+                  onClick={() => handleToggleView('admin')}
+                  className="px-2.5 py-0.5 sm:px-3 sm:py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] rounded-lg transition-colors cursor-pointer shadow-xs"
+                  id="btn-topbar-admin-official"
+                >
+                  Painel de Gestão
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setActiveView('store')}
+                  className="px-2.5 py-0.5 sm:px-3 sm:py-1 bg-stone-800 hover:bg-stone-700 text-stone-200 text-[11px] font-semibold rounded-lg border border-white/10 transition-colors cursor-pointer"
+                  id="btn-topbar-store-view"
+                >
+                  Ver Vitrine ao Vivo
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : (
         <div className="bg-gradient-to-r from-stone-950 via-[#1C1814] to-stone-950 text-white text-xs py-2 px-4 border-b border-[#3D3328] shadow-xs">
           <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center space-x-2">

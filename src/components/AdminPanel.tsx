@@ -59,6 +59,8 @@ import {
   Crown,
   Menu,
   CreditCard,
+  ShieldCheck,
+  AlertCircle,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -591,14 +593,33 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           </div>
 
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-bold uppercase tracking-wider text-brand-primary-darker">
                 Painel de Gestão da Boutique
               </span>
+              {currentClient && currentClient.username !== 'teste@123' && currentClient.id !== 'client-test-natural' ? (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-800 text-[10px] font-extrabold uppercase tracking-wide">
+                  <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                  Conta Oficial
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 border border-amber-300 text-amber-900 text-[10px] font-extrabold uppercase tracking-wide">
+                  <AlertCircle className="w-3 h-3 text-amber-700" />
+                  Modo de Demonstração
+                </span>
+              )}
             </div>
             <h1 className="text-2xl sm:text-3xl font-serif-luxury font-bold text-stone-900">
               Controle Geral: {settings.storeName}
             </h1>
+            {currentClient && currentClient.username !== 'teste@123' && (
+              <p className="text-xs text-stone-500 mt-0.5">
+                Usuário autenticado: <strong className="text-stone-800 font-mono">@{currentClient.username}</strong>
+                {currentClient.dueDate && (
+                  <span> • Vencimento: <strong className="text-emerald-700">{new Date(currentClient.dueDate + 'T00:00:00').toLocaleDateString('pt-BR')}</strong></span>
+                )}
+              </p>
+            )}
           </div>
         </div>
       </div>

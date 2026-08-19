@@ -133,10 +133,12 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
         >
           {/* Header */}
           <div className="relative px-6 sm:px-8 pt-8 pb-6 bg-gradient-to-r from-brand-secondary to-[#342D26] text-white">
-            {!isFirstSetup && onClose && (
+            {onClose && (
               <button
+                type="button"
                 onClick={onClose}
-                className="absolute top-5 right-5 p-2 text-stone-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+                className="absolute top-5 right-5 p-2 text-stone-300 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+                title="Sair sem salvar"
                 id="btn-close-setup-modal"
               >
                 <X className="w-5 h-5" />
@@ -1309,14 +1311,14 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
 
             {/* Footer Buttons */}
             <div className="flex items-center justify-end space-x-3 pt-4 border-t border-brand-border">
-              {!isFirstSetup && onClose && (
+              {onClose && (
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-5 py-2.5 rounded-xl border border-stone-300 text-stone-700 hover:bg-stone-100 text-sm font-medium transition-colors"
+                  className="px-5 py-2.5 rounded-xl border border-stone-300 text-stone-700 hover:bg-stone-100 text-sm font-medium transition-colors cursor-pointer"
                   id="btn-cancel-store-setup"
                 >
-                  Cancelar
+                  Sair sem salvar
                 </button>
               )}
               <button
@@ -1325,7 +1327,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                 id="btn-save-store-setup"
               >
                 <Save className="w-4 h-4 text-brand-primary" />
-                <span>{isFirstSetup ? 'Confirmar Alterações e Abrir Vitrine' : 'Confirmar Alterações'}</span>
+                <span>{isFirstSetup ? 'Confirmar Alterações e Abrir Vitrine' : 'Salvar Alterações'}</span>
               </button>
             </div>
           </form>
