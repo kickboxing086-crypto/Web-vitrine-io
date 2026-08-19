@@ -29,6 +29,7 @@ import {
   ArrowRight,
   Sparkles,
   ChevronDown,
+  ExternalLink,
 } from 'lucide-react';
 import { StoreClient } from '../types';
 import { getClients, saveClient, deleteClient } from '../lib/firestoreService';
@@ -262,8 +263,9 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
       id: formData.id || `client-${Date.now()}`,
       storeName: formData.storeName.trim(),
       username: cleanUsername,
+      storeSlug: cleanUsername,
       password: formData.password.trim(),
-      planPrice: isNaN(priceNum) ? 89.90 : priceNum,
+      planPrice: isNaN(priceNum) ? 29.99 : priceNum,
       dueDate: formData.dueDate || getDefaultDueDate(30),
       storeType: formData.storeType,
       phoneWhatsapp: formData.phoneWhatsapp.trim(),
@@ -275,7 +277,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
 
     try {
       await saveClient(clientToSave);
-      showToast(editingClient ? 'Loja atualizada com sucesso!' : 'Nova loja criada com sucesso!', 'success');
+      showToast(editingClient ? 'Loja atualizada com sucesso!' : 'Nova loja criada com sucesso no sistema!', 'success');
       setIsAddingOrEditing(false);
       setEditingClient(null);
     } catch (err) {
@@ -361,8 +363,10 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
   };
 
   const handleCopyFullAccessMessage = (client: StoreClient) => {
-    const storeLink = `${window.location.origin}/?loja=${client.storeSlug || client.username}`;
-    const msg = `👑 *ACESSO À SUA WEB VITRINE*\n\nOlá! Aqui estão as credenciais exclusivas da sua loja:\n\n🏬 *Loja:* ${client.storeName}\n👤 *Usuário:* ${client.username}\n🔑 *Senha:* ${client.password}\n\n🌐 *Link da sua Vitrine:* ${storeLink}\n📅 *Vencimento do Plano:* ${formatDateBr(client.dueDate)}\n💵 *Valor:* R$ ${(Number(client.planPrice) || 0).toFixed(2).replace('.', ',')}/mês\n\nQualquer dúvida, estamos à disposição na Gestão Web Vitrine! ✨`;
+    const slug = client.storeSlug || client.username;
+    const storeLink = `${window.location.origin}/?loja=${slug}`;
+    const adminLink = `${window.location.origin}/?loja=${slug}&admin=1`;
+    const msg = `👑 *ACESSO À SUA WEB VITRINE*\n\nOlá! Aqui estão as credenciais exclusivas da sua loja:\n\n🏬 *Loja:* ${client.storeName}\n👤 *Usuário:* ${client.username}\n🔑 *Senha:* ${client.password}\n\n🌐 *Link da sua Vitrine:* ${storeLink}\n⚙️ *Painel de Gestão da Loja:* ${adminLink}\n📅 *Vencimento do Plano:* ${formatDateBr(client.dueDate)}\n💵 *Valor:* R$ ${(Number(client.planPrice) || 0).toFixed(2).replace('.', ',')}/mês\n\nQualquer dúvida, estamos à disposição na Gestão Web Vitrine! ✨`;
     
     copyToClipboard(msg, `msg-${client.id}`);
   };
@@ -370,12 +374,14 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
   const handleSendWhatsappReminder = (client: StoreClient) => {
     const dueInfo = getDueStatus(client.dueDate);
     const priceFormatted = `R$ ${(Number(client.planPrice) || 0).toFixed(2).replace('.', ',')}`;
+    const slug = client.storeSlug || client.username;
+    const storeLink = `${window.location.origin}/?loja=${slug}`;
     
     let msg = '';
     if (dueInfo.status === 'overdue') {
-      msg = `Olá! Notamos que a assinatura da sua Web Vitrine (*${client.storeName}*) venceu em *${formatDateBr(client.dueDate)}*. O valor da renovação é de *${priceFormatted}*. Gostaria de renovar agora para manter o catálogo 100% online?`;
+      msg = `Olá! Notamos que a assinatura da sua Web Vitrine (*${client.storeName}*) venceu em *${formatDateBr(client.dueDate)}*. O valor da renovação é de *${priceFormatted}*.\n\n🌐 Sua Vitrine: ${storeLink}\n\nGostaria de renovar agora para manter o catálogo 100% online?`;
     } else {
-      msg = `Olá! Tudo bem? Lembramos que a renovação da sua Web Vitrine (*${client.storeName}*) vence em *${formatDateBr(client.dueDate)}* (Valor: *${priceFormatted}*). Estamos à disposição para qualquer suporte!`;
+      msg = `Olá! Aqui é da Gestão Web Vitrine. Segue o acesso da sua loja:\n\n🏬 *Loja:* ${client.storeName}\n👤 *Usuário:* ${client.username}\n🔑 *Senha:* ${client.password}\n🌐 *Link da Vitrine:* ${storeLink}\n📅 *Vencimento:* ${formatDateBr(client.dueDate)} (*${priceFormatted}*)`;
     }
 
     const cleanPhone = (client.phoneWhatsapp || '').replace(/\D/g, '');
@@ -865,6 +871,17 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                             >
                               <MessageCircle className="w-4 h-4" />
                             </button>
+
+                            {/* Direct Open Store Showcase */}
+                            <a
+                              href={`/?loja=${client.storeSlug || client.username}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-2 bg-[#182030] hover:bg-emerald-500/20 text-slate-300 hover:text-emerald-400 rounded-xl border border-slate-700 hover:border-emerald-500/40 transition-colors inline-flex items-center"
+                              title="Abrir Vitrine em Nova Aba"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </a>
 
                             {/* Edit Client */}
                             <button

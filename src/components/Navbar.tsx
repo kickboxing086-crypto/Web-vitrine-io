@@ -31,6 +31,7 @@ interface NavbarProps {
   onOpenStoreSetup: () => void;
   onOpenStoreHours?: () => void;
   onOpenLandingHero?: () => void;
+  isOfficialStore?: boolean;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -47,6 +48,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenStoreSetup,
   onOpenStoreHours,
   onOpenLandingHero,
+  isOfficialStore = false,
 }) => {
   const [showSearch, setShowSearch] = useState(false);
   const hoursStatus = checkStoreHoursStatus(settings);
@@ -119,8 +121,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {/* Presentation / Landing Button ("Adquira Sua Vitrine") */}
-            {onOpenLandingHero && activeView === 'store' && (
+            {/* Presentation / Landing Button ("Adquira Sua Vitrine") only on Demo/Platform showcase */}
+            {onOpenLandingHero && activeView === 'store' && !isOfficialStore && (
               <button
                 type="button"
                 onClick={onOpenLandingHero}

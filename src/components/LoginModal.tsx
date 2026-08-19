@@ -89,19 +89,20 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     // Authenticate actual client first to ensure custom database configurations are respected
     const client = await authenticateClient(cleanUser, cleanPass);
     
-    // Check fallback for original adminUser config if client not found
-    const isFallbackAdmin = (cleanUser === adminUser.username.toLowerCase()) && (cleanPass === adminUser.password);
-
-    if (client || isFallbackAdmin) {
+    if (client) {
       setIsSuccess(true);
       setIsLoading(false);
       setTimeout(() => {
-        onLoginSuccess('store_admin', client || {
-          id: 'admin-fallback',
-          name: settings.storeName || 'Sua Vitrine',
-          username: adminUser.username,
-          password: adminUser.password,
-          storeType: settings.storeType || 'clothing'
+        onLoginSuccess('store_admin', {
+          id: client.id,
+          storeName: client.storeName || client.name || 'Minha Loja',
+          username: client.username,
+          password: client.password,
+          storeType: client.storeType || 'clothing',
+          dueDate: client.dueDate,
+          planPrice: client.planPrice,
+          isOfficial: true,
+          ...client,
         });
         setIsSuccess(false);
         setUsername('');
@@ -111,17 +112,41 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       return;
     }
 
-    // Fallback Test Client bypass only if no matching client is found in the database
+    // Check fallback for original adminUser config if client not found
+    const isFallbackAdmin = (cleanUser === adminUser.username.toLowerCase()) && (cleanPass === adminUser.password);
+
+    if (isFallbackAdmin) {
+      setIsSuccess(true);
+      setIsLoading(false);
+      setTimeout(() => {
+        onLoginSuccess('store_admin', {
+          id: 'admin-fallback',
+          storeName: settings.storeName || 'Sua Vitrine',
+          username: adminUser.username,
+          password: adminUser.password,
+          storeType: settings.storeType || 'clothing',
+          isOfficial: true,
+        });
+        setIsSuccess(false);
+        setUsername('');
+        setPassword('');
+        onClose();
+      }, 600);
+      return;
+    }
+
+    // Fallback Test Client bypass only if explicit test credentials are provided
     if (cleanUser === 'teste@123' && cleanPass === '01020304') {
       setIsSuccess(true);
       setIsLoading(false);
       setTimeout(() => {
         onLoginSuccess('store_admin', {
           id: 'client-test-natural',
-          name: 'Elite Fashion Vitrine',
+          storeName: 'Elite Fashion Vitrine',
           username: 'teste@123',
           password: '01020304',
           storeType: 'clothing',
+          isOfficial: false,
         });
         setIsSuccess(false);
         setUsername('');

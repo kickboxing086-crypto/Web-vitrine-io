@@ -628,12 +628,21 @@ export const authenticateClient = async (username: string, password: string): Pr
     const matchedDoc = snapshot.docs.find((docSnap) => {
       const data = docSnap.data();
       const u = (data.username || '').toString().trim().toLowerCase();
+      const s = (data.storeSlug || '').toString().trim().toLowerCase();
       const p = (data.password || '').toString().trim();
-      return u === cleanUser && p === cleanPass;
+      return (u === cleanUser || s === cleanUser) && p === cleanPass;
     });
 
     if (matchedDoc) {
-      return { id: matchedDoc.id, ...matchedDoc.data() };
+      const data = matchedDoc.data();
+      return { 
+        id: matchedDoc.id, 
+        isOfficial: true,
+        ...data,
+        storeName: data.storeName || data.name || 'Minha Loja',
+        username: (data.username || '').toString().trim().toLowerCase(),
+        storeSlug: data.storeSlug || (data.username || '').toString().trim().toLowerCase(),
+      };
     }
 
     return null;
@@ -650,7 +659,15 @@ export const getClients = (callback: (clients: any[]) => void) => {
     (snapshot) => {
       const items: any[] = [];
       snapshot.forEach((docSnap) => {
-        items.push({ id: docSnap.id, ...docSnap.data() });
+        const data = docSnap.data();
+        items.push({ 
+          id: docSnap.id, 
+          isOfficial: true,
+          ...data,
+          storeName: data.storeName || data.name || 'Minha Loja',
+          username: (data.username || '').toString().trim().toLowerCase(),
+          storeSlug: data.storeSlug || (data.username || '').toString().trim().toLowerCase(),
+        });
       });
       callback(items);
     },
@@ -663,13 +680,39 @@ export const getClients = (callback: (clients: any[]) => void) => {
 
 export const saveClient = async (clientData: any) => {
   try {
-    const clientsCol = collection(db, COLLECTIONS.CLIENTS);
-    if (clientData.id) {
-      const docRef = doc(db, COLLECTIONS.CLIENTS, clientData.id);
-      await setDoc(docRef, clientData, { merge: true });
-    } else {
-      const newRef = doc(clientsCol);
-      await setDoc(newRef, { ...clientData, id: newRef.id });
+    const cleanUsername = (clientData.username || '').toString().trim().toLowerCase();
+    const cleanSlug = clientData.storeSlug || cleanUsername;
+    const clientId = clientData.id || `client-${Date.now()}`;
+
+    const normalizedClient = {
+      ...clientData,
+      id: clientId,
+      username: cleanUsername,
+      storeSlug: cleanSlug,
+      isOfficial: true,
+      storeName: clientData.storeName || 'Minha Loja',
+    };
+
+    const docRef = doc(db, COLLECTIONS.CLIENTS, clientId);
+    await setDoc(docRef, normalizedClient, { merge: true });
+
+    // Initialize tenant settings document in Firestore to prevent falling back to test store
+    try {
+      const tenantSettingsRef = getDocRef(COLLECTIONS.SETTINGS, SETTINGS_DOC_ID, clientId);
+      const tenantSnap = await getDoc(tenantSettingsRef);
+      if (!tenantSnap.exists()) {
+        const initialTenantSettings: StoreSettings = {
+          ...initialStoreSettings,
+          storeName: normalizedClient.storeName,
+          phoneWhatsapp: normalizedClient.phoneWhatsapp || initialStoreSettings.phoneWhatsapp,
+          storeType: normalizedClient.storeType || 'clothing',
+          isFirstSetupDone: true,
+          announcementBannerText: `💎 Bem-vindo à vitrine oficial da ${normalizedClient.storeName}! Explore o catálogo e faça seu pedido direto pelo WhatsApp.`,
+        };
+        await setDoc(tenantSettingsRef, initialTenantSettings);
+      }
+    } catch (tenantErr) {
+      console.warn('Could not pre-seed tenant settings, it will auto-create on first load:', tenantErr);
     }
   } catch (error) {
     console.error('Error saving client:', error);
@@ -701,11 +744,20 @@ export const getClientByUsername = async (slugOrUsername: string): Promise<any |
       const data = docSnap.data();
       const u = (data.username || '').toString().trim().toLowerCase();
       const s = (data.storeSlug || '').toString().trim().toLowerCase();
-      return u === clean || s === clean;
+      const id = (docSnap.id || '').toString().trim().toLowerCase();
+      return u === clean || s === clean || id === clean;
     });
 
     if (matchedDoc) {
-      return { id: matchedDoc.id, ...matchedDoc.data() };
+      const data = matchedDoc.data();
+      return { 
+        id: matchedDoc.id, 
+        isOfficial: true,
+        ...data,
+        storeName: data.storeName || data.name || 'Minha Loja',
+        username: (data.username || '').toString().trim().toLowerCase(),
+        storeSlug: data.storeSlug || (data.username || '').toString().trim().toLowerCase(),
+      };
     }
 
     return null;

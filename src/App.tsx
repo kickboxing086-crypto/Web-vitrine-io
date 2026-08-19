@@ -108,6 +108,13 @@ export default function App() {
     return saved ? JSON.parse(saved) : null;
   });
 
+  const isOfficialStore = Boolean(
+    currentClient &&
+    currentClient.username !== 'teste@123' &&
+    currentClient.id !== 'client-test-natural' &&
+    currentClient.isOfficial !== false
+  );
+
   const handleToggleView = (view: 'store' | 'admin' | 'super_admin' | 'landing') => {
     if (view === 'admin' && !isAdminAuthenticated) {
       setIsLoginModalOpen(true);
@@ -120,8 +127,13 @@ export default function App() {
     setIsAdminAuthenticated(true);
     saveAuthSession(true);
     if (client) {
-      setCurrentClient(client);
-      localStorage.setItem('store_current_client', JSON.stringify(client));
+      const isOfficial = client.username !== 'teste@123' && client.id !== 'client-test-natural' && client.isOfficial !== false;
+      const enrichedClient = {
+        ...client,
+        isOfficial,
+      };
+      setCurrentClient(enrichedClient);
+      localStorage.setItem('store_current_client', JSON.stringify(enrichedClient));
     }
     if (type === 'super_admin') {
       setActiveView('super_admin');
@@ -204,22 +216,25 @@ export default function App() {
     }
 
     const getStoreUsernameFromUrl = () => {
+      const params = new URLSearchParams(window.location.search);
+      const queryParam = params.get('loja') || params.get('u') || params.get('store');
+      if (queryParam) return queryParam.trim().toLowerCase();
+
       const hostname = window.location.hostname;
-      
-      // List of base domains. Add custom domains here later (e.g., 'seusite.com.br')
-      const baseDomains = ['web-vitrine-site.vercel.app', 'localhost'];
-      
-      for (const base of baseDomains) {
-        if (hostname.endsWith(`.${base}`)) {
-          const subdomain = hostname.replace(`.${base}`, '');
-          if (subdomain && subdomain !== 'www') {
-            return subdomain;
-          }
+      const parts = hostname.split('.');
+      if (parts.length > 2) {
+        const subdomain = parts[0].toLowerCase();
+        if (
+          subdomain !== 'www' &&
+          !subdomain.startsWith('ais-') &&
+          subdomain !== 'web-vitrine-site' &&
+          subdomain !== 'localhost'
+        ) {
+          return subdomain;
         }
       }
       
-      const params = new URLSearchParams(window.location.search);
-      return params.get('loja') || params.get('u');
+      return null;
     };
     
     // Check for client store username (from subdomain or param)
@@ -228,8 +243,10 @@ export default function App() {
       import('./lib/firestoreService').then(async (module) => {
         const client = await module.getClientByUsername(lojaParam);
         if (client) {
-          setCurrentClient(client);
-          localStorage.setItem('store_current_client', JSON.stringify(client));
+          const isOfficial = client.username !== 'teste@123' && client.id !== 'client-test-natural';
+          const enriched = { ...client, isOfficial };
+          setCurrentClient(enriched);
+          localStorage.setItem('store_current_client', JSON.stringify(enriched));
         }
       });
     }
@@ -826,6 +843,7 @@ export default function App() {
         onOpenStoreSetup={() => setIsStoreSetupOpen(true)}
         onOpenStoreHours={() => setIsStoreHoursModalOpen(true)}
         onOpenLandingHero={() => setActiveView('landing')}
+        isOfficialStore={isOfficialStore}
       />
 
       {/* Main Content Body */}
