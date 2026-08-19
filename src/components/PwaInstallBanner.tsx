@@ -78,7 +78,7 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({ storeName = 
               <div>
                 <div className="flex items-center gap-1.5">
                   <span className="font-bold text-xs sm:text-sm text-stone-100 line-clamp-1">
-                    {storeName}
+                    Web Vitrine
                   </span>
                   <span className="px-1.5 py-0.5 bg-[#D4AF37]/20 text-[#E5C378] text-[9px] font-bold rounded">
                     App PWA
