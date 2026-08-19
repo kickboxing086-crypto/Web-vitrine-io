@@ -42,6 +42,15 @@ interface PlanOption {
   features: string[];
 }
 
+const SHARED_SYSTEM_FEATURES = [
+  'Vitrine virtual online 24h por dia',
+  'Pedidos ilimitados direto no WhatsApp oficial',
+  'Gestão completa de catálogo, fotos e estoque',
+  'Painel financeiro, fluxo de caixa e relatórios',
+  '0% de taxas ou comissões sobre suas vendas',
+  'Suporte técnico e atualizações automáticas',
+];
+
 const COMMERCIAL_PLANS: PlanOption[] = [
   {
     id: 'monthly',
@@ -50,13 +59,8 @@ const COMMERCIAL_PLANS: PlanOption[] = [
     monthsCount: 1,
     price: 29.99,
     monthlyEquivalent: 'R$ 29,99/mês',
-    description: 'Renovação flexível ideal para manter sua vitrine ativa mês a mês.',
-    features: [
-      'Vitrine online 24h por dia',
-      'Pedidos ilimitados no WhatsApp',
-      'Painel financeiro e estoque completo',
-      '0% de taxas ou comissões sobre suas vendas',
-    ],
+    description: 'Renovação flexível mês a mês com acesso completo a todos os recursos da vitrine.',
+    features: SHARED_SYSTEM_FEATURES,
   },
   {
     id: 'quarterly',
@@ -65,16 +69,11 @@ const COMMERCIAL_PLANS: PlanOption[] = [
     monthsCount: 3,
     price: 49.99,
     monthlyEquivalent: 'R$ 16,66/mês',
-    saveAmount: 'Economia de R$ 39,98',
+    saveAmount: 'Economia de R$ 39,98 no período',
     popular: true,
     badge: 'Mais Escolhido',
-    description: 'Excelente custo-benefício para manter sua loja faturando no trimestre.',
-    features: [
-      'Tudo do plano mensal incluído',
-      'Economia imediata de 44%',
-      'Estabilidade garantida por 90 dias',
-      'Suporte prioritário de atendimento',
-    ],
+    description: 'Excelente custo-benefício para garantir 90 dias de operação contínua com economia.',
+    features: SHARED_SYSTEM_FEATURES,
   },
   {
     id: 'semiannual',
@@ -83,32 +82,10 @@ const COMMERCIAL_PLANS: PlanOption[] = [
     monthsCount: 6,
     price: 119.99,
     monthlyEquivalent: 'R$ 19,99/mês',
-    saveAmount: 'Economia de R$ 59,95',
+    saveAmount: 'Economia de R$ 59,95 no período',
     badge: 'Alta Economia',
-    description: 'Tranquilidade semestral para focar exclusivamente no crescimento das vendas.',
-    features: [
-      'Tudo do plano trimestral incluído',
-      '6 meses completos de vitrine ativa',
-      'Economia de R$ 59,95 acumulada',
-      'Sincronização em nuvem e backups automáticos',
-    ],
-  },
-  {
-    id: 'annual',
-    title: 'Plano Anual VIP',
-    period: '12 meses',
-    monthsCount: 12,
-    price: 199.99,
-    monthlyEquivalent: 'R$ 16,66/mês',
-    saveAmount: 'Economia de R$ 159,89',
-    badge: 'Maior Vantagem',
-    description: 'O ano inteiro garantido com a menor tarifa mensal e suporte preferencial.',
-    features: [
-      '365 dias de operação contínua sem interrupções',
-      'Maior taxa de economia anual da plataforma',
-      'Acesso preferencial a atualizações e novos recursos',
-      'Consultoria para personalização e catálogo',
-    ],
+    description: 'Tranquilidade semestral de 180 dias com o mesmo acesso integral ao sistema.',
+    features: SHARED_SYSTEM_FEATURES,
   },
 ];
 
@@ -305,7 +282,7 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settin
             </div>
 
             {/* Commercial Plan Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {COMMERCIAL_PLANS.map((plan, index) => {
                 const isSelected = selectedPlan?.id === plan.id;
                 return (

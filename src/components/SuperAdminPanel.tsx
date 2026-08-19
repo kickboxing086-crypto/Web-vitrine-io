@@ -27,7 +27,6 @@ import {
   Zap,
   ShieldAlert,
   ArrowRight,
-  Sparkles,
   ChevronDown,
   ExternalLink,
 } from 'lucide-react';
@@ -418,7 +417,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
             className="fixed top-6 right-6 z-50 flex items-center space-x-3 px-5 py-3 rounded-2xl bg-[#141B2D] border border-amber-500/40 shadow-2xl shadow-stone-950/80 backdrop-blur-md"
           >
             {feedbackToast.type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-400" />}
-            {feedbackToast.type === 'info' && <Sparkles className="w-5 h-5 text-amber-400" />}
+            {feedbackToast.type === 'info' && <CheckCircle2 className="w-5 h-5 text-amber-400" />}
             {feedbackToast.type === 'error' && <AlertTriangle className="w-5 h-5 text-rose-400" />}
             <span className="text-xs sm:text-sm font-semibold text-slate-100">{feedbackToast.message}</span>
           </motion.div>
@@ -1030,7 +1029,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       {[
                         {
                           price: 29.99,
@@ -1052,13 +1051,6 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                           period: '180 dias',
                           days: 180,
                           badge: 'Alta Economia',
-                        },
-                        {
-                          price: 199.99,
-                          title: 'Anual VIP',
-                          period: '365 dias',
-                          days: 365,
-                          badge: 'Maior Vantagem',
                         },
                       ].map((plan) => {
                         const isSelected = Number(formData.planPrice) === plan.price;
