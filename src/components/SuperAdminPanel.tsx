@@ -1018,27 +1018,122 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                     </div>
                   </div>
 
-                  {/* Valor do Plano (Editável pelo Gestor) */}
-                  <div>
-                    <label className="block text-xs font-bold text-amber-300 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                      <DollarSign className="w-3.5 h-3.5 text-amber-400" />
-                      Plano Contratado *
-                    </label>
-                    <div className="relative">
-                      <select
-                        required
-                        value={formData.planPrice}
-                        onChange={(e) => setFormData({ ...formData, planPrice: e.target.value })}
-                        className="w-full px-4 py-2.5 bg-[#0B0F19] border border-amber-500/40 rounded-xl text-sm font-bold text-amber-300 focus:outline-none focus:border-amber-400 transition-colors appearance-none"
-                        id="input-form-planprice"
-                      >
-                        <option value="29.99">Plano Mensal - R$ 29,99</option>
-                        <option value="49.99">Plano Trimestral - R$ 49,99</option>
-                        <option value="119.99">Plano Semestral - R$ 119,99</option>
-                      </select>
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <ChevronDown className="w-4 h-4 text-amber-500/70" />
-                      </div>
+                  {/* Plano Contratado (Com Animação Interativa de Alto Padrão) */}
+                  <div className="sm:col-span-2 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <Crown className="w-3.5 h-3.5 text-amber-400" />
+                        Plano Contratado & Duração *
+                      </label>
+                      <span className="text-[11px] text-slate-400 font-medium">
+                        Toque para selecionar o ciclo
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                      {[
+                        {
+                          price: 29.99,
+                          title: 'Mensal',
+                          period: '30 dias',
+                          days: 30,
+                          badge: null,
+                        },
+                        {
+                          price: 49.99,
+                          title: 'Trimestral',
+                          period: '90 dias',
+                          days: 90,
+                          badge: 'Mais Escolhido',
+                        },
+                        {
+                          price: 119.99,
+                          title: 'Semestral',
+                          period: '180 dias',
+                          days: 180,
+                          badge: 'Alta Economia',
+                        },
+                        {
+                          price: 199.99,
+                          title: 'Anual VIP',
+                          period: '365 dias',
+                          days: 365,
+                          badge: 'Maior Vantagem',
+                        },
+                      ].map((plan) => {
+                        const isSelected = Number(formData.planPrice) === plan.price;
+                        return (
+                          <motion.button
+                            key={plan.price}
+                            type="button"
+                            whileHover={{ scale: 1.03, y: -2 }}
+                            whileTap={{ scale: 0.96 }}
+                            transition={{ type: 'spring', stiffness: 450, damping: 20 }}
+                            onClick={() => {
+                              setFormData({
+                                ...formData,
+                                planPrice: plan.price,
+                                dueDate: getDefaultDueDate(plan.days),
+                              });
+                            }}
+                            className={`relative p-3 rounded-2xl border text-left flex flex-col justify-between transition-all cursor-pointer overflow-hidden select-none min-h-[96px] ${
+                              isSelected
+                                ? 'bg-gradient-to-b from-amber-500/20 via-amber-500/10 to-transparent border-amber-500 shadow-lg shadow-amber-950/40 ring-1 ring-amber-500/60'
+                                : 'bg-[#0B0F19] hover:bg-[#101624] border-slate-700/80 hover:border-slate-600'
+                            }`}
+                            id={`btn-plan-select-${plan.price}`}
+                          >
+                            {/* Animated Background Indicator */}
+                            {isSelected && (
+                              <motion.div
+                                layoutId="activeAdminPlanGlow"
+                                className="absolute inset-0 bg-amber-500/10 pointer-events-none rounded-2xl"
+                                transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+                              />
+                            )}
+
+                            {/* Top Badge */}
+                            {plan.badge && (
+                              <span className="self-start px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider bg-amber-400 text-stone-950 mb-1 shadow-2xs">
+                                {plan.badge}
+                              </span>
+                            )}
+
+                            <div className="flex items-center justify-between w-full mb-1">
+                              <span className={`text-xs font-bold ${isSelected ? 'text-amber-300' : 'text-slate-200'}`}>
+                                {plan.title}
+                              </span>
+                              <div
+                                className={`w-4 h-4 rounded-full flex items-center justify-center border transition-all ${
+                                  isSelected
+                                    ? 'bg-amber-400 border-amber-400 text-stone-950 scale-110'
+                                    : 'border-slate-600 bg-transparent'
+                                }`}
+                              >
+                                {isSelected && (
+                                  <motion.div
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                                  >
+                                    <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                  </motion.div>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="my-0.5">
+                              <span className={`text-sm sm:text-base font-black tracking-tight ${isSelected ? 'text-white' : 'text-slate-100'}`}>
+                                R$ {plan.price.toFixed(2).replace('.', ',')}
+                              </span>
+                            </div>
+
+                            <span className="text-[10px] text-slate-400 font-medium">
+                              {plan.period}
+                            </span>
+                          </motion.button>
+                        );
+                      })}
                     </div>
                   </div>
 
