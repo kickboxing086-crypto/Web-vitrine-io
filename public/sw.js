@@ -1,4 +1,4 @@
-const CACHE_NAME = 'web-vitrine-v1';
+const CACHE_NAME = 'web-vitrine-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -7,6 +7,8 @@ const STATIC_ASSETS = [
   '/favicon.svg',
   '/icon-192.png',
   '/icon-512.png',
+  '/icon-maskable-192.png',
+  '/icon-maskable-512.png',
   '/apple-touch-icon.png',
   '/logo.jpg'
 ];

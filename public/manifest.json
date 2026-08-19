@@ -3,12 +3,14 @@
   "short_name": "Web Vitrine",
   "description": "Sua vitrine virtual exclusiva, catálogo de produtos e pedidos direto no WhatsApp.",
   "start_url": "/",
+  "scope": "/",
   "id": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "window-controls-overlay"],
   "orientation": "portrait-primary",
-  "background_color": "#FAF8F5",
+  "background_color": "#121114",
   "theme_color": "#18181B",
-  "scope": "/",
+  "prefer_related_applications": false,
   "categories": ["shopping", "business", "lifestyle"],
   "icons": [
     {
@@ -18,15 +20,37 @@
       "purpose": "any"
     },
     {
+      "src": "/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
       "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/apple-touch-icon.png",
       "sizes": "180x180",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Ver Catálogo",
+      "short_name": "Catálogo",
+      "description": "Acessar todos os produtos e novidades",
+      "url": "/",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }
