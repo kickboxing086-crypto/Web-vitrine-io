@@ -217,8 +217,26 @@ export default function App() {
 
     const getStoreUsernameFromUrl = () => {
       const params = new URLSearchParams(window.location.search);
-      const queryParam = params.get('loja') || params.get('u') || params.get('store');
+      const queryParam = params.get('loja') || params.get('u') || params.get('store') || params.get('slug');
       if (queryParam) return queryParam.trim().toLowerCase();
+
+      // Check hash fragment (e.g. /#loja=xxx or #/loja/xxx)
+      if (window.location.hash) {
+        const hashClean = window.location.hash.replace(/^#\/?/, '');
+        const hashParams = new URLSearchParams(hashClean);
+        const hashLoja = hashParams.get('loja') || hashParams.get('u') || hashParams.get('store') || hashParams.get('slug');
+        if (hashLoja) return hashLoja.trim().toLowerCase();
+        if (hashClean.startsWith('loja/')) {
+          return hashClean.replace('loja/', '').trim().toLowerCase();
+        }
+      }
+
+      // Check pathname (e.g. /loja/xxx)
+      const pathname = window.location.pathname;
+      if (pathname.startsWith('/loja/')) {
+        const pathSlug = pathname.replace('/loja/', '').replace(/\/$/, '').trim().toLowerCase();
+        if (pathSlug) return pathSlug;
+      }
 
       const hostname = window.location.hostname;
       const parts = hostname.split('.');
@@ -228,6 +246,7 @@ export default function App() {
           subdomain !== 'www' &&
           !subdomain.startsWith('ais-') &&
           subdomain !== 'web-vitrine-site' &&
+          subdomain !== 'web-vitrine-net' &&
           subdomain !== 'localhost'
         ) {
           return subdomain;

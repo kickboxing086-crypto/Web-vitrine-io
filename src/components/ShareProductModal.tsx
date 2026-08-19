@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Product, StoreSettings } from '../types';
-import { formatCurrency } from '../lib/formatters';
+import { formatCurrency, copyToClipboardSafe } from '../lib/formatters';
 import {
   X,
   Share2,
@@ -43,7 +43,11 @@ export const ShareProductModal: React.FC<ShareProductModalProps> = ({
   // Build product link
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
-  const shareUrl = `${origin}${pathname}?produto=${encodeURIComponent(product.id)}`;
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const loja = searchParams.get('loja') || searchParams.get('store') || searchParams.get('u');
+  const shareUrl = loja 
+    ? `${origin}${pathname}?loja=${encodeURIComponent(loja)}&produto=${encodeURIComponent(product.id)}`
+    : `${origin}${pathname}?produto=${encodeURIComponent(product.id)}`;
 
   // Default share text message
   const shareMessage = `Olha que peça linda que encontrei na ${settings.storeName} ✨\n\n👗 *${product.name}*\n💰 Por apenas *${formatCurrency(currentPrice)}*\n\n👉 Veja todos os detalhes e fotos aqui:\n${shareUrl}`;

@@ -15,6 +15,8 @@ import {
   formatPhone,
   cleanPhoneForWhatsapp,
   generateWhatsappStoreShareMessage,
+  getStoreShareUrl,
+  copyToClipboardSafe,
 } from '../lib/formatters';
 import { fileToBase64, filesToBase64List } from '../lib/imageUtils';
 import {
@@ -460,18 +462,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setEditingTagId(null);
   };
 
-  const handleCopyInvite = () => {
-    let inviteUrl = '';
-    const activeSlug = currentClient?.storeSlug || currentClient?.username;
-    
-    if (activeSlug) {
-      // Prioritize the standard reliable query param URL that works 100% on Vercel without wildcard DNS
-      inviteUrl = `${window.location.origin}/?loja=${activeSlug}`;
-    } else {
-      inviteUrl = `${window.location.origin}?invite=${settings.inviteCode || 'VIP'}`;
-    }
-
-    navigator.clipboard.writeText(inviteUrl);
+  const handleCopyInvite = async () => {
+    const inviteUrl = getStoreShareUrl(settings, currentClient);
+    await copyToClipboardSafe(inviteUrl);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2500);
   };
@@ -549,7 +542,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       type="button"
                       onClick={() => {
                         setIsSettingsMenuOpen(false);
-                        const msg = generateWhatsappStoreShareMessage(settings);
+                        const inviteUrl = getStoreShareUrl(settings, currentClient);
+                        const msg = generateWhatsappStoreShareMessage(settings, inviteUrl);
                         window.open(`https://wa.me/?text=${msg}`, '_blank');
                       }}
                       className="w-full flex items-center space-x-3 px-3 py-2.5 hover:bg-stone-100 text-emerald-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer"

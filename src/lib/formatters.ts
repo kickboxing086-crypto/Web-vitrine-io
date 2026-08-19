@@ -117,7 +117,61 @@ export const generateWhatsappDirectProductMessage = (
   return encodeURIComponent(msg);
 };
 
-export const generateWhatsappStoreShareMessage = (settings: StoreSettings): string => {
+export const copyToClipboardSafe = async (text: string): Promise<boolean> => {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (err) {
+    console.warn('Clipboard API error, trying fallback:', err);
+  }
+
+  try {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    textArea.setAttribute('readonly', '');
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    const successful = document.execCommand('copy');
+    document.body.removeChild(textArea);
+    return successful;
+  } catch (err) {
+    console.error('Fallback copy failed:', err);
+    return false;
+  }
+};
+
+export const getStoreShareUrl = (settings?: StoreSettings, client?: any): string => {
+  if (typeof window === 'undefined') return '';
+  const origin = window.location.origin;
+  const activeSlug =
+    client?.storeSlug ||
+    client?.username ||
+    (settings?.storeName
+      ? settings.storeName
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]/g, '-')
+          .replace(/-+/g, '-')
+          .replace(/^-|-$/g, '')
+      : '');
+
+  if (activeSlug) {
+    return `${origin}/?loja=${encodeURIComponent(activeSlug)}`;
+  }
+  return `${origin}/`;
+};
+
+export const generateWhatsappStoreShareMessage = (
+  settings: StoreSettings,
+  customUrl?: string
+): string => {
   let msg = `*${settings.storeName.toUpperCase()}*\n`;
   if (settings.slogan) {
     msg += `_${settings.slogan}_\n`;
@@ -126,8 +180,11 @@ export const generateWhatsappStoreShareMessage = (settings: StoreSettings): stri
   if (settings.description) {
     msg += `${settings.description}\n\n`;
   }
-  const officialUrl = 'https://web-vitrine-net.vercel.app';
-  msg += `*Conheça nossa Vitrine Exclusiva & Lançamentos:* \n${officialUrl}\n\n`;
+  
+  const linkToShare = customUrl || getStoreShareUrl(settings);
+  if (linkToShare) {
+    msg += `*Conheça nossa Vitrine Exclusiva & Lançamentos:*\n${linkToShare}\n\n`;
+  }
   msg += `Atendimento personalizado e pedidos direto pelo WhatsApp!\n`;
   msg += `Será um prazer vestir você com elegância e exclusividade.`;
   return encodeURIComponent(msg);

@@ -732,7 +732,12 @@ export const deleteClient = async (id: string) => {
 
 export const getClientByUsername = async (slugOrUsername: string): Promise<any | null> => {
   try {
-    const clean = slugOrUsername.trim().toLowerCase();
+    const rawClean = slugOrUsername.trim().toLowerCase();
+    const normalizedQuery = rawClean
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]/g, '');
+
     const clientsCol = collection(db, COLLECTIONS.CLIENTS);
     const snapshot = await getDocs(clientsCol);
 
@@ -744,8 +749,25 @@ export const getClientByUsername = async (slugOrUsername: string): Promise<any |
       const data = docSnap.data();
       const u = (data.username || '').toString().trim().toLowerCase();
       const s = (data.storeSlug || '').toString().trim().toLowerCase();
+      const name = (data.storeName || data.name || '').toString().trim().toLowerCase();
       const id = (docSnap.id || '').toString().trim().toLowerCase();
-      return u === clean || s === clean || id === clean;
+      const email = (data.email || '').toString().trim().toLowerCase();
+
+      const uNorm = u.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+      const sNorm = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+      const nameNorm = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+      const emailPrefix = email.split('@')[0].normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+
+      return (
+        u === rawClean ||
+        s === rawClean ||
+        id === rawClean ||
+        uNorm === normalizedQuery ||
+        sNorm === normalizedQuery ||
+        nameNorm === normalizedQuery ||
+        emailPrefix === normalizedQuery ||
+        id === `client-${rawClean}`
+      );
     });
 
     if (matchedDoc) {

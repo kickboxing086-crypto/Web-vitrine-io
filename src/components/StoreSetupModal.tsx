@@ -27,6 +27,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { fileToBase64 } from '../lib/imageUtils';
 import { STORE_FONTS, STORE_COLOR_PALETTES, WEEK_DAYS, formatBusinessDaysLabel } from '../lib/themeUtils';
+import { getStoreShareUrl, copyToClipboardSafe } from '../lib/formatters';
 
 interface StoreSetupModalProps {
   currentClient?: any;
@@ -89,18 +90,10 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
     if (onClose) onClose();
   };
 
-  const copyInviteLink = () => {
-    let inviteUrl = '';
+  const copyInviteLink = async () => {
     const activeSlug = storeSlug.trim().replace(/\s+/g, '').toLowerCase() || currentClient?.storeSlug || currentClient?.username;
-    
-    if (activeSlug) {
-      // Prioritize the standard reliable query param URL that works 100% on Vercel
-      inviteUrl = `${window.location.origin}/?loja=${activeSlug}`;
-    } else {
-      inviteUrl = `${window.location.origin}?invite=${formData.inviteCode || 'VIP'}`;
-    }
-
-    navigator.clipboard.writeText(inviteUrl);
+    const inviteUrl = getStoreShareUrl(formData, { ...currentClient, storeSlug: activeSlug });
+    await copyToClipboardSafe(inviteUrl);
     setCopiedInvite(true);
     setTimeout(() => setCopiedInvite(false), 2500);
   };
