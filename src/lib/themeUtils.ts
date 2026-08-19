@@ -182,9 +182,86 @@ export const STORE_COLOR_PALETTES: ColorPaletteOption[] = [
   },
 ];
 
-export function getFontFamilyCss(fontId?: string): string {
-  const found = STORE_FONTS.find((f) => f.id === fontId);
-  return found ? found.fontFamily : STORE_FONTS[0].fontFamily;
+export function getFontFamilyCss(fontIdOrName?: string): string {
+  if (!fontIdOrName) return STORE_FONTS[0].fontFamily;
+  const clean = fontIdOrName.toLowerCase().trim();
+  const found = STORE_FONTS.find(
+    (f) =>
+      f.id.toLowerCase() === clean ||
+      f.name.toLowerCase() === clean ||
+      f.fontFamily.toLowerCase().includes(clean)
+  );
+  return found ? found.fontFamily : fontIdOrName;
+}
+
+export function adjustColorBrightness(hex: string, percent: number): string {
+  let cleanHex = hex.replace('#', '');
+  if (cleanHex.length === 3) {
+    cleanHex = cleanHex.split('').map((c) => c + c).join('');
+  }
+  if (cleanHex.length !== 6) return hex;
+
+  const num = parseInt(cleanHex, 16);
+  let r = (num >> 16) + Math.round(255 * (percent / 100));
+  let g = ((num >> 8) & 0x00ff) + Math.round(255 * (percent / 100));
+  let b = (num & 0x0000ff) + Math.round(255 * (percent / 100));
+
+  r = Math.min(255, Math.max(0, r));
+  g = Math.min(255, Math.max(0, g));
+  b = Math.min(255, Math.max(0, b));
+
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+}
+
+export function applyStoreTheme(settings?: { fontFamily?: string; primaryColor?: string }) {
+  if (typeof document === 'undefined' || !settings) return;
+  const root = document.documentElement;
+
+  // Apply Font
+  if (settings.fontFamily) {
+    const fontCss = getFontFamilyCss(settings.fontFamily);
+    root.style.setProperty('--font-serif-luxury', fontCss);
+    
+    // Check if it's a clean sans-serif font
+    const cleanFontId = settings.fontFamily.toLowerCase().trim();
+    const isSans = ['montserrat', 'plus-jakarta', 'poppins', 'raleway', 'outfit'].some(
+      (s) => cleanFontId.includes(s)
+    );
+    if (isSans) {
+      root.style.setProperty('--font-body', fontCss);
+    } else {
+      root.style.setProperty('--font-body', "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif");
+    }
+  }
+
+  // Apply Color Palette
+  if (settings.primaryColor) {
+    const hex = settings.primaryColor.trim();
+    const matchedPalette = STORE_COLOR_PALETTES.find(
+      (p) => p.hex.toLowerCase() === hex.toLowerCase() || p.id.toLowerCase() === hex.toLowerCase()
+    );
+
+    if (matchedPalette) {
+      root.style.setProperty('--brand-primary', matchedPalette.hex);
+      root.style.setProperty('--brand-primary-dark', matchedPalette.darkHex);
+      root.style.setProperty('--brand-primary-darker', adjustColorBrightness(matchedPalette.darkHex, -15));
+      root.style.setProperty('--brand-bg', matchedPalette.bgHex);
+      root.style.setProperty('--brand-bg-alt', adjustColorBrightness(matchedPalette.bgHex, -4));
+      root.style.setProperty('--brand-border', adjustColorBrightness(matchedPalette.bgHex, -10));
+      root.style.setProperty('--brand-border-dark', adjustColorBrightness(matchedPalette.bgHex, -18));
+    } else {
+      root.style.setProperty('--brand-primary', hex);
+      const darkHex = adjustColorBrightness(hex, -20);
+      const darkerHex = adjustColorBrightness(hex, -35);
+      const bgHex = adjustColorBrightness(hex, 82);
+      root.style.setProperty('--brand-primary-dark', darkHex);
+      root.style.setProperty('--brand-primary-darker', darkerHex);
+      root.style.setProperty('--brand-bg', bgHex);
+      root.style.setProperty('--brand-bg-alt', adjustColorBrightness(bgHex, -4));
+      root.style.setProperty('--brand-border', adjustColorBrightness(bgHex, -10));
+      root.style.setProperty('--brand-border-dark', adjustColorBrightness(bgHex, -18));
+    }
+  }
 }
 
 // Preset color variants with suggested Hex colors

@@ -64,7 +64,7 @@ import { StoreHoursModal } from './components/StoreHoursModal';
 import { ShareProductModal } from './components/ShareProductModal';
 import { PaymentSuccessModal } from './components/PaymentSuccessModal';
 import { SlidersHorizontal, AlertCircle, Tag as TagIcon, ShoppingBag, ArrowLeft, MessageCircle, ChevronDown, Check, Instagram, MapPin, Clock } from 'lucide-react';
-import { getFontFamilyCss, checkStoreHoursStatus } from './lib/themeUtils';
+import { getFontFamilyCss, checkStoreHoursStatus, applyStoreTheme } from './lib/themeUtils';
 import { formatCurrency, cleanPhoneForWhatsapp } from './lib/formatters';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -199,13 +199,7 @@ export default function App() {
     }
 
     // Apply custom dynamic store font and primary color to root document
-    if (settings.fontFamily) {
-      document.documentElement.style.setProperty('--font-serif-luxury', getFontFamilyCss(settings.fontFamily));
-    }
-    if (settings.primaryColor) {
-      document.documentElement.style.setProperty('--brand-primary', settings.primaryColor);
-      document.documentElement.style.setProperty('--brand-primary-dark', settings.primaryColor);
-    }
+    applyStoreTheme(settings);
   }, [settings.storeName, settings.description, settings.fontFamily, settings.primaryColor]);
 
   // Check first access and URL params for admin login and tenant stores

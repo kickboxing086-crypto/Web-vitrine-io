@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { fileToBase64 } from '../lib/imageUtils';
-import { STORE_FONTS, STORE_COLOR_PALETTES, WEEK_DAYS, formatBusinessDaysLabel } from '../lib/themeUtils';
+import { STORE_FONTS, STORE_COLOR_PALETTES, WEEK_DAYS, formatBusinessDaysLabel, applyStoreTheme } from '../lib/themeUtils';
 import { getStoreShareUrl, copyToClipboardSafe } from '../lib/formatters';
 
 interface StoreSetupModalProps {
@@ -80,6 +80,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    applyStoreTheme(formData);
     onSave({
       ...formData,
       isFirstSetupDone: true,
@@ -624,12 +625,14 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                       <button
                         key={pal.id}
                         type="button"
-                        onClick={() =>
-                          setFormData({
+                        onClick={() => {
+                          const updated = {
                             ...formData,
                             primaryColor: pal.hex,
-                          })
-                        }
+                          };
+                          setFormData(updated);
+                          applyStoreTheme(updated);
+                        }}
                         className={`p-2.5 rounded-xl border text-left flex flex-col justify-between space-y-2 transition-all cursor-pointer ${
                           isSelected
                             ? 'ring-2 ring-stone-900 border-stone-900 bg-stone-50 shadow-sm'
@@ -667,13 +670,23 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                     <input
                       type="color"
                       value={formData.primaryColor || '#B8860B'}
-                      onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
+                      onChange={(e) => {
+                        const updated = { ...formData, primaryColor: e.target.value };
+                        setFormData(updated);
+                        applyStoreTheme(updated);
+                      }}
                       className="w-7 h-7 rounded-lg border border-stone-300 cursor-pointer p-0.5"
                     />
                     <input
                       type="text"
                       value={formData.primaryColor || '#B8860B'}
-                      onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
+                      onChange={(e) => {
+                        const updated = { ...formData, primaryColor: e.target.value };
+                        setFormData(updated);
+                        if (e.target.value.startsWith('#') && e.target.value.length === 7) {
+                          applyStoreTheme(updated);
+                        }
+                      }}
                       placeholder="#B8860B"
                       className="w-24 px-2 py-1 bg-brand-bg border border-stone-300 rounded-lg font-mono text-xs text-stone-800 uppercase"
                     />
@@ -699,12 +712,14 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                       <button
                         key={font.id}
                         type="button"
-                        onClick={() =>
-                          setFormData({
+                        onClick={() => {
+                          const updated = {
                             ...formData,
                             fontFamily: font.id,
-                          })
-                        }
+                          };
+                          setFormData(updated);
+                          applyStoreTheme(updated);
+                        }}
                         className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-start justify-between ${
                           isSelected
                             ? 'ring-2 ring-stone-900 border-stone-900 bg-stone-50 shadow-sm'

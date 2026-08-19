@@ -9,13 +9,19 @@
   --color-brand-bg-alt: var(--brand-bg-alt);
   --color-brand-border: var(--brand-border);
   --color-brand-border-dark: var(--brand-border-dark);
+  --font-serif-luxury: var(--font-serif-luxury);
+  --font-heading: var(--font-serif-luxury);
 }
 
 :root {
+  /* Dynamic font variables */
+  --font-serif-luxury: 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
   /* Clothing Store Theme (Default) */
-  --brand-primary: #D7B58B;
-  --brand-primary-dark: #B58D5F;
-  --brand-primary-darker: #A67C52;
+  --brand-primary: #B8860B;
+  --brand-primary-dark: #8C6508;
+  --brand-primary-darker: #705106;
   --brand-secondary: #211E1B;
   --brand-bg: #FAF8F5;
   --brand-bg-alt: #F2ECE3;
@@ -37,13 +43,10 @@
 
 @layer base {
   body {
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--font-body);
   }
-  h1, h2, h3, .font-serif-luxury {
-    font-family: 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
-  }
-  .font-cormorant {
-    font-family: 'Cormorant Garamond', Georgia, serif;
+  h1, h2, h3, h4, h5, h6, .font-serif-luxury, .font-cormorant {
+    font-family: var(--font-serif-luxury) !important;
   }
   
   .theme-natural h1, 
