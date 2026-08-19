@@ -1,4 +1,4 @@
-const CACHE_NAME = 'web-vitrine-pwa-v9';
+const CACHE_NAME = 'web-vitrine-pwa-v10';
 const urlsToCache = [
   '/',
   '/index.html',
