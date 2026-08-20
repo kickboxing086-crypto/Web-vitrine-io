@@ -25,16 +25,23 @@ export const PwaInstallBanner: React.FC<{ storeName?: string }> = ({ storeName =
     if (isInstalling) return;
     setIsInstalling(true);
     
+    // Safety timeout to reset "installing" state if nothing happens
+    const safetyTimeout = setTimeout(() => {
+      setIsInstalling(false);
+    }, 5000);
+
     try {
       const result = await triggerNativeInstall();
+      clearTimeout(safetyTimeout);
+      
       if (result === 'accepted') {
         setIsDismissed(true);
-      } else if (result === 'unavailable' || result === 'dismissed') {
-        // If still unavailable, don't stay stuck
-        setTimeout(() => setIsInstalling(false), 500);
+      } else {
+        setIsInstalling(false);
       }
     } catch (error) {
       console.error('Install error:', error);
+      clearTimeout(safetyTimeout);
       setIsInstalling(false);
     }
   };
@@ -49,8 +56,21 @@ export const PwaInstallBanner: React.FC<{ storeName?: string }> = ({ storeName =
         style={{ backdropFilter: 'blur(10px)' }}
       >
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-black rounded-xl border border-[#D4AF37] flex items-center justify-center p-1 flex-shrink-0">
-            <img src="/icon-192.png" alt="Logo" className="w-full h-full object-contain" />
+          <div className="w-12 h-12 bg-black rounded-xl border border-[#D4AF37] flex items-center justify-center p-1 flex-shrink-0 overflow-hidden">
+            <img 
+              src="/logo-master.jpg" 
+              alt="Logo" 
+              className="w-full h-full object-cover" 
+              onLoad={(e) => console.log('PWA Logo loaded')}
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                if (target.src.includes('logo-master.jpg')) {
+                  target.src = '/icon-192.png';
+                } else if (target.src.includes('icon-192.png')) {
+                  target.src = '/favicon.png';
+                }
+              }}
+            />
           </div>
           <div className="overflow-hidden">
             <h4 className="text-white font-black text-sm leading-tight truncate">{storeName}</h4>

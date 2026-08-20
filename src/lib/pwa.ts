@@ -57,26 +57,32 @@ export function registerPWA() {
 }
 
 export async function triggerNativeInstall(): Promise<'accepted' | 'dismissed' | 'unavailable'> {
+  console.log('Triggering PWA Install...');
   const activePrompt = deferredPrompt || window.deferredPwaPrompt;
   
   if (!activePrompt) {
-    // If not ready, wait very briefly
+    console.log('No prompt found, waiting 2s...');
     return new Promise((resolve) => {
       let resolved = false;
       const timeout = setTimeout(() => {
         if (!resolved) {
           resolved = true;
+          console.log('Install prompt timeout');
           resolve('unavailable');
         }
-      }, 800); // Shorter timeout for better responsiveness
+      }, 2000);
 
-      const check = () => {
+      const checkAndPrompt = async () => {
         const p = deferredPrompt || window.deferredPwaPrompt;
         if (p && !resolved) {
           resolved = true;
           clearTimeout(timeout);
-          p.prompt().then(() => p.userChoice).then(choice => {
-            if (choice.outcome === 'accepted') {
+          try {
+            console.log('Prompt found during wait, showing...');
+            await p.prompt();
+            const { outcome } = await p.userChoice;
+            console.log('User choice outcome:', outcome);
+            if (outcome === 'accepted') {
               deferredPrompt = null;
               window.deferredPwaPrompt = null;
               listeners.forEach(l => l(false));
@@ -84,24 +90,30 @@ export async function triggerNativeInstall(): Promise<'accepted' | 'dismissed' |
             } else {
               resolve('dismissed');
             }
-          }).catch(() => resolve('unavailable'));
+          } catch (err) {
+            console.error('Wait prompt error:', err);
+            resolve('unavailable');
+          }
         }
       };
 
       const listener = () => {
-        check();
+        console.log('Captured event fired');
+        checkAndPrompt();
         window.removeEventListener('pwa-prompt-captured', listener);
       };
       window.addEventListener('pwa-prompt-captured', listener);
       
       // Also check immediately
-      check();
+      checkAndPrompt();
     });
   }
   
   try {
+    console.log('Active prompt found, showing...');
     await activePrompt.prompt();
     const { outcome } = await activePrompt.userChoice;
+    console.log('Outcome:', outcome);
     if (outcome === 'accepted') {
       deferredPrompt = null;
       window.deferredPwaPrompt = null;
@@ -110,7 +122,7 @@ export async function triggerNativeInstall(): Promise<'accepted' | 'dismissed' |
     }
     return 'dismissed';
   } catch (err) {
-    console.error('PWA install error:', err);
+    console.error('PWA install prompt error:', err);
     return 'unavailable';
   }
 }
