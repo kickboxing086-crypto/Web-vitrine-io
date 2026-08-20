@@ -1271,7 +1271,6 @@ export default function App() {
       {/* PWA Install Notification Prompt */}
       <PwaInstallBanner
         storeName={settings.storeName || 'Web Vitrine'}
-        logoUrl={settings.logoUrl || '/logo-master.jpg'}
       />
     </div>
   );

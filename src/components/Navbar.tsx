@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { formatPhone, cleanPhoneForWhatsapp } from '../lib/formatters';
 import { checkStoreHoursStatus } from '../lib/themeUtils';
-import { usePWAInstall } from '../lib/pwa';
+import { usePwa } from '../lib/pwa';
 
 interface NavbarProps {
   settings: StoreSettings;
@@ -54,7 +54,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [showSearch, setShowSearch] = useState(false);
   const hoursStatus = checkStoreHoursStatus(settings);
-  const { canInstall, isStandalone, installApp } = usePWAInstall();
+  const { canInstall, triggerNativeInstall } = usePwa();
 
   return (
     <header className="sticky top-0 z-40 bg-brand-bg/98 backdrop-blur-md border-b border-brand-bg-alt transition-all">
@@ -140,10 +140,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
 
             {/* PWA Install Button (When available) */}
-            {canInstall && !isStandalone && (
+            {canInstall && (
               <button
                 type="button"
-                onClick={() => installApp()}
+                onClick={() => triggerNativeInstall()}
                 className="hidden md:inline-flex items-center space-x-1.5 px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-xl text-xs font-semibold border border-stone-200 transition-all cursor-pointer shadow-2xs"
                 title="Instalar aplicativo no seu dispositivo"
                 id="btn-navbar-install-pwa"

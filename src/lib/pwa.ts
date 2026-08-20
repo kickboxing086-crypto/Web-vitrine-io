@@ -1,158 +1,64 @@
-/**
- * PWA Service Worker Registration and Install Prompt Helper
- */
-
 import { useState, useEffect } from 'react';
 
-declare global {
-  interface Window {
-    deferredPwaPrompt: BeforeInstallPromptEvent | null;
-  }
-}
-
-export function registerServiceWorker() {
-  if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-    const register = () => {
-      navigator.serviceWorker
-        .register('/sw.js')
-        .then((reg) => {
-          console.log('PWA Service Worker registered:', reg.scope);
-          reg.update().catch(() => {});
-        })
-        .catch((err) => {
-          console.warn('PWA Service Worker registration:', err);
-        });
-    };
-
-    if (document.readyState === 'complete' || document.readyState === 'interactive') {
-      register();
-    } else {
-      window.addEventListener('load', register);
-    }
-  }
-}
-
-export interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed';
+    platform: string;
+  }>;
+  prompt(): Promise<void>;
 }
 
 let deferredPrompt: BeforeInstallPromptEvent | null = null;
-const listeners = new Set<(canInstall: boolean) => void>();
 
-if (typeof window !== 'undefined') {
-  // Sync if already captured in index.html head
-  if (window.deferredPwaPrompt) {
-    deferredPrompt = window.deferredPwaPrompt;
+export function registerPWA() {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js');
+    });
   }
 
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e as BeforeInstallPromptEvent;
-    window.deferredPwaPrompt = deferredPrompt;
-    listeners.forEach((listener) => listener(true));
-  });
-
-  window.addEventListener('pwa-prompt-captured', () => {
-    if (window.deferredPwaPrompt) {
-      deferredPrompt = window.deferredPwaPrompt;
-      listeners.forEach((listener) => listener(true));
-    }
+    // Dispatch custom event to notify React components
+    window.dispatchEvent(new Event('can-install-pwa'));
   });
 
   window.addEventListener('appinstalled', () => {
     deferredPrompt = null;
-    window.deferredPwaPrompt = null;
-    listeners.forEach((listener) => listener(false));
+    window.dispatchEvent(new Event('pwa-installed-successfully'));
   });
+}
 
-  window.addEventListener('pwa-installed', () => {
+export async function triggerNativeInstall(): Promise<boolean> {
+  if (!deferredPrompt) return false;
+  
+  await deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  
+  if (outcome === 'accepted') {
     deferredPrompt = null;
-    window.deferredPwaPrompt = null;
-    listeners.forEach((listener) => listener(false));
-  });
-}
-
-export async function promptInstallPWA(): Promise<'accepted' | 'dismissed' | 'unavailable'> {
-  const promptEvent = window.deferredPwaPrompt || deferredPrompt;
-
-  if (promptEvent) {
-    try {
-      await promptEvent.prompt();
-      const choice = await promptEvent.userChoice;
-      deferredPrompt = null;
-      window.deferredPwaPrompt = null;
-      listeners.forEach((listener) => listener(false));
-      return choice?.outcome === 'accepted' ? 'accepted' : 'dismissed';
-    } catch (err) {
-      console.warn('Error invoking install prompt:', err);
-      return 'unavailable';
-    }
+    return true;
   }
-
-  // If prompt not yet available, wait up to 1 second for Chrome to dispatch
-  return new Promise((resolve) => {
-    let resolved = false;
-
-    const timeout = setTimeout(() => {
-      if (!resolved) {
-        resolved = true;
-        resolve('unavailable');
-      }
-    }, 1000);
-
-    const checkListener = (canInstall: boolean) => {
-      const activePrompt = window.deferredPwaPrompt || deferredPrompt;
-      if (canInstall && activePrompt && !resolved) {
-        resolved = true;
-        clearTimeout(timeout);
-        listeners.delete(checkListener);
-        activePrompt
-          .prompt()
-          .then(() => activePrompt.userChoice)
-          .then((choice) => {
-            deferredPrompt = null;
-            window.deferredPwaPrompt = null;
-            listeners.forEach((l) => l(false));
-            resolve(choice?.outcome === 'accepted' ? 'accepted' : 'dismissed');
-          })
-          .catch(() => resolve('unavailable'));
-      }
-    };
-
-    listeners.add(checkListener);
-  });
+  return false;
 }
 
-export function usePWAInstall() {
-  const [canInstall, setCanInstall] = useState<boolean>(
-    Boolean(typeof window !== 'undefined' && (window.deferredPwaPrompt || deferredPrompt))
-  );
-  const [isStandalone, setIsStandalone] = useState<boolean>(false);
+export function usePwa() {
+  const [canInstall, setCanInstall] = useState(!!deferredPrompt);
 
   useEffect(() => {
-    const checkStandalone = () => {
-      const isDisplayStandalone = window.matchMedia('(display-mode: standalone)').matches;
-      // @ts-ignore
-      const isIOSStandalone = window.navigator.standalone === true;
-      setIsStandalone(isDisplayStandalone || isIOSStandalone);
-    };
+    const handleCanInstall = () => setCanInstall(true);
+    const handleInstalled = () => setCanInstall(false);
 
-    checkStandalone();
+    window.addEventListener('can-install-pwa', handleCanInstall);
+    window.addEventListener('pwa-installed-successfully', handleInstalled);
 
-    const handlePrompt = (state: boolean) => {
-      setCanInstall(state);
-    };
-
-    listeners.add(handlePrompt);
     return () => {
-      listeners.delete(handlePrompt);
+      window.removeEventListener('can-install-pwa', handleCanInstall);
+      window.removeEventListener('pwa-installed-successfully', handleInstalled);
     };
   }, []);
 
-  return {
-    canInstall,
-    isStandalone,
-    installApp: promptInstallPWA,
-  };
+  return { canInstall, triggerNativeInstall };
 }
