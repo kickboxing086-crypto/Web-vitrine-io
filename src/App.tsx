@@ -64,7 +64,6 @@ import { StoreHoursModal } from './components/StoreHoursModal';
 import { ShareProductModal } from './components/ShareProductModal';
 import { PaymentSuccessModal } from './components/PaymentSuccessModal';
 import { PwaInstallBanner } from './components/PwaInstallBanner';
-import { SplashScreen } from './components/SplashScreen';
 import { SlidersHorizontal, AlertCircle, Tag as TagIcon, ShoppingBag, ArrowLeft, MessageCircle, ChevronDown, Check, Instagram, MapPin, Clock } from 'lucide-react';
 import { getFontFamilyCss, checkStoreHoursStatus, applyStoreTheme } from './lib/themeUtils';
 import { formatCurrency, cleanPhoneForWhatsapp } from './lib/formatters';
@@ -85,7 +84,6 @@ export default function App() {
   const [isStoreHoursModalOpen, setIsStoreHoursModalOpen] = useState<boolean>(false);
   const [isLandingHeroModalOpen, setIsLandingHeroModalOpen] = useState<boolean>(false);
   const [isCloudSyncing, setIsCloudSyncing] = useState<boolean>(true);
-  const [showSplash, setShowSplash] = useState<boolean>(true);
   const [paymentSuccessInfo, setPaymentSuccessInfo] = useState<{
     isOpen: boolean;
     planTitle: string;
@@ -1272,15 +1270,6 @@ export default function App() {
 
       {/* PWA Install Notification Prompt */}
       <PwaInstallBanner storeName={settings.storeName || 'Web Vitrine'} />
-
-      {/* Opening Intro / Splash Screen Animation */}
-      {showSplash && (
-        <SplashScreen
-          storeName={settings.storeName || 'Web Vitrine'}
-          logoUrl={settings.logoUrl || '/icon-512-v5.png'}
-          onFinish={() => setShowSplash(false)}
-        />
-      )}
     </div>
   );
 }
