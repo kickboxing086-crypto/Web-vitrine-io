@@ -1,10 +1,12 @@
 {
-  "name": "Web Vitrine",
-  "short_name": "Vitrine",
-  "description": "Catálogo de produtos e pedidos via WhatsApp.",
+  "name": "WEB VITRINE",
+  "short_name": "WEB VITRINE",
+  "description": "Sua vitrine virtual exclusiva, catálogo de produtos e pedidos direto no WhatsApp.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#000000",
+  "orientation": "portrait",
+  "background_color": "#121114",
   "theme_color": "#000000",
   "icons": [
     {
@@ -31,5 +33,6 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ]
+  ],
+  "categories": ["shopping", "business"]
 }
