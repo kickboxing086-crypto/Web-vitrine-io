@@ -41,8 +41,8 @@ export const initialStoreSettings: StoreSettings = {
   freeDeliveryThreshold: 350.0,
   deliveryFeeType: 'flat',
   customDeliveryRates: [
-    { id: 'rate-1', city: 'Natal', neighborhood: 'Centro', fee: 10.0 },
-    { id: 'rate-2', city: 'Natal', neighborhood: 'Ponta Negra', fee: 15.0 },
+    { id: 'rate-1', state: 'RN', city: 'Natal', neighborhood: 'Centro', fee: 10.0 },
+    { id: 'rate-2', state: 'RN', city: 'Natal', neighborhood: 'Ponta Negra', fee: 15.0 },
   ],
   enableInstallments: true,
   maxInstallments: 6,

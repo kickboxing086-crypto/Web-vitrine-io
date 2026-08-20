@@ -2,6 +2,7 @@ export type DeliveryMode = 'pickup' | 'delivery' | 'both';
 
 export interface DeliveryRate {
   id: string;
+  state: string;
   city: string;
   neighborhood: string;
   fee: number;
@@ -146,6 +147,8 @@ export interface Order {
   appliedCoupon?: string;
   customerNotes?: string;
   paymentMethod: 'card_delivery' | 'card_pickup' | 'cash' | 'other' | 'pix';
+  cashAmount?: number;
+  noChangeNeeded?: boolean;
   status: OrderStatus;
   createdAt: string;
 }

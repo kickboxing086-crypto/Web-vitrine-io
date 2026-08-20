@@ -86,6 +86,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const [paymentMethod, setPaymentMethod] = useState<'card_delivery' | 'card_pickup' | 'cash' | 'other' | 'pix'>(
     'pix'
   );
+  const [cashAmount, setCashAmount] = useState<string>('');
+  const [noChangeNeeded, setNoChangeNeeded] = useState(false);
 
   // CEP Lookup
   const handleCepSearch = async (cepVal: string) => {
@@ -239,6 +241,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       appliedCoupon: appliedCoupon?.code,
       customerNotes: customerNotes.trim(),
       paymentMethod,
+      cashAmount: paymentMethod === 'cash' && !noChangeNeeded ? parseFloat(cashAmount) : undefined,
+      noChangeNeeded: paymentMethod === 'cash' ? noChangeNeeded : undefined,
       status: 'pending',
       createdAt: new Date().toISOString(),
     };
@@ -820,6 +824,45 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                             </motion.button>
                           ))}
                         </div>
+                        {paymentMethod === 'cash' && (
+                          <div className="mt-3 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div className="flex items-center justify-between">
+                              <label className="text-[11px] font-bold text-stone-600 uppercase tracking-wider">
+                                Informações para Troco
+                              </label>
+                              <label className="flex items-center space-x-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={noChangeNeeded}
+                                  onChange={(e) => setNoChangeNeeded(e.target.checked)}
+                                  className="w-3.5 h-3.5 rounded border-stone-300 text-stone-900 focus:ring-stone-900"
+                                />
+                                <span className="text-[11px] font-semibold text-stone-600">Não preciso de troco</span>
+                              </label>
+                            </div>
+                            
+                            {!noChangeNeeded && (
+                              <div className="relative">
+                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 font-bold text-xs">
+                                  R$
+                                </div>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  placeholder="Com quanto você vai pagar?"
+                                  value={cashAmount}
+                                  onChange={(e) => setCashAmount(e.target.value)}
+                                  className="w-full pl-9 pr-3.5 py-2 bg-brand-bg border border-brand-border-dark rounded-xl text-stone-900 text-xs focus:ring-1 focus:ring-stone-900 focus:outline-none"
+                                />
+                                {parseFloat(cashAmount) > finalTotal && (
+                                  <p className="text-[10px] text-emerald-600 font-bold mt-1 ml-1 uppercase tracking-tight">
+                                    Seu troco será de {formatCurrency(parseFloat(cashAmount) - finalTotal)}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
                         {paymentMethod === 'pix' && settings.pixKey && (
                           <div className="mt-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-[11px] text-emerald-900 flex items-center justify-between">
                             <span>Chave Pix: <strong>{settings.pixKey}</strong></span>

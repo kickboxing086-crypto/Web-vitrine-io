@@ -63,7 +63,7 @@ import { LandingHeroModal } from './components/LandingHeroModal';
 import { StoreHoursModal } from './components/StoreHoursModal';
 import { ShareProductModal } from './components/ShareProductModal';
 import { PaymentSuccessModal } from './components/PaymentSuccessModal';
-import { SlidersHorizontal, AlertCircle, Tag as TagIcon, ShoppingBag, ArrowLeft, MessageCircle, ChevronDown, Check, Instagram, MapPin, Clock } from 'lucide-react';
+import { SlidersHorizontal, AlertCircle, Tag as TagIcon, ShoppingBag, ArrowLeft, MessageCircle, ChevronDown, Check, Instagram, MapPin, Clock, ExternalLink } from 'lucide-react';
 import { getFontFamilyCss, checkStoreHoursStatus, applyStoreTheme } from './lib/themeUtils';
 import { formatCurrency, cleanPhoneForWhatsapp } from './lib/formatters';
 import { motion, AnimatePresence } from 'motion/react';
@@ -81,6 +81,7 @@ export default function App() {
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(getAuthSession);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
   const [isStoreHoursModalOpen, setIsStoreHoursModalOpen] = useState<boolean>(false);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState<boolean>(false);
   const [isLandingHeroModalOpen, setIsLandingHeroModalOpen] = useState<boolean>(false);
   const [isCloudSyncing, setIsCloudSyncing] = useState<boolean>(true);
   const [paymentSuccessInfo, setPaymentSuccessInfo] = useState<{
@@ -895,10 +896,14 @@ export default function App() {
 
                 {/* Location / City */}
                 {(settings.cityState || settings.address) && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-stone-200 text-stone-600 text-xs font-medium shadow-2xs">
-                    <MapPin className="w-3.5 h-3.5 text-stone-400" />
-                    <span>{settings.cityState || settings.address}</span>
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsLocationModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-stone-200 text-stone-600 text-xs font-bold shadow-2xs hover:border-brand-primary-dark hover:text-stone-900 transition-all cursor-pointer"
+                  >
+                    <MapPin className="w-3.5 h-3.5 text-brand-primary-dark" />
+                    <span>Localização</span>
+                  </button>
                 )}
               </div>
             </motion.div>
@@ -1266,6 +1271,64 @@ export default function App() {
           setPaymentSuccessInfo((prev) => ({ ...prev, isOpen: false }));
         }}
       />
+
+      {/* Location Modal */}
+      <AnimatePresence>
+        {isLocationModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="w-full max-w-sm bg-white rounded-3xl border border-brand-border shadow-2xl overflow-hidden"
+            >
+              <div className="p-6 text-center space-y-4">
+                <div className="w-16 h-16 bg-brand-bg rounded-full flex items-center justify-center mx-auto text-brand-primary-dark border border-[#E8DACB]">
+                  <MapPin className="w-8 h-8" />
+                </div>
+                
+                <div>
+                  <h3 className="font-serif-luxury text-xl font-bold text-stone-900">
+                    Nossa Localização
+                  </h3>
+                  <p className="text-xs text-stone-500 mt-1 uppercase tracking-widest font-bold">
+                    {settings.storeName}
+                  </p>
+                </div>
+
+                <div className="p-4 bg-brand-bg rounded-2xl border border-stone-100 space-y-1">
+                  <p className="text-sm font-semibold text-stone-800">
+                    {settings.address || 'Endereço não informado'}
+                  </p>
+                  <p className="text-xs text-stone-500">
+                    {settings.cityState}
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-2 pt-2">
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${settings.address}, ${settings.cityState}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full py-3 bg-stone-900 hover:bg-stone-800 text-white rounded-2xl text-xs font-bold shadow-md transition-all cursor-pointer"
+                  >
+                    <ExternalLink className="w-4 h-4 text-brand-primary" />
+                    <span>Ver no Google Maps</span>
+                  </a>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setIsLocationModalOpen(false)}
+                    className="w-full py-3 bg-white hover:bg-stone-50 text-stone-500 text-xs font-bold rounded-2xl transition-colors cursor-pointer"
+                  >
+                    Fechar
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

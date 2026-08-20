@@ -16,6 +16,7 @@ import {
   Upload,
   Image as ImageIcon,
   Trash2,
+  Edit2,
   Info,
   Palette,
   Type,
@@ -52,6 +53,11 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
   const [storeSlug, setStoreSlug] = useState(currentClient?.storeSlug || currentClient?.username || '');
   const [copiedInvite, setCopiedInvite] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [editingRateId, setEditingRateId] = useState<string | null>(null);
+  const [rateState, setRateState] = useState('');
+  const [rateCity, setRateCity] = useState('');
+  const [rateNeighborhood, setRateNeighborhood] = useState('');
+  const [rateFee, setRateFee] = useState('');
 
   const logoInputRef = useRef<HTMLInputElement>(null);
 
@@ -459,6 +465,20 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                               <button
                                 type="button"
                                 onClick={() => {
+                                  setEditingRateId(rate.id);
+                                  setRateState(rate.state || '');
+                                  setRateCity(rate.city || '');
+                                  setRateNeighborhood(rate.neighborhood || '');
+                                  setRateFee(rate.fee.toString());
+                                }}
+                                className="text-stone-400 hover:text-stone-900 p-1 cursor-pointer transition-colors"
+                                title="Editar Taxa"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
                                   const updated = (formData.customDeliveryRates || []).filter(
                                     (_, i) => i !== idx
                                   );
@@ -476,25 +496,28 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                         )}
                       </div>
 
-                      {/* Form to add rate */}
+                      {/* Form to add/edit rate */}
                       <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-2 border-t border-stone-100">
                         <input
                           type="text"
                           placeholder="UF (ex: SP)"
-                          id="input-rate-state"
+                          value={rateState}
+                          onChange={(e) => setRateState(e.target.value.toUpperCase())}
                           maxLength={2}
                           className="px-2.5 py-1.5 bg-brand-bg border border-stone-300 rounded-lg text-xs uppercase"
                         />
                         <input
                           type="text"
                           placeholder="Cidade (ex: São Paulo)"
-                          id="input-rate-city"
+                          value={rateCity}
+                          onChange={(e) => setRateCity(e.target.value)}
                           className="px-2.5 py-1.5 bg-brand-bg border border-stone-300 rounded-lg text-xs"
                         />
                         <input
                           type="text"
                           placeholder="Bairro (ex: Jardins)"
-                          id="input-rate-neighborhood"
+                          value={rateNeighborhood}
+                          onChange={(e) => setRateNeighborhood(e.target.value)}
                           className="px-2.5 py-1.5 bg-brand-bg border border-stone-300 rounded-lg text-xs"
                         />
                         <div className="flex gap-1">
@@ -502,42 +525,62 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                             type="number"
                             step="0.01"
                             placeholder="Valor R$"
-                            id="input-rate-fee"
+                            value={rateFee}
+                            onChange={(e) => setRateFee(e.target.value)}
                             className="w-full px-2.5 py-1.5 bg-brand-bg border border-stone-300 rounded-lg text-xs"
                           />
                           <button
                             type="button"
                             onClick={() => {
-                              const stateInput = (document.getElementById('input-rate-state') as HTMLInputElement)?.value.toUpperCase();
-                              const cityInput = (document.getElementById('input-rate-city') as HTMLInputElement)?.value;
-                              const neighInput = (document.getElementById('input-rate-neighborhood') as HTMLInputElement)?.value;
-                              const feeInput = parseFloat((document.getElementById('input-rate-fee') as HTMLInputElement)?.value || '0');
-                              if (neighInput && feeInput >= 0) {
-                                const newRate = {
-                                  id: 'rate-' + Date.now(),
-                                  state: stateInput || formData.cityState || 'SP',
-                                  city: cityInput || 'Sua Cidade',
-                                  neighborhood: neighInput,
-                                  fee: feeInput,
-                                };
-                                setFormData({
-                                  ...formData,
-                                  customDeliveryRates: [...(formData.customDeliveryRates || []), newRate],
-                                });
-                                if (document.getElementById('input-rate-state')) {
-                                  (document.getElementById('input-rate-state') as HTMLInputElement).value = '';
+                              const feeNum = parseFloat(rateFee || '0');
+                              if (rateNeighborhood && feeNum >= 0) {
+                                if (editingRateId) {
+                                  // Update existing
+                                  const updated = (formData.customDeliveryRates || []).map(r => 
+                                    r.id === editingRateId 
+                                      ? { ...r, state: rateState || 'SP', city: rateCity || 'Sua Cidade', neighborhood: rateNeighborhood, fee: feeNum }
+                                      : r
+                                  );
+                                  setFormData({ ...formData, customDeliveryRates: updated });
+                                  setEditingRateId(null);
+                                } else {
+                                  // Add new
+                                  const newRate = {
+                                    id: 'rate-' + Date.now(),
+                                    state: rateState || formData.cityState || 'SP',
+                                    city: rateCity || 'Sua Cidade',
+                                    neighborhood: rateNeighborhood,
+                                    fee: feeNum,
+                                  };
+                                  setFormData({
+                                    ...formData,
+                                    customDeliveryRates: [...(formData.customDeliveryRates || []), newRate],
+                                  });
                                 }
-                                (document.getElementById('input-rate-city') as HTMLInputElement).value = '';
-                                (document.getElementById('input-rate-neighborhood') as HTMLInputElement).value = '';
-                                (document.getElementById('input-rate-fee') as HTMLInputElement).value = '';
+                                // Important: We DO NOT clear rateState and rateCity to satisfy user request "ainda permaneça gravado somente esses"
+                                setRateNeighborhood('');
+                                setRateFee('');
                               }
                             }}
                             className="px-3 py-1.5 bg-stone-900 text-white rounded-lg text-xs font-bold cursor-pointer flex-shrink-0"
                           >
-                            + Add
+                            {editingRateId ? 'Salvar' : '+ Add'}
                           </button>
                         </div>
                       </div>
+                      {editingRateId && (
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            setEditingRateId(null);
+                            setRateNeighborhood('');
+                            setRateFee('');
+                          }}
+                          className="text-[10px] text-stone-500 hover:text-stone-800 underline mt-1"
+                        >
+                          Cancelar Edição
+                        </button>
+                      )}
                     </div>
                   ) : null}
 

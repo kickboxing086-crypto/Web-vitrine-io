@@ -72,6 +72,16 @@ export const generateWhatsappOrderMessage = (
       : 'A Combinar'
   }\n`;
 
+  if (order.paymentMethod === 'cash') {
+    if (order.noChangeNeeded) {
+      msg += `*Troco:* Não precisa de troco (Valor exato)\n`;
+    } else if (order.cashAmount && order.cashAmount > order.finalTotal) {
+      const change = order.cashAmount - order.finalTotal;
+      msg += `*Pagar com:* ${formatCurrency(order.cashAmount)}\n`;
+      msg += `*Troco necessário:* ${formatCurrency(change)}\n`;
+    }
+  }
+
   msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
   msg += `*ITENS DO PEDIDO:*\n\n`;
 
