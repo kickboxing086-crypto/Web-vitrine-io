@@ -3,6 +3,7 @@
   "short_name": "WEB VITRINE",
   "description": "Sua vitrine virtual exclusiva, catálogo de produtos e pedidos direto no WhatsApp.",
   "start_url": "/",
+  "id": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

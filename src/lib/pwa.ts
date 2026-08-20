@@ -10,55 +10,71 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 let deferredPrompt: BeforeInstallPromptEvent | null = null;
+const listeners = new Set<(canInstall: boolean) => void>();
 
 export function registerPWA() {
+  if (typeof window === 'undefined') return;
+
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js');
+      navigator.serviceWorker.register('/sw.js').then(reg => {
+        console.log('SW registered');
+        reg.update();
+      });
     });
   }
 
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e as BeforeInstallPromptEvent;
-    // Dispatch custom event to notify React components
-    window.dispatchEvent(new Event('can-install-pwa'));
+    listeners.forEach(l => l(true));
   });
 
   window.addEventListener('appinstalled', () => {
     deferredPrompt = null;
-    window.dispatchEvent(new Event('pwa-installed-successfully'));
+    listeners.forEach(l => l(false));
   });
 }
 
-export async function triggerNativeInstall(): Promise<boolean> {
-  if (!deferredPrompt) return false;
+export async function triggerNativeInstall(): Promise<'accepted' | 'dismissed' | 'unavailable'> {
+  if (!deferredPrompt) return 'unavailable';
   
-  await deferredPrompt.prompt();
-  const { outcome } = await deferredPrompt.userChoice;
-  
-  if (outcome === 'accepted') {
-    deferredPrompt = null;
-    return true;
+  try {
+    await deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      deferredPrompt = null;
+      listeners.forEach(l => l(false));
+      return 'accepted';
+    }
+    return 'dismissed';
+  } catch (err) {
+    console.error('PWA install error:', err);
+    return 'unavailable';
   }
-  return false;
 }
 
 export function usePwa() {
   const [canInstall, setCanInstall] = useState(!!deferredPrompt);
+  const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
-    const handleCanInstall = () => setCanInstall(true);
-    const handleInstalled = () => setCanInstall(false);
+    const checkStandalone = () => {
+      const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches 
+        || (navigator as any).standalone 
+        || document.referrer.includes('android-app://');
+      setIsStandalone(!!isStandaloneMode);
+    };
 
-    window.addEventListener('can-install-pwa', handleCanInstall);
-    window.addEventListener('pwa-installed-successfully', handleInstalled);
+    checkStandalone();
+
+    const handleChange = (state: boolean) => setCanInstall(state);
+    listeners.add(handleChange);
 
     return () => {
-      window.removeEventListener('can-install-pwa', handleCanInstall);
-      window.removeEventListener('pwa-installed-successfully', handleInstalled);
+      listeners.delete(handleChange);
     };
   }, []);
 
-  return { canInstall, triggerNativeInstall };
+  return { canInstall, isStandalone, triggerNativeInstall };
 }
