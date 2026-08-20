@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 
 export function registerServiceWorker() {
   if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
+    const register = () => {
       navigator.serviceWorker
         .register('/sw.js')
         .then((reg) => {
@@ -15,9 +15,15 @@ export function registerServiceWorker() {
           reg.update().catch(() => {});
         })
         .catch((err) => {
-          console.warn('PWA Service Worker registration skipped or failed:', err);
+          console.warn('PWA Service Worker registration failed:', err);
         });
-    });
+    };
+
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      register();
+    } else {
+      window.addEventListener('load', register);
+    }
   }
 }
 
