@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, X } from 'lucide-react';
+import { Download, X, Loader2 } from 'lucide-react';
 import { usePWAInstall } from '../lib/pwa';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -8,25 +8,22 @@ interface PwaInstallBannerProps {
 }
 
 export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({ storeName = 'Web Vitrine' }) => {
-  const { isStandalone, canInstall, installApp } = usePWAInstall();
+  const { isStandalone, installApp } = usePWAInstall();
   const [isDismissed, setIsDismissed] = useState<boolean>(false);
   const [isMounted, setIsMounted] = useState<boolean>(false);
+  const [isInstalling, setIsInstalling] = useState<boolean>(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Do not show if not mounted, already running inside standalone app, or dismissed
+  // Do not show if already running inside installed standalone app or dismissed
   if (!isMounted || isStandalone || isDismissed) {
     return null;
   }
 
-  // Only show if the browser is ready for direct native installation
-  if (!canInstall) {
-    return null;
-  }
-
   const handleInstallClick = async () => {
+    setIsInstalling(true);
     try {
       const accepted = await installApp();
       if (accepted) {
@@ -34,6 +31,8 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({ storeName = 
       }
     } catch (err) {
       console.warn('Native install error:', err);
+    } finally {
+      setIsInstalling(false);
     }
   };
 
@@ -95,11 +94,16 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({ storeName = 
           <button
             type="button"
             onClick={handleInstallClick}
-            className="flex-1 py-2.5 px-3 bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#D4AF37] hover:brightness-110 text-stone-950 font-black text-xs rounded-xl shadow-lg shadow-[#D4AF37]/30 flex items-center justify-center gap-2 transition-all cursor-pointer transform active:scale-95 border border-[#FFF8DC]"
+            disabled={isInstalling}
+            className="flex-1 py-2.5 px-3 bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#D4AF37] hover:brightness-110 text-stone-950 font-black text-xs rounded-xl shadow-lg shadow-[#D4AF37]/30 flex items-center justify-center gap-2 transition-all cursor-pointer transform active:scale-95 border border-[#FFF8DC] disabled:opacity-70"
             id="btn-install-pwa"
           >
-            <Download className="w-4 h-4 text-stone-950 stroke-[2.5]" />
-            <span>INSTALAR APLICATIVO</span>
+            {isInstalling ? (
+              <Loader2 className="w-4 h-4 text-stone-950 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4 text-stone-950 stroke-[2.5]" />
+            )}
+            <span>{isInstalling ? 'INSTALANDO...' : 'INSTALAR APLICATIVO'}</span>
           </button>
 
           <button

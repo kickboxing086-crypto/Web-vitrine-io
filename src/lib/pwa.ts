@@ -6,24 +6,15 @@ import { useState, useEffect } from 'react';
 
 export function registerServiceWorker() {
   if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-    const register = () => {
-      navigator.serviceWorker
-        .register('/sw.js')
-        .then((reg) => {
-          console.log('PWA Service Worker registered with scope:', reg.scope);
-          // Check for worker updates on every page load
-          reg.update().catch(() => {});
-        })
-        .catch((err) => {
-          console.warn('PWA Service Worker registration failed:', err);
-        });
-    };
-
-    if (document.readyState === 'complete' || document.readyState === 'interactive') {
-      register();
-    } else {
-      window.addEventListener('load', register);
-    }
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then((reg) => {
+        console.log('PWA Service Worker registered:', reg.scope);
+        reg.update().catch(() => {});
+      })
+      .catch((err) => {
+        console.warn('PWA Service Worker registration:', err);
+      });
   }
 }
 
@@ -37,6 +28,7 @@ const listeners = new Set<(canInstall: boolean) => void>();
 
 if (typeof window !== 'undefined') {
   window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent default mini-infobar and capture event
     e.preventDefault();
     deferredPrompt = e as BeforeInstallPromptEvent;
     listeners.forEach((listener) => listener(true));
@@ -45,26 +37,49 @@ if (typeof window !== 'undefined') {
   window.addEventListener('appinstalled', () => {
     deferredPrompt = null;
     listeners.forEach((listener) => listener(false));
-    console.log('PWA was installed successfully.');
+    console.log('PWA installed successfully.');
   });
 }
 
 export async function promptInstallPWA(): Promise<boolean> {
-  if (!deferredPrompt) {
-    console.log('Direct install prompt is not currently available from browser yet');
-    return false;
+  // If deferredPrompt is already captured, trigger native prompt immediately
+  if (deferredPrompt) {
+    try {
+      await deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      listeners.forEach((listener) => listener(false));
+      return choice?.outcome === 'accepted';
+    } catch (err) {
+      console.warn('Error invoking install prompt:', err);
+      return false;
+    }
   }
 
-  try {
-    await deferredPrompt.prompt();
-    const choice = await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    listeners.forEach((listener) => listener(false));
-    return choice?.outcome === 'accepted';
-  } catch (err) {
-    console.warn('Error invoking install prompt:', err);
-    return false;
-  }
+  // If not yet captured, wait up to 1 second in case event is firing
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => {
+      resolve(false);
+    }, 1200);
+
+    const checkListener = (canInstall: boolean) => {
+      if (canInstall && deferredPrompt) {
+        clearTimeout(timeout);
+        listeners.delete(checkListener);
+        deferredPrompt
+          .prompt()
+          .then(() => deferredPrompt!.userChoice)
+          .then((choice) => {
+            deferredPrompt = null;
+            listeners.forEach((l) => l(false));
+            resolve(choice?.outcome === 'accepted');
+          })
+          .catch(() => resolve(false));
+      }
+    };
+
+    listeners.add(checkListener);
+  });
 }
 
 export function usePWAInstall() {
