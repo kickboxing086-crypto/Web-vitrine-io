@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, X, Loader2 } from 'lucide-react';
+import { Download, X, Loader2, Smartphone, CheckCircle, Sparkles } from 'lucide-react';
 import { usePWAInstall } from '../lib/pwa';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -12,6 +12,8 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({ storeName = 
   const [isDismissed, setIsDismissed] = useState<boolean>(false);
   const [isMounted, setIsMounted] = useState<boolean>(false);
   const [isInstalling, setIsInstalling] = useState<boolean>(false);
+  const [imgError, setImgError] = useState<boolean>(false);
+  const [helperNotice, setHelperNotice] = useState<string | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -24,13 +26,23 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({ storeName = 
 
   const handleInstallClick = async () => {
     setIsInstalling(true);
+    setHelperNotice(null);
     try {
-      const accepted = await installApp();
-      if (accepted) {
+      const result = await installApp();
+      if (result === 'accepted') {
         setIsDismissed(true);
+      } else if (result === 'unavailable') {
+        // If the browser hasn't fired beforeinstallprompt or is in iOS/Webview, give brief helpful tip
+        const isIOS = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+        if (isIOS) {
+          setHelperNotice('No iPhone: toque em Compartilhar ⎋ e "Adicionar à Tela de Início"');
+        } else {
+          setHelperNotice('Abra o menu (⋮) do seu navegador e toque em "Instalar aplicativo"');
+        }
       }
     } catch (err) {
       console.warn('Native install error:', err);
+      setHelperNotice('Abra o menu (⋮) do seu navegador e toque em "Instalar aplicativo"');
     } finally {
       setIsInstalling(false);
     }
@@ -54,15 +66,22 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({ storeName = 
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl overflow-hidden bg-black border border-[#D4AF37] flex-shrink-0 flex items-center justify-center shadow-lg p-0.5 relative">
-              <img
-                src="/icon-192-v5.png"
-                alt="Web Vitrine App"
-                className="w-full h-full object-cover rounded-lg"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src = '/logo-master.jpg';
-                }}
-              />
+            {/* App Icon with guaranteed uncorrupted fallback */}
+            <div className="w-11 h-11 rounded-xl overflow-hidden bg-[#1A181C] border border-[#D4AF37] flex-shrink-0 flex items-center justify-center shadow-lg relative">
+              {!imgError ? (
+                <img
+                  src="/icon-192.png"
+                  alt={storeName || 'Web Vitrine App'}
+                  className="w-full h-full object-cover rounded-lg"
+                  onError={() => setImgError(true)}
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-[#1E1C22] to-black flex items-center justify-center">
+                  <span className="font-serif font-black text-xs text-[#E5C378] tracking-tighter">
+                    WV
+                  </span>
+                </div>
+              )}
             </div>
             <div>
               <div className="flex items-center gap-1.5">
@@ -90,12 +109,20 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({ storeName = 
           </button>
         </div>
 
+        {/* Dynamic Helper Notice if browser needs direct menu trigger */}
+        {helperNotice && (
+          <div className="bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#F3E5AB] px-3 py-2 rounded-xl text-[11px] leading-snug flex items-center gap-2">
+            <Smartphone className="w-4 h-4 flex-shrink-0 text-[#E5C378]" />
+            <span>{helperNotice}</span>
+          </div>
+        )}
+
         <div className="flex items-center gap-2 pt-1 border-t border-stone-800">
           <button
             type="button"
             onClick={handleInstallClick}
             disabled={isInstalling}
-            className="flex-1 py-2.5 px-3 bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#D4AF37] hover:brightness-110 text-stone-950 font-black text-xs rounded-xl shadow-lg shadow-[#D4AF37]/30 flex items-center justify-center gap-2 transition-all cursor-pointer transform active:scale-95 border border-[#FFF8DC] disabled:opacity-70"
+            className="flex-1 py-2.5 px-3 bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#D4AF37] hover:brightness-110 text-stone-950 font-black text-xs rounded-xl shadow-lg shadow-[#D4AF37]/30 flex items-center justify-center gap-2 transition-all cursor-pointer transform active:scale-95 border border-[#FFF8DC] disabled:opacity-75"
             id="btn-install-pwa"
           >
             {isInstalling ? (
@@ -103,7 +130,7 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({ storeName = 
             ) : (
               <Download className="w-4 h-4 text-stone-950 stroke-[2.5]" />
             )}
-            <span>{isInstalling ? 'INSTALANDO...' : 'INSTALAR APLICATIVO'}</span>
+            <span>{isInstalling ? 'ACESSANDO INSTALADOR...' : 'INSTALAR APLICATIVO'}</span>
           </button>
 
           <button

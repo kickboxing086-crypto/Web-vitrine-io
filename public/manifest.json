@@ -6,13 +6,19 @@
   "scope": "/",
   "id": "/",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui", "window-controls-overlay"],
-  "orientation": "portrait-primary",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
   "background_color": "#121114",
   "theme_color": "#000000",
   "prefer_related_applications": false,
   "categories": ["shopping", "business", "lifestyle"],
   "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/icon-192-v5.png",
       "sizes": "192x192",
@@ -20,10 +26,16 @@
       "purpose": "any"
     },
     {
-      "src": "/icon-maskable-192-v5.png",
+      "src": "/icon-maskable-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/icon-512-v5.png",
@@ -32,25 +44,10 @@
       "purpose": "any"
     },
     {
-      "src": "/icon-maskable-512-v5.png",
+      "src": "/icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
-    },
-    {
-      "src": "/apple-touch-icon-v5.png",
-      "sizes": "180x180",
-      "type": "image/png",
-      "purpose": "any"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Ver Catálogo",
-      "short_name": "Catálogo",
-      "description": "Acessar todos os produtos e novidades",
-      "url": "/",
-      "icons": [{ "src": "/icon-192-v5.png", "sizes": "192x192" }]
     }
   ]
 }

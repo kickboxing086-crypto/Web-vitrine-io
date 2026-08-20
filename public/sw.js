@@ -1,25 +1,30 @@
-const CACHE_NAME = 'web-vitrine-pwa-v20';
+const CACHE_NAME = 'web-vitrine-pwa-v26';
 const urlsToPrecache = [
   '/',
   '/index.html',
   '/manifest.json',
+  '/icon-192.png',
+  '/icon-512.png',
   '/icon-192-v5.png',
   '/icon-512-v5.png',
-  '/icon-maskable-192-v5.png',
-  '/icon-maskable-512-v5.png',
-  '/apple-touch-icon-v5.png',
-  '/favicon-v5.png'
+  '/apple-touch-icon.png',
+  '/favicon.png',
+  '/favicon.svg'
 ];
 
-// Install: precache essential offline assets
+// Install: precache essential offline assets safely
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToPrecache))
+    caches.open(CACHE_NAME).then(cache => {
+      return Promise.allSettled(
+        urlsToPrecache.map(url => cache.add(url).catch(err => console.warn('Precache skip:', url, err)))
+      );
+    })
   );
   self.skipWaiting();
 });
 
-// Activate: purge all old caches immediately
+// Activate: purge old caches immediately
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
@@ -32,11 +37,11 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch: Network-First for HTML navigation so updates on Vercel reflect instantly
+// Fetch handler
 self.addEventListener('fetch', event => {
   const request = event.request;
 
-  // Handle navigation / page requests with Network-First
+  // Handle navigation requests: Network-First with cache fallback
   if (request.mode === 'navigate' || request.destination === 'document') {
     event.respondWith(
       fetch(request)
@@ -52,13 +57,12 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Handle assets with Network-First or Cache-Fallback
+  // Handle static assets
   event.respondWith(
     caches.match(request).then(cachedResponse => {
       if (cachedResponse) {
-        // Fetch fresh copy in background for next time (Stale-While-Revalidate)
         fetch(request).then(networkResponse => {
-          if (networkResponse && networkResponse.status === 200) {
+          if (networkResponse && networkResponse.status === 200 && request.method === 'GET') {
             caches.open(CACHE_NAME).then(cache => cache.put(request, networkResponse));
           }
         }).catch(() => {});
