@@ -43,15 +43,20 @@ if (typeof window !== 'undefined') {
 
 export async function promptInstallPWA(): Promise<boolean> {
   if (!deferredPrompt) {
-    // If not directly triggerable via beforeinstallprompt, provide instructions
+    console.log('Direct install prompt is not currently available from browser yet');
     return false;
   }
 
-  deferredPrompt.prompt();
-  const { outcome } = await deferredPrompt.userChoice;
-  deferredPrompt = null;
-  listeners.forEach((listener) => listener(false));
-  return outcome === 'accepted';
+  try {
+    await deferredPrompt.prompt();
+    const choice = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    listeners.forEach((listener) => listener(false));
+    return choice?.outcome === 'accepted';
+  } catch (err) {
+    console.warn('Error invoking install prompt:', err);
+    return false;
+  }
 }
 
 export function usePWAInstall() {
