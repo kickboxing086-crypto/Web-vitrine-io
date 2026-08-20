@@ -1,14 +1,14 @@
-const CACHE_NAME = 'web-vitrine-pwa-v11';
+const CACHE_NAME = 'web-vitrine-pwa-v12';
 const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/logo-v3.png',
-  '/icon-192-v3.png',
-  '/icon-512-v3.png',
-  '/icon-maskable-192-v3.png',
-  '/icon-maskable-512-v3.png',
-  '/apple-touch-icon-v3.png'
+  '/logo-v4.png',
+  '/icon-192-v4.png',
+  '/icon-512-v4.png',
+  '/icon-maskable-192-v4.png',
+  '/icon-maskable-512-v4.png',
+  '/apple-touch-icon-v4.png'
 ];
 
 self.addEventListener('install', event => {

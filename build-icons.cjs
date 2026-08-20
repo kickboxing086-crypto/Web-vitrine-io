@@ -24,7 +24,7 @@ function writeV3() {
   const icons = ["icon-192.png","icon-512.png","icon-maskable-192.png","icon-maskable-512.png","apple-touch-icon.png","favicon.png","favicon-32x32.png","favicon.svg","logo.png","logo.jpg"];
   for (const icon of icons) {
     const filePath = path.join(__dirname, 'public', icon);
-    const newName = icon.replace(/.png$/, '-v3.png').replace(/.jpg$/, '-v3.jpg').replace(/.svg$/, '-v3.svg');
+    const newName = icon.replace(/.png$/, '-v4.png').replace(/.jpg$/, '-v4.jpg').replace(/.svg$/, '-v4.svg');
     if (fs.existsSync(filePath)) {
       if (icon.endsWith('svg')) {
         fs.writeFileSync(path.join(outDir, newName), fs.readFileSync(filePath, 'utf8'));

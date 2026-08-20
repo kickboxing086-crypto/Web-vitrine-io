@@ -66,7 +66,7 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({ storeName = 
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl overflow-hidden bg-black/40 border border-[#D4AF37]/40 flex-shrink-0 flex items-center justify-center shadow-md">
                 <img
-                  src="/icon-192-v3.png"
+                  src="/icon-192-v4.png"
                   alt="App Icon"
                   className="w-full h-full object-cover"
                   onError={(e) => {
