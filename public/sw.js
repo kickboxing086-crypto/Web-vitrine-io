@@ -1,14 +1,13 @@
-const CACHE_NAME = 'web-vitrine-pwa-v12';
+const CACHE_NAME = 'web-vitrine-pwa-v14'; // Aggressive bump
 const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/logo-v4.png',
-  '/icon-192-v4.png',
-  '/icon-512-v4.png',
-  '/icon-maskable-192-v4.png',
-  '/icon-maskable-512-v4.png',
-  '/apple-touch-icon-v4.png'
+  '/icon-192-v5.png',
+  '/icon-512-v5.png',
+  '/icon-maskable-192-v5.png',
+  '/icon-maskable-512-v5.png',
+  '/apple-touch-icon-v5.png'
 ];
 
 self.addEventListener('install', event => {
@@ -26,7 +25,7 @@ self.addEventListener('activate', event => {
       return Promise.all(
         cacheNames
           .filter(cacheName => cacheName !== CACHE_NAME)
-          .map(cacheName => caches.delete(cacheName)) // Apaga Caches Antigos (incluindo o da letra V)
+          .map(cacheName => caches.delete(cacheName)) // Apaga TODOS os caches antigos para evitar o "V" fantasma
       );
     })
   );
