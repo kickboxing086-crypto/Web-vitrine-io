@@ -73,7 +73,7 @@ if (typeof window !== 'undefined') {
   });
 }
 
-export async function promptInstallPWA(): Promise<boolean> {
+export async function promptInstallPWA(): Promise<'accepted' | 'dismissed' | 'unavailable'> {
   const promptEvent = window.deferredPwaPrompt || deferredPrompt;
 
   if (promptEvent) {
@@ -83,23 +83,23 @@ export async function promptInstallPWA(): Promise<boolean> {
       deferredPrompt = null;
       window.deferredPwaPrompt = null;
       listeners.forEach((listener) => listener(false));
-      return choice?.outcome === 'accepted';
+      return choice?.outcome === 'accepted' ? 'accepted' : 'dismissed';
     } catch (err) {
       console.warn('Error invoking install prompt:', err);
-      return false;
+      return 'unavailable';
     }
   }
 
-  // If prompt not yet available, wait up to 1.5 seconds for Chrome to dispatch
+  // If prompt not yet available, wait up to 1 second for Chrome to dispatch
   return new Promise((resolve) => {
     let resolved = false;
 
     const timeout = setTimeout(() => {
       if (!resolved) {
         resolved = true;
-        resolve(false);
+        resolve('unavailable');
       }
-    }, 1500);
+    }, 1000);
 
     const checkListener = (canInstall: boolean) => {
       const activePrompt = window.deferredPwaPrompt || deferredPrompt;
@@ -114,9 +114,9 @@ export async function promptInstallPWA(): Promise<boolean> {
             deferredPrompt = null;
             window.deferredPwaPrompt = null;
             listeners.forEach((l) => l(false));
-            resolve(choice?.outcome === 'accepted');
+            resolve(choice?.outcome === 'accepted' ? 'accepted' : 'dismissed');
           })
-          .catch(() => resolve(false));
+          .catch(() => resolve('unavailable'));
       }
     };
 
