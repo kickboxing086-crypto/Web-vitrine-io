@@ -11,6 +11,8 @@ export function registerServiceWorker() {
         .register('/sw.js')
         .then((reg) => {
           console.log('PWA Service Worker registered with scope:', reg.scope);
+          // Check for worker updates on every page load
+          reg.update().catch(() => {});
         })
         .catch((err) => {
           console.warn('PWA Service Worker registration skipped or failed:', err);
