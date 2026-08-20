@@ -60,7 +60,7 @@ export async function triggerNativeInstall(): Promise<'accepted' | 'dismissed' |
   const activePrompt = deferredPrompt || window.deferredPwaPrompt;
   
   if (!activePrompt) {
-    // If not ready, wait a bit for it
+    // If not ready, wait very briefly
     return new Promise((resolve) => {
       let resolved = false;
       const timeout = setTimeout(() => {
@@ -68,7 +68,7 @@ export async function triggerNativeInstall(): Promise<'accepted' | 'dismissed' |
           resolved = true;
           resolve('unavailable');
         }
-      }, 1500);
+      }, 800); // Shorter timeout for better responsiveness
 
       const check = () => {
         const p = deferredPrompt || window.deferredPwaPrompt;
@@ -88,15 +88,14 @@ export async function triggerNativeInstall(): Promise<'accepted' | 'dismissed' |
         }
       };
 
-      if (deferredPrompt || window.deferredPwaPrompt) {
+      const listener = () => {
         check();
-      } else {
-        const listener = () => {
-          check();
-          window.removeEventListener('pwa-prompt-captured', listener);
-        };
-        window.addEventListener('pwa-prompt-captured', listener);
-      }
+        window.removeEventListener('pwa-prompt-captured', listener);
+      };
+      window.addEventListener('pwa-prompt-captured', listener);
+      
+      // Also check immediately
+      check();
     });
   }
   

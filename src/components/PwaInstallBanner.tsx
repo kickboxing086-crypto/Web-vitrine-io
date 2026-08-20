@@ -22,15 +22,19 @@ export const PwaInstallBanner: React.FC<{ storeName?: string }> = ({ storeName =
   if (!isVisible || isStandalone || isDismissed) return null;
 
   const handleInstall = async () => {
+    if (isInstalling) return;
     setIsInstalling(true);
-    const result = await triggerNativeInstall();
-    if (result === 'accepted') {
-      setIsDismissed(true);
-    } else if (result === 'unavailable') {
-      // Prompt still not ready, we could show a message but user said "no step by step"
-      // So we just keep it in "preparing" state for a bit
-      setTimeout(() => setIsInstalling(false), 2000);
-    } else {
+    
+    try {
+      const result = await triggerNativeInstall();
+      if (result === 'accepted') {
+        setIsDismissed(true);
+      } else if (result === 'unavailable' || result === 'dismissed') {
+        // If still unavailable, don't stay stuck
+        setTimeout(() => setIsInstalling(false), 500);
+      }
+    } catch (error) {
+      console.error('Install error:', error);
       setIsInstalling(false);
     }
   };
