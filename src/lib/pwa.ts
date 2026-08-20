@@ -57,63 +57,19 @@ export function registerPWA() {
 }
 
 export async function triggerNativeInstall(): Promise<'accepted' | 'dismissed' | 'unavailable'> {
-  console.log('Triggering PWA Install...');
   const activePrompt = deferredPrompt || window.deferredPwaPrompt;
   
   if (!activePrompt) {
-    console.log('No prompt found, waiting 2s...');
-    return new Promise((resolve) => {
-      let resolved = false;
-      const timeout = setTimeout(() => {
-        if (!resolved) {
-          resolved = true;
-          console.log('Install prompt timeout');
-          resolve('unavailable');
-        }
-      }, 2000);
-
-      const checkAndPrompt = async () => {
-        const p = deferredPrompt || window.deferredPwaPrompt;
-        if (p && !resolved) {
-          resolved = true;
-          clearTimeout(timeout);
-          try {
-            console.log('Prompt found during wait, showing...');
-            await p.prompt();
-            const { outcome } = await p.userChoice;
-            console.log('User choice outcome:', outcome);
-            if (outcome === 'accepted') {
-              deferredPrompt = null;
-              window.deferredPwaPrompt = null;
-              listeners.forEach(l => l(false));
-              resolve('accepted');
-            } else {
-              resolve('dismissed');
-            }
-          } catch (err) {
-            console.error('Wait prompt error:', err);
-            resolve('unavailable');
-          }
-        }
-      };
-
-      const listener = () => {
-        console.log('Captured event fired');
-        checkAndPrompt();
-        window.removeEventListener('pwa-prompt-captured', listener);
-      };
-      window.addEventListener('pwa-prompt-captured', listener);
-      
-      // Also check immediately
-      checkAndPrompt();
-    });
+    console.log('PWA: Prompt not ready yet');
+    return 'unavailable';
   }
   
   try {
-    console.log('Active prompt found, showing...');
+    console.log('PWA: Showing native install prompt...');
     await activePrompt.prompt();
     const { outcome } = await activePrompt.userChoice;
-    console.log('Outcome:', outcome);
+    console.log('PWA: User choice:', outcome);
+    
     if (outcome === 'accepted') {
       deferredPrompt = null;
       window.deferredPwaPrompt = null;
@@ -122,7 +78,7 @@ export async function triggerNativeInstall(): Promise<'accepted' | 'dismissed' |
     }
     return 'dismissed';
   } catch (err) {
-    console.error('PWA install prompt error:', err);
+    console.error('PWA: Install error:', err);
     return 'unavailable';
   }
 }

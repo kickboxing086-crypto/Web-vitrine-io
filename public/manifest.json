@@ -1,7 +1,7 @@
 {
   "name": "WEB VITRINE",
   "short_name": "WEB VITRINE",
-  "description": "Sua vitrine virtual exclusiva, catálogo de produtos e pedidos direto no WhatsApp.",
+  "description": "Catálogo de produtos e pedidos via WhatsApp.",
   "start_url": "/",
   "id": "/",
   "scope": "/",

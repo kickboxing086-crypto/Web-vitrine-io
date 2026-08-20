@@ -25,23 +25,17 @@ export const PwaInstallBanner: React.FC<{ storeName?: string }> = ({ storeName =
     if (isInstalling) return;
     setIsInstalling(true);
     
-    // Safety timeout to reset "installing" state if nothing happens
-    const safetyTimeout = setTimeout(() => {
-      setIsInstalling(false);
-    }, 5000);
-
     try {
       const result = await triggerNativeInstall();
-      clearTimeout(safetyTimeout);
       
       if (result === 'accepted') {
         setIsDismissed(true);
       } else {
+        // If rejected, unavailable or dismissed, allow trying again immediately
         setIsInstalling(false);
       }
     } catch (error) {
       console.error('Install error:', error);
-      clearTimeout(safetyTimeout);
       setIsInstalling(false);
     }
   };
@@ -61,14 +55,9 @@ export const PwaInstallBanner: React.FC<{ storeName?: string }> = ({ storeName =
               src="/logo-master.jpg" 
               alt="Logo" 
               className="w-full h-full object-cover" 
-              onLoad={(e) => console.log('PWA Logo loaded')}
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
-                if (target.src.includes('logo-master.jpg')) {
-                  target.src = '/icon-192.png';
-                } else if (target.src.includes('icon-192.png')) {
-                  target.src = '/favicon.png';
-                }
+                target.src = '/icon-192.png';
               }}
             />
           </div>
