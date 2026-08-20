@@ -1,48 +1,40 @@
 import React, { useState, useEffect } from 'react';
-import { Download, X, Loader2, Smartphone, CheckCircle, Sparkles } from 'lucide-react';
+import { Download, X, Loader2 } from 'lucide-react';
 import { usePWAInstall } from '../lib/pwa';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface PwaInstallBannerProps {
   storeName?: string;
+  logoUrl?: string;
 }
 
-export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({ storeName = 'Web Vitrine' }) => {
+export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({
+  storeName = 'Web Vitrine',
+  logoUrl,
+}) => {
   const { isStandalone, installApp } = usePWAInstall();
   const [isDismissed, setIsDismissed] = useState<boolean>(false);
   const [isMounted, setIsMounted] = useState<boolean>(false);
   const [isInstalling, setIsInstalling] = useState<boolean>(false);
-  const [imgError, setImgError] = useState<boolean>(false);
-  const [helperNotice, setHelperNotice] = useState<string | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Do not show if already running inside installed standalone app or dismissed
+  // Do not show if already running inside standalone app or dismissed
   if (!isMounted || isStandalone || isDismissed) {
     return null;
   }
 
   const handleInstallClick = async () => {
     setIsInstalling(true);
-    setHelperNotice(null);
     try {
-      const result = await installApp();
-      if (result === 'accepted') {
+      const accepted = await installApp();
+      if (accepted) {
         setIsDismissed(true);
-      } else if (result === 'unavailable') {
-        // If the browser hasn't fired beforeinstallprompt or is in iOS/Webview, give brief helpful tip
-        const isIOS = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
-        if (isIOS) {
-          setHelperNotice('No iPhone: toque em Compartilhar ⎋ e "Adicionar à Tela de Início"');
-        } else {
-          setHelperNotice('Abra o menu (⋮) do seu navegador e toque em "Instalar aplicativo"');
-        }
       }
     } catch (err) {
       console.warn('Native install error:', err);
-      setHelperNotice('Abra o menu (⋮) do seu navegador e toque em "Instalar aplicativo"');
     } finally {
       setIsInstalling(false);
     }
@@ -51,6 +43,8 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({ storeName = 
   const handleDismiss = () => {
     setIsDismissed(true);
   };
+
+  const imageSrc = logoUrl || '/logo-master.jpg';
 
   return (
     <AnimatePresence>
@@ -66,22 +60,21 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({ storeName = 
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            {/* App Icon with guaranteed uncorrupted fallback */}
-            <div className="w-11 h-11 rounded-xl overflow-hidden bg-[#1A181C] border border-[#D4AF37] flex-shrink-0 flex items-center justify-center shadow-lg relative">
-              {!imgError ? (
-                <img
-                  src="/icon-192.png"
-                  alt={storeName || 'Web Vitrine App'}
-                  className="w-full h-full object-cover rounded-lg"
-                  onError={() => setImgError(true)}
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-[#1E1C22] to-black flex items-center justify-center">
-                  <span className="font-serif font-black text-xs text-[#E5C378] tracking-tighter">
-                    WV
-                  </span>
-                </div>
-              )}
+            {/* Store Logo */}
+            <div className="w-11 h-11 rounded-xl overflow-hidden bg-black border border-[#D4AF37] flex-shrink-0 flex items-center justify-center shadow-lg relative p-0.5">
+              <img
+                src={imageSrc}
+                alt={storeName || 'Web Vitrine App'}
+                className="w-full h-full object-cover rounded-lg"
+                onError={(e) => {
+                  const target = e.currentTarget as HTMLImageElement;
+                  if (target.src.indexOf('logo-master.jpg') === -1) {
+                    target.src = '/logo-master.jpg';
+                  } else if (target.src.indexOf('icon-192.png') === -1) {
+                    target.src = '/icon-192.png';
+                  }
+                }}
+              />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
@@ -108,14 +101,6 @@ export const PwaInstallBanner: React.FC<PwaInstallBannerProps> = ({ storeName = 
             <X className="w-4 h-4" />
           </button>
         </div>
-
-        {/* Dynamic Helper Notice if browser needs direct menu trigger */}
-        {helperNotice && (
-          <div className="bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#F3E5AB] px-3 py-2 rounded-xl text-[11px] leading-snug flex items-center gap-2">
-            <Smartphone className="w-4 h-4 flex-shrink-0 text-[#E5C378]" />
-            <span>{helperNotice}</span>
-          </div>
-        )}
 
         <div className="flex items-center gap-2 pt-1 border-t border-stone-800">
           <button

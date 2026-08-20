@@ -4,6 +4,12 @@
 
 import { useState, useEffect } from 'react';
 
+declare global {
+  interface Window {
+    deferredPwaPrompt: BeforeInstallPromptEvent | null;
+  }
+}
+
 export function registerServiceWorker() {
   if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
     const register = () => {
@@ -35,61 +41,82 @@ let deferredPrompt: BeforeInstallPromptEvent | null = null;
 const listeners = new Set<(canInstall: boolean) => void>();
 
 if (typeof window !== 'undefined') {
+  // Sync if already captured in index.html head
+  if (window.deferredPwaPrompt) {
+    deferredPrompt = window.deferredPwaPrompt;
+  }
+
   window.addEventListener('beforeinstallprompt', (e) => {
-    // Prevent default mini-infobar and capture event for our custom button
     e.preventDefault();
     deferredPrompt = e as BeforeInstallPromptEvent;
+    window.deferredPwaPrompt = deferredPrompt;
     listeners.forEach((listener) => listener(true));
-    console.log('PWA beforeinstallprompt event captured.');
+  });
+
+  window.addEventListener('pwa-prompt-captured', () => {
+    if (window.deferredPwaPrompt) {
+      deferredPrompt = window.deferredPwaPrompt;
+      listeners.forEach((listener) => listener(true));
+    }
   });
 
   window.addEventListener('appinstalled', () => {
     deferredPrompt = null;
+    window.deferredPwaPrompt = null;
     listeners.forEach((listener) => listener(false));
-    console.log('PWA was successfully installed.');
+  });
+
+  window.addEventListener('pwa-installed', () => {
+    deferredPrompt = null;
+    window.deferredPwaPrompt = null;
+    listeners.forEach((listener) => listener(false));
   });
 }
 
-export async function promptInstallPWA(): Promise<'accepted' | 'dismissed' | 'unavailable'> {
-  // If deferredPrompt is available, trigger native prompt immediately
-  if (deferredPrompt) {
+export async function promptInstallPWA(): Promise<boolean> {
+  const promptEvent = window.deferredPwaPrompt || deferredPrompt;
+
+  if (promptEvent) {
     try {
-      await deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice;
+      await promptEvent.prompt();
+      const choice = await promptEvent.userChoice;
       deferredPrompt = null;
+      window.deferredPwaPrompt = null;
       listeners.forEach((listener) => listener(false));
-      return choice?.outcome === 'accepted' ? 'accepted' : 'dismissed';
+      return choice?.outcome === 'accepted';
     } catch (err) {
       console.warn('Error invoking install prompt:', err);
-      return 'unavailable';
+      return false;
     }
   }
 
-  // If prompt not yet captured, wait up to 2 seconds for event
+  // If prompt not yet available, wait up to 1.5 seconds for Chrome to dispatch
   return new Promise((resolve) => {
     let resolved = false;
 
     const timeout = setTimeout(() => {
       if (!resolved) {
         resolved = true;
-        resolve('unavailable');
+        resolve(false);
       }
-    }, 2000);
+    }, 1500);
 
     const checkListener = (canInstall: boolean) => {
-      if (canInstall && deferredPrompt && !resolved) {
+      const activePrompt = window.deferredPwaPrompt || deferredPrompt;
+      if (canInstall && activePrompt && !resolved) {
         resolved = true;
         clearTimeout(timeout);
         listeners.delete(checkListener);
-        deferredPrompt
+        activePrompt
           .prompt()
-          .then(() => deferredPrompt!.userChoice)
+          .then(() => activePrompt.userChoice)
           .then((choice) => {
             deferredPrompt = null;
+            window.deferredPwaPrompt = null;
             listeners.forEach((l) => l(false));
-            resolve(choice?.outcome === 'accepted' ? 'accepted' : 'dismissed');
+            resolve(choice?.outcome === 'accepted');
           })
-          .catch(() => resolve('unavailable'));
+          .catch(() => resolve(false));
       }
     };
 
@@ -98,7 +125,9 @@ export async function promptInstallPWA(): Promise<'accepted' | 'dismissed' | 'un
 }
 
 export function usePWAInstall() {
-  const [canInstall, setCanInstall] = useState<boolean>(Boolean(deferredPrompt));
+  const [canInstall, setCanInstall] = useState<boolean>(
+    Boolean(typeof window !== 'undefined' && (window.deferredPwaPrompt || deferredPrompt))
+  );
   const [isStandalone, setIsStandalone] = useState<boolean>(false);
 
   useEffect(() => {
