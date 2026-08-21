@@ -64,9 +64,9 @@ export const generateWhatsappOrderMessage = (
     order.paymentMethod === 'pix'
       ? 'PIX (Chave da Loja)'
       : order.paymentMethod === 'card_delivery'
-      ? 'Cartão na Entrega (Maquininha)'
+      ? `Cartão na Entrega (${order.cardType === 'debit' ? 'Débito' : 'Crédito'})`
       : order.paymentMethod === 'card_pickup'
-      ? 'Cartão na Retirada'
+      ? `Cartão na Retirada (${order.cardType === 'debit' ? 'Débito' : 'Crédito'})`
       : order.paymentMethod === 'cash'
       ? 'Dinheiro'
       : 'A Combinar'

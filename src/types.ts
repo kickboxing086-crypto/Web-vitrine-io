@@ -147,6 +147,7 @@ export interface Order {
   appliedCoupon?: string;
   customerNotes?: string;
   paymentMethod: 'card_delivery' | 'card_pickup' | 'cash' | 'other' | 'pix';
+  cardType?: 'credit' | 'debit';
   cashAmount?: number;
   noChangeNeeded?: boolean;
   status: OrderStatus;

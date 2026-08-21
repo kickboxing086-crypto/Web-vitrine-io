@@ -88,6 +88,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   );
   const [cashAmount, setCashAmount] = useState<string>('');
   const [noChangeNeeded, setNoChangeNeeded] = useState(false);
+  const [cardType, setCardType] = useState<'credit' | 'debit'>('credit');
+  const [shakeWhatsapp, setShakeWhatsapp] = useState(false);
+
 
   // CEP Lookup
   const handleCepSearch = async (cepVal: string) => {
@@ -192,6 +195,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     if (cart.length === 0) return;
 
     if (!customerName.trim() || !customerPhone.trim()) {
+      if (!customerPhone.trim()) {
+        setShakeWhatsapp(true);
+        setTimeout(() => setShakeWhatsapp(false), 500);
+      }
       alert('Por favor, informe seu Nome e WhatsApp de contato.');
       return;
     }
@@ -241,6 +248,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       appliedCoupon: appliedCoupon?.code,
       customerNotes: customerNotes.trim(),
       paymentMethod,
+      cardType: (paymentMethod === 'card_delivery' || paymentMethod === 'card_pickup') ? cardType : undefined,
       cashAmount: paymentMethod === 'cash' && !noChangeNeeded ? parseFloat(cashAmount) : undefined,
       noChangeNeeded: paymentMethod === 'cash' ? noChangeNeeded : undefined,
       status: 'pending',
@@ -381,64 +389,70 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       return (
                         <div
                           key={`${item.product.id}-${index}`}
-                          className="flex items-center space-x-4 p-4 bg-white rounded-2xl border border-brand-border shadow-xs hover:shadow-md transition-shadow"
+                          className="flex gap-4 p-5 bg-white rounded-3xl border border-brand-border shadow-sm hover:shadow-md transition-all group"
                         >
-                          <img
-                            src={item.product.images[0]}
-                            alt={item.product.name}
-                            className="w-18 h-24 rounded-xl object-cover object-top bg-stone-100 flex-shrink-0"
-                          />
+                          <div className="w-20 h-24 sm:w-24 sm:h-32 rounded-2xl overflow-hidden bg-brand-bg border border-brand-border/40 shrink-0">
+                            <img
+                              src={item.product.images[0]}
+                              alt={item.product.name}
+                              className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                            />
+                          </div>
 
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-bold text-stone-900 truncate">
-                              {item.product.name}
-                            </h4>
-                            <div className="flex items-center gap-2.5 mt-1.5 text-[11px] text-stone-500">
-                              <span className="font-bold text-stone-700 bg-stone-100 px-2 py-0.5 rounded-lg">
-                                TAM: {item.selectedSize}
-                              </span>
-                              <span className="flex items-center gap-1.5">
-                                <span
-                                  className="w-3 h-3 rounded-full border border-black/10"
-                                  style={{ backgroundColor: item.selectedColor.hex }}
-                                />
-                                {item.selectedColor.name}
-                              </span>
+                          <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
+                            <div>
+                              <div className="flex justify-between items-start gap-2">
+                                <h4 className="text-sm font-bold text-stone-900 truncate pr-2">
+                                  {item.product.name}
+                                </h4>
+                                <button
+                                  onClick={() => onRemoveItem(index)}
+                                  className="p-1 text-stone-300 hover:text-red-500 transition-colors shrink-0"
+                                  title="Remover item"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                              
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                <span className="inline-flex items-center px-2 py-0.5 bg-stone-50 border border-stone-100 rounded-lg text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+                                  TAM: {item.selectedSize}
+                                </span>
+                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-stone-50 border border-stone-100 rounded-lg text-[10px] font-bold text-stone-500 uppercase tracking-wider">
+                                  <span
+                                    className="w-2.5 h-2.5 rounded-full border border-black/10"
+                                    style={{ backgroundColor: item.selectedColor.hex }}
+                                  />
+                                  {item.selectedColor.name}
+                                </span>
+                              </div>
                             </div>
 
-                            <div className="flex items-center justify-between mt-3">
-                              <span className="text-sm font-bold text-stone-900">
+                            <div className="flex items-center justify-between mt-4">
+                              <span className="text-base font-bold text-stone-900">
                                 {formatCurrency(itemPrice * item.quantity)}
                               </span>
 
                               {/* Quantity Controls */}
-                              <div className="flex items-center border border-brand-border rounded-xl bg-brand-bg p-0.5">
+                              <div className="flex items-center border border-brand-border rounded-xl bg-brand-bg p-1 shadow-2xs">
                                 <button
                                   onClick={() => onUpdateQuantity(index, -1)}
-                                  className="p-1.5 text-stone-600 hover:text-stone-900"
+                                  className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white text-stone-400 hover:text-stone-900 transition-colors"
                                 >
                                   <Minus className="w-3.5 h-3.5" />
                                 </button>
-                                <span className="px-3 text-xs font-bold text-stone-800">
+                                <span className="w-8 text-center text-xs font-bold text-stone-800">
                                   {item.quantity}
                                 </span>
                                 <button
                                   onClick={() => onUpdateQuantity(index, 1)}
-                                  className="p-1.5 text-stone-600 hover:text-stone-900"
+                                  className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white text-stone-400 hover:text-stone-900 transition-colors"
                                 >
                                   <Plus className="w-3.5 h-3.5" />
                                 </button>
                               </div>
                             </div>
                           </div>
-
-                          <button
-                            onClick={() => onRemoveItem(index)}
-                            className="p-2 text-stone-300 hover:text-red-600 transition-colors"
-                            title="Remover item"
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
                         </div>
                       );
                     })}
@@ -561,52 +575,63 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   </div>
 
                   {/* Customer Information Form */}
-                  <div className="space-y-5 p-6 sm:p-8 bg-white rounded-3xl border border-brand-border shadow-sm">
-                    <span className="text-xs font-bold uppercase tracking-widest text-stone-900 flex items-center space-x-2.5">
+                  <div className="space-y-8 p-6 sm:p-10 bg-white rounded-3xl border border-brand-border shadow-sm">
+                    <span className="text-xs font-bold uppercase tracking-widest text-stone-900 flex items-center space-x-2.5 pb-2 border-b border-stone-50">
                       <div className="p-1.5 bg-brand-bg rounded-lg border border-[#E8DACB]">
                         <User className="w-4 h-4 text-brand-primary-dark" />
                       </div>
                       <span>Informações de Entrega</span>
                     </span>
 
-                    <div className="space-y-4">
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-stone-400 uppercase ml-1">Nome Completo</label>
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-stone-400 uppercase ml-1 tracking-wider">Nome Completo</label>
                         <input
                           type="text"
                           required
                           value={customerName}
                           onChange={(e) => setCustomerName(e.target.value)}
                           placeholder="Digite seu nome..."
-                          className="w-full px-4 py-3 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark transition-all"
+                          className="w-full px-5 py-4 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark transition-all shadow-xs"
                         />
                       </div>
 
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-stone-400 uppercase ml-1">WhatsApp de Contato</label>
-                        <input
-                          type="text"
-                          required
-                          value={customerPhone}
-                          onChange={(e) => setCustomerPhone(e.target.value)}
-                          placeholder="(00) 00000-0000"
-                          className="w-full px-4 py-3 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark transition-all"
-                        />
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-stone-400 uppercase ml-1 tracking-wider">WhatsApp de Contato</label>
+                        <motion.div
+                          animate={shakeWhatsapp ? { 
+                            x: [-6, 6, -6, 6, -3, 3, 0],
+                            scale: [1, 1.02, 1],
+                            boxShadow: ["0 0 0 0px rgba(239, 68, 68, 0)", "0 0 0 4px rgba(239, 68, 68, 0.2)", "0 0 0 0px rgba(239, 68, 68, 0)"]
+                          } : {}}
+                          transition={{ duration: 0.5 }}
+                        >
+                          <input
+                            type="text"
+                            required
+                            value={customerPhone}
+                            onChange={(e) => setCustomerPhone(e.target.value)}
+                            placeholder="(00) 00000-0000"
+                            className={`w-full px-5 py-4 bg-brand-bg border rounded-2xl text-sm text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-1 transition-all shadow-xs ${
+                              shakeWhatsapp ? 'border-red-500 ring-1 ring-red-500' : 'border-brand-border-dark focus:ring-brand-primary-dark'
+                            }`}
+                          />
+                        </motion.div>
                       </div>
 
                       {/* Delivery Address Fields */}
                       {isDelivery && (
-                        <div className="space-y-4 pt-4 border-t border-stone-100">
+                        <div className="space-y-6 pt-6 border-t border-stone-50">
                           <div className="flex items-center justify-between">
                             <span className="text-[11px] font-bold text-stone-800 uppercase tracking-tight flex items-center gap-2">
                               <MapPin className="w-3.5 h-3.5 text-brand-primary-dark" /> 
-                              Endereço
+                              Endereço para Entrega
                             </span>
                           </div>
 
                           {/* CEP Field */}
-                          <div className="relative space-y-1.5">
-                            <label className="text-[10px] font-bold text-stone-400 uppercase ml-1">CEP (opcional)</label>
+                          <div className="relative space-y-2">
+                            <label className="text-[10px] font-bold text-stone-400 uppercase ml-1 tracking-wider">CEP (opcional)</label>
                             <input
                               type="text"
                               value={cep}
@@ -617,50 +642,50 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                               }}
                               placeholder="00000-000"
                               maxLength={9}
-                              className="w-full px-4 py-3 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark"
+                              className="w-full px-5 py-4 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark shadow-xs"
                             />
                             {isLoadingCep && (
-                              <span className="absolute right-4 bottom-3.5 text-[10px] text-brand-primary-dark font-bold animate-pulse">
+                              <span className="absolute right-5 bottom-4 text-[10px] text-brand-primary-dark font-bold animate-pulse">
                                 BUSCANDO...
                               </span>
                             )}
                           </div>
 
-                          <div className="grid grid-cols-1 gap-4">
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-stone-400 uppercase ml-1">Rua / Avenida</label>
+                          <div className="grid grid-cols-1 gap-6">
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-bold text-stone-400 uppercase ml-1 tracking-wider">Rua / Avenida</label>
                               <input
                                 type="text"
                                 required
                                 value={street}
                                 onChange={(e) => setStreet(e.target.value)}
                                 placeholder="Nome da rua..."
-                                className="w-full px-4 py-3 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark"
+                                className="w-full px-5 py-4 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark shadow-xs"
                               />
                             </div>
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-stone-400 uppercase ml-1">Número</label>
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-bold text-stone-400 uppercase ml-1 tracking-wider">Número</label>
                               <input
                                 type="text"
                                 required
                                 value={number}
                                 onChange={(e) => setNumber(e.target.value)}
                                 placeholder="S/N ou Nº"
-                                className="w-full px-4 py-3 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark"
+                                className="w-full px-5 py-4 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark shadow-xs"
                               />
                             </div>
                           </div>
 
-                          <div className="space-y-4">
+                          <div className="space-y-6">
                             {settings.deliveryFeeType === 'custom' &&
                             settings.customDeliveryRates &&
                             settings.customDeliveryRates.length > 0 ? (
-                              <div className="relative space-y-1.5">
-                                <label className="text-[10px] font-bold text-stone-400 uppercase ml-1">Bairro de Entrega</label>
+                              <div className="relative space-y-2">
+                                <label className="text-[10px] font-bold text-stone-400 uppercase ml-1 tracking-wider">Bairro de Entrega</label>
                                 <button
                                   type="button"
                                   onClick={() => setIsNeighborhoodOpen(!isNeighborhoodOpen)}
-                                  className="w-full px-4 py-3 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 focus:outline-none flex items-center justify-between hover:scale-[1.01] active:scale-[0.99] transition-all"
+                                  className="w-full px-5 py-4 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 focus:outline-none flex items-center justify-between hover:scale-[1.01] active:scale-[0.99] transition-all shadow-xs"
                                   id="select-neighborhood-btn"
                                 >
                                   <span className="truncate">
@@ -762,52 +787,52 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                                 </AnimatePresence>
                               </div>
                             ) : (
-                              <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold text-stone-400 uppercase ml-1">Bairro</label>
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-stone-400 uppercase ml-1 tracking-wider">Bairro</label>
                                 <input
                                   type="text"
                                   required
                                   value={neighborhood}
                                   onChange={(e) => setNeighborhood(e.target.value)}
                                   placeholder="Digite seu bairro..."
-                                  className="w-full px-4 py-3 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark"
+                                  className="w-full px-5 py-4 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark shadow-xs"
                                 />
                               </div>
                             )}
 
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold text-stone-400 uppercase ml-1">Cidade</label>
+                            <div className="grid grid-cols-1 gap-6">
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-stone-400 uppercase ml-1 tracking-wider">Cidade</label>
                                 <input
                                   type="text"
                                   required
                                   value={city}
                                   onChange={(e) => setCity(e.target.value)}
-                                  className="w-full px-4 py-3 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark"
+                                  className="w-full px-5 py-4 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark shadow-xs"
                                 />
                               </div>
-                              <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold text-stone-400 uppercase ml-1">UF</label>
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-stone-400 uppercase ml-1 tracking-wider">UF</label>
                                 <input
                                   type="text"
                                   required
                                   maxLength={2}
                                   value={addressState}
                                   onChange={(e) => setAddressState(e.target.value.toUpperCase())}
-                                  className="w-full px-4 py-3 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark uppercase"
+                                  className="w-full px-5 py-4 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark uppercase shadow-xs"
                                 />
                               </div>
                             </div>
                           </div>
 
-                          <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-stone-400 uppercase ml-1">Complemento</label>
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-stone-400 uppercase ml-1 tracking-wider">Complemento</label>
                             <input
                               type="text"
                               value={complement}
                               onChange={(e) => setComplement(e.target.value)}
                               placeholder="Apto, Bloco, Casa..."
-                              className="w-full px-4 py-3 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark"
+                              className="w-full px-5 py-4 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark shadow-xs"
                             />
                           </div>
                         </div>
@@ -821,40 +846,75 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                         Forma de Pagamento
                       </label>
                       
-                      <div className="space-y-2.5">
+                      <div className="space-y-3">
                         {[
-                          { id: 'pix', label: 'Pix (Rápido e Seguro)', icon: <CheckCircle2 className="w-4 h-4" /> },
+                          { id: 'pix', label: 'Pix (Pagamento Instantâneo)', icon: <CheckCircle2 className="w-4 h-4" />, detail: 'Chave Pix será exibida após selecionar' },
                           {
                             id: isDelivery ? 'card_delivery' : 'card_pickup',
-                            label: isDelivery ? 'Pagar com Cartão na Entrega' : 'Pagar com Cartão na Retirada',
-                            icon: <CreditCard className="w-4 h-4" />
+                            label: isDelivery ? 'Cartão de Débito ou Crédito (Na Entrega)' : 'Cartão de Débito ou Crédito (Na Retirada)',
+                            icon: <CreditCard className="w-4 h-4" />,
+                            detail: 'Levaremos a maquininha até você'
                           },
-                          { id: 'cash', label: 'Dinheiro', icon: <div className="font-bold text-xs">R$</div> },
+                          { id: 'cash', label: 'Dinheiro (Pagamento na Entrega)', icon: <div className="font-bold text-xs">R$</div>, detail: 'Informe se precisará de troco abaixo' },
                         ].map((p) => (
                           <motion.button
                             key={p.id}
                             type="button"
                             onClick={() => setPaymentMethod(p.id as any)}
-                            className={`w-full py-4 px-5 rounded-2xl border flex items-center justify-between transition-all cursor-pointer ${
+                            className={`w-full py-4 px-5 rounded-2xl border flex items-center justify-between transition-all cursor-pointer group ${
                               paymentMethod === p.id
-                                ? 'bg-stone-900 text-white border-stone-900 shadow-md ring-2 ring-stone-900/10'
-                                : 'bg-white border-brand-border text-stone-700 hover:border-stone-400'
+                                ? 'bg-stone-900 text-white border-stone-900 shadow-lg ring-2 ring-stone-900/10'
+                                : 'bg-white border-brand-border text-stone-700 hover:border-stone-400 hover:bg-stone-50/50'
                             }`}
                           >
-                            <div className="flex items-center gap-3">
-                              <div className={`p-1.5 rounded-lg ${paymentMethod === p.id ? 'bg-white/10' : 'bg-brand-bg'}`}>
+                            <div className="flex items-center gap-4">
+                              <div className={`p-2.5 rounded-xl transition-colors ${paymentMethod === p.id ? 'bg-white/15 text-white' : 'bg-brand-bg text-stone-500 group-hover:text-stone-700'}`}>
                                 {p.icon}
                               </div>
-                              <span className="text-xs font-bold">{p.label}</span>
+                              <div className="text-left">
+                                <span className="text-xs font-bold block">{p.label}</span>
+                                <span className={`text-[10px] block mt-0.5 ${paymentMethod === p.id ? 'text-white/60' : 'text-stone-400'}`}>
+                                  {p.detail}
+                                </span>
+                              </div>
                             </div>
-                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                              paymentMethod === p.id ? 'bg-brand-primary border-brand-primary' : 'border-stone-200'
+                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                              paymentMethod === p.id ? 'bg-brand-primary border-brand-primary scale-110 shadow-sm' : 'border-stone-200 group-hover:border-stone-300'
                             }`}>
-                              {paymentMethod === p.id && <Check className="w-3.5 h-3.5 text-stone-900" />}
+                              {paymentMethod === p.id && <Check className="w-4 h-4 text-stone-900" strokeWidth={3} />}
                             </div>
                           </motion.button>
                         ))}
                       </div>
+
+                      {(paymentMethod === 'card_delivery' || paymentMethod === 'card_pickup') && (
+                        <motion.div 
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="mt-4 p-4 bg-brand-bg rounded-2xl border border-brand-border-dark space-y-3"
+                        >
+                          <label className="text-[11px] font-bold text-stone-700 uppercase tracking-wider block mb-2">
+                            Tipo de Cartão
+                          </label>
+                          <div className="grid grid-cols-2 gap-2">
+                            {(['credit', 'debit'] as const).map((type) => (
+                              <button
+                                key={type}
+                                type="button"
+                                onClick={() => setCardType(type)}
+                                className={`py-2.5 px-4 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                                  cardType === type
+                                    ? 'bg-stone-900 text-white border-stone-900 shadow-sm'
+                                    : 'bg-white border-brand-border text-stone-600 hover:border-stone-400'
+                                }`}
+                              >
+                                {type === 'credit' ? 'Crédito' : 'Débito'}
+                                {cardType === type && <Check className="w-3.5 h-3.5 text-emerald-400" />}
+                              </button>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
 
                       {paymentMethod === 'cash' && (
                         <motion.div 

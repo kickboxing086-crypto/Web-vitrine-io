@@ -16,6 +16,7 @@ import {
   Upload,
   Image as ImageIcon,
   Trash2,
+  Pencil,
   Edit2,
   Info,
   Palette,
@@ -474,7 +475,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                                 className="text-stone-400 hover:text-stone-900 p-1 cursor-pointer transition-colors"
                                 title="Editar Taxa"
                               >
-                                <Edit2 className="w-3.5 h-3.5" />
+                                <Pencil className="w-3.5 h-3.5" />
                               </button>
                               <button
                                 type="button"

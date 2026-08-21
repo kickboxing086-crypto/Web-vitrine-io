@@ -631,9 +631,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             {currentClient && currentClient.username !== 'teste@123' && (
               <p className="text-xs text-stone-500 mt-0.5">
                 Usuário autenticado: <strong className="text-stone-800 font-mono">@{currentClient.username}</strong>
-                {currentClient.dueDate && (
-                  <span> • Vencimento: <strong className="text-emerald-700">{new Date(currentClient.dueDate + 'T00:00:00').toLocaleDateString('pt-BR')}</strong></span>
-                )}
+                {currentClient.dueDate && (() => {
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  const due = new Date(currentClient.dueDate + 'T00:00:00');
+                  const diffTime = due.getTime() - today.getTime();
+                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                  
+                  return (
+                    <span className="flex items-center gap-1">
+                      <span>• Vencimento:</span>
+                      <strong className="text-emerald-700">{new Date(currentClient.dueDate + 'T00:00:00').toLocaleDateString('pt-BR')}</strong>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${diffDays <= 5 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                        {diffDays < 0 ? `Vencido há ${Math.abs(diffDays)} dias` : diffDays === 0 ? 'Vence hoje!' : `Faltam ${diffDays} dias`}
+                      </span>
+                    </span>
+                  );
+                })()}
               </p>
             )}
           </div>

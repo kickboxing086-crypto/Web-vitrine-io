@@ -33,7 +33,7 @@ import { cleanPhoneForWhatsapp } from '../lib/formatters';
 
 interface LandingPageProps {
   settings?: StoreSettings;
-  onEnterStore: () => void;
+  onEnterStore: (slug?: string) => void;
   onAdminLogin: () => void;
 }
 
@@ -133,11 +133,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           {/* Navigation Actions */}
           <div className="flex items-center space-x-2 sm:space-x-4">
             <button
-              onClick={onEnterStore}
-              className="hidden sm:inline-flex items-center space-x-1.5 px-3.5 py-2 text-stone-300 hover:text-white rounded-xl text-xs font-semibold hover:bg-white/5 transition-colors cursor-pointer"
+              onClick={() => onEnterStore('Teste@123')}
+              className="hidden sm:inline-flex items-center space-x-1.5 px-3.5 py-2 text-stone-300 hover:text-white rounded-xl text-xs font-semibold hover:bg-white/5 transition-colors cursor-pointer border border-[#D4AF37]/30"
             >
               <Store className="w-4 h-4 text-[#D4AF37]" />
-              <span>Ver Vitrine de Demonstração</span>
+              <span>Ver Vitrine de Demonstração (Teste@123)</span>
             </button>
 
             <button
@@ -226,11 +226,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
                 <button
                   type="button"
-                  onClick={onEnterStore}
-                  className="w-full sm:w-auto px-6 py-4 bg-stone-900/80 hover:bg-stone-800 text-stone-200 hover:text-white rounded-2xl font-semibold text-xs sm:text-sm border border-white/15 flex items-center justify-center space-x-2 transition-all cursor-pointer"
+                  onClick={() => onEnterStore('Teste@123')}
+                  className="w-full sm:w-auto px-6 py-4 bg-stone-900/80 hover:bg-stone-800 text-stone-200 hover:text-white rounded-2xl font-semibold text-xs sm:text-sm border border-[#D4AF37]/40 flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-lg shadow-[#D4AF37]/5"
                 >
                   <Store className="w-4 h-4 text-[#D4AF37]" />
-                  <span>Ver Demonstração ao Vivo</span>
+                  <span>Ver Demonstração ao Vivo (Teste@123)</span>
                 </button>
               </div>
 
@@ -359,7 +359,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     <div className="mt-3">
                       <button
                         type="button"
-                        onClick={onEnterStore}
+                        onClick={() => onEnterStore('Teste@123')}
                         className="w-full py-2.5 px-3 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 transition-colors cursor-pointer shadow-md"
                       >
                         <ShoppingBag className="w-4 h-4" />

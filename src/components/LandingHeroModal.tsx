@@ -15,18 +15,21 @@ import {
   Clock,
   Lock,
   Tag,
+  Store,
 } from 'lucide-react';
 
 interface LandingHeroModalProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenLogin: () => void;
+  onEnterStore: (slug?: string) => void;
 }
 
 export const LandingHeroModal: React.FC<LandingHeroModalProps> = ({
   isOpen,
   onClose,
   onOpenLogin,
+  onEnterStore,
 }) => {
   if (!isOpen) return null;
 
@@ -175,6 +178,19 @@ export const LandingHeroModal: React.FC<LandingHeroModalProps> = ({
                   <MessageCircle className="w-5 h-5 fill-white" />
                   <span>Adquira Aqui • R$ 29,99/mês no WhatsApp</span>
                   <ArrowRight className="w-4 h-4" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onEnterStore('Teste@123');
+                  }}
+                  className="w-full py-3.5 px-6 bg-stone-900/80 hover:bg-stone-800 text-stone-200 hover:text-white rounded-2xl font-semibold text-sm border border-stone-700/60 flex items-center justify-center space-x-2.5 transition-all cursor-pointer shadow-lg"
+                  id="btn-demo-from-landing-modal"
+                >
+                  <Store className="w-5 h-5 text-[#D4AF37]" />
+                  <span>Ver Vitrine de Demonstração (Exemplo)</span>
                 </button>
 
                 <div className="flex items-center justify-between pt-1">

@@ -155,6 +155,21 @@ export default function App() {
     setActiveView('store');
   };
 
+  const handleEnterStore = async (slug?: string) => {
+    if (slug) {
+      const module = await import('./lib/firestoreService');
+      const client = await module.getClientByUsername(slug.trim().toLowerCase());
+      if (client) {
+        const isOfficial = client.username !== 'teste@123' && client.id !== 'client-test-natural';
+        const enriched = { ...client, isOfficial };
+        setCurrentClient(enriched);
+        localStorage.setItem('store_current_client', JSON.stringify(enriched));
+      }
+    }
+    setActiveView('store');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   // Customer Showcase Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -737,23 +752,12 @@ export default function App() {
     );
   }
 
-  if (isCloudSyncing) {
-    return (
-      <div className="min-h-screen bg-[#12110F] flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-[#D4AF37] text-sm font-bold animate-pulse">Sincronizando Vitrine...</p>
-        </div>
-      </div>
-    );
-  }
-
   if (activeView === 'landing') {
     return (
       <>
         <LandingPage
           settings={settings}
-          onEnterStore={() => setActiveView('store')}
+          onEnterStore={handleEnterStore}
           onAdminLogin={() => setIsLoginModalOpen(true)}
         />
         {/* Admin Login Modal */}
@@ -775,6 +779,17 @@ export default function App() {
           }}
         />
       </>
+    );
+  }
+
+  if (isCloudSyncing) {
+    return (
+      <div className="min-h-screen bg-[#12110F] flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-[#D4AF37] text-sm font-bold animate-pulse">Sincronizando Vitrine...</p>
+        </div>
+      </div>
     );
   }
 
@@ -903,9 +918,9 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => setIsLocationModalOpen(true)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-stone-200 text-stone-600 text-xs font-bold shadow-2xs hover:border-brand-primary-dark hover:text-stone-900 transition-all cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-brand-primary-light/10 border border-brand-primary/30 text-brand-primary-darker text-xs font-bold shadow-sm hover:bg-brand-primary-light/20 hover:border-brand-primary transition-all cursor-pointer group"
                   >
-                    <MapPin className="w-3.5 h-3.5 text-brand-primary-dark" />
+                    <MapPin className="w-4 h-4 text-brand-primary-dark group-hover:scale-110 transition-transform" />
                     <span>Localização</span>
                   </button>
                 )}
@@ -1122,6 +1137,7 @@ export default function App() {
         isOpen={isLandingHeroModalOpen}
         onClose={() => setIsLandingHeroModalOpen(false)}
         onOpenLogin={() => setIsLoginModalOpen(true)}
+        onEnterStore={handleEnterStore}
       />
 
       {/* Admin Login Modal */}
