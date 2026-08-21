@@ -137,7 +137,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               className="hidden sm:inline-flex items-center space-x-1.5 px-3.5 py-2 text-stone-300 hover:text-white rounded-xl text-xs font-semibold hover:bg-white/5 transition-colors cursor-pointer border border-[#D4AF37]/30"
             >
               <Store className="w-4 h-4 text-[#D4AF37]" />
-              <span>Ver Vitrine de Demonstração (Teste@123)</span>
+              <span>Ver Vitrine de Demonstração</span>
             </button>
 
             <button
@@ -230,7 +230,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   className="w-full sm:w-auto px-6 py-4 bg-stone-900/80 hover:bg-stone-800 text-stone-200 hover:text-white rounded-2xl font-semibold text-xs sm:text-sm border border-[#D4AF37]/40 flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-lg shadow-[#D4AF37]/5"
                 >
                   <Store className="w-4 h-4 text-[#D4AF37]" />
-                  <span>Ver Demonstração ao Vivo (Teste@123)</span>
+                  <span>Ver Demonstração ao Vivo</span>
                 </button>
               </div>
 

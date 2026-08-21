@@ -35,7 +35,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const mainImage =
     (activeColor?.imageUrl && activeColor.imageUrl.trim()) ||
     product.images[0] ||
-    'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop&q=80';
+    '';
 
   const handleWhatsappClick = (e: React.MouseEvent) => {
     e.stopPropagation();

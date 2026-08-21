@@ -60,7 +60,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     new Set([
       ...(product.images || []),
       ...colorImages,
-      'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&auto=format&fit=crop&q=80',
     ])
   ).filter((img) => img && img.trim().length > 0);
 
@@ -180,25 +179,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                   </>
                 )}
               </div>
-
-              {/* Thumbnails */}
-              {images.length > 1 && (
-                <div className="flex gap-2 mt-4 overflow-x-auto pb-1">
-                  {images.map((img, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setActiveImageIndex(idx)}
-                      className={`relative w-14 h-16 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all ${
-                        activeImageIndex === idx
-                          ? 'border-brand-primary-dark ring-2 ring-brand-primary-dark/30 scale-105'
-                          : 'border-transparent opacity-70 hover:opacity-100'
-                      }`}
-                    >
-                      <img src={img} alt="" className="w-full h-full object-cover" />
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* Info & Buy Column (With Sticky Bottom Action Bar) */}

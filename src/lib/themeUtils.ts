@@ -97,6 +97,7 @@ export interface ColorPaletteOption {
   darkHex: string;
   bgHex: string;
   description: string;
+  archetype?: 'classic' | 'modern' | 'bold' | 'soft';
 }
 
 export const STORE_COLOR_PALETTES: ColorPaletteOption[] = [
@@ -107,6 +108,7 @@ export const STORE_COLOR_PALETTES: ColorPaletteOption[] = [
     darkHex: '#8C6508',
     bgHex: '#FAF7EE',
     description: 'Ouro e sofisticação atemporal.',
+    archetype: 'classic',
   },
   {
     id: 'crimson',
@@ -115,6 +117,7 @@ export const STORE_COLOR_PALETTES: ColorPaletteOption[] = [
     darkHex: '#660000',
     bgHex: '#FAF4F4',
     description: 'Bordeaux marcante e luxuoso.',
+    archetype: 'bold',
   },
   {
     id: 'emerald',
@@ -123,6 +126,7 @@ export const STORE_COLOR_PALETTES: ColorPaletteOption[] = [
     darkHex: '#093621',
     bgHex: '#F2F8F5',
     description: 'Verde joia profundo e distinto.',
+    archetype: 'classic',
   },
   {
     id: 'rosegold',
@@ -131,6 +135,7 @@ export const STORE_COLOR_PALETTES: ColorPaletteOption[] = [
     darkHex: '#94535D',
     bgHex: '#FAF5F6',
     description: 'Delicado, feminino e romântico.',
+    archetype: 'soft',
   },
   {
     id: 'sapphire',
@@ -139,6 +144,7 @@ export const STORE_COLOR_PALETTES: ColorPaletteOption[] = [
     darkHex: '#0A335C',
     bgHex: '#F2F6FA',
     description: 'Azul clássico de extrema elegância.',
+    archetype: 'modern',
   },
   {
     id: 'onyx',
@@ -147,6 +153,7 @@ export const STORE_COLOR_PALETTES: ColorPaletteOption[] = [
     darkHex: '#09090B',
     bgHex: '#F4F4F5',
     description: 'Preto puro sofisticado e de alto contraste.',
+    archetype: 'modern',
   },
   {
     id: 'amethyst',
@@ -155,6 +162,7 @@ export const STORE_COLOR_PALETTES: ColorPaletteOption[] = [
     darkHex: '#300833',
     bgHex: '#F8F3F9',
     description: 'Púrpura nobre de riqueza e mistério.',
+    archetype: 'classic',
   },
   {
     id: 'terracotta',
@@ -163,6 +171,7 @@ export const STORE_COLOR_PALETTES: ColorPaletteOption[] = [
     darkHex: '#94412B',
     bgHex: '#FAF5F3',
     description: 'Calor terroso e orgânico da moda artesanal.',
+    archetype: 'soft',
   },
   {
     id: 'chocolate',
@@ -171,6 +180,7 @@ export const STORE_COLOR_PALETTES: ColorPaletteOption[] = [
     darkHex: '#25140A',
     bgHex: '#F8F5F2',
     description: 'Marrom aveludado e acolhedor.',
+    archetype: 'classic',
   },
   {
     id: 'olive',
@@ -179,6 +189,7 @@ export const STORE_COLOR_PALETTES: ColorPaletteOption[] = [
     darkHex: '#313714',
     bgHex: '#F5F7F0',
     description: 'Naturalismo elegante e sustentável.',
+    archetype: 'soft',
   },
 ];
 
@@ -217,29 +228,48 @@ export function applyStoreTheme(settings?: { fontFamily?: string; primaryColor?:
   if (typeof document === 'undefined' || !settings) return;
   const root = document.documentElement;
 
-  // Apply Font
-  if (settings.fontFamily) {
-    const fontCss = getFontFamilyCss(settings.fontFamily);
-    root.style.setProperty('--font-serif-luxury', fontCss);
-    
-    // Check if it's a clean sans-serif font
-    const cleanFontId = settings.fontFamily.toLowerCase().trim();
-    const isSans = ['montserrat', 'plus-jakarta', 'poppins', 'raleway', 'outfit'].some(
-      (s) => cleanFontId.includes(s)
-    );
-    if (isSans) {
-      root.style.setProperty('--font-body', fontCss);
-    } else {
-      root.style.setProperty('--font-body', "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif");
+  // Visual Archetypes Mapping
+  const archetypeConfig = {
+    classic: {
+      radius: { sm: '0.25rem', md: '0.375rem', lg: '0.5rem', xl: '0.75rem', '2xl': '1rem', '3xl': '1.5rem' },
+      shadow: { sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)', md: '0 4px 6px -1px rgb(0 0 0 / 0.1)', lg: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }
+    },
+    modern: {
+      radius: { sm: '0.5rem', md: '0.75rem', lg: '1rem', xl: '1.25rem', '2xl': '1.75rem', '3xl': '2.5rem' },
+      shadow: { sm: '0 1px 3px 0 rgb(0 0 0 / 0.1)', md: '0 10px 15px -3px rgb(0 0 0 / 0.1)', lg: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }
+    },
+    bold: {
+      radius: { sm: '0', md: '0.125rem', lg: '0.25rem', xl: '0.375rem', '2xl': '0.5rem', '3xl': '0.75rem' },
+      shadow: { sm: '2px 2px 0 0 rgb(0 0 0 / 1)', md: '4px 4px 0 0 rgb(0 0 0 / 1)', lg: '8px 8px 0 0 rgb(0 0 0 / 1)' }
+    },
+    soft: {
+      radius: { sm: '0.75rem', md: '1rem', lg: '1.25rem', xl: '1.75rem', '2xl': '2.5rem', '3xl': '4rem' },
+      shadow: { sm: '0 2px 10px 0 rgba(0,0,0,0.03)', md: '0 10px 30px 0 rgba(0,0,0,0.04)', lg: '0 20px 50px 0 rgba(0,0,0,0.05)' }
     }
-  }
+  };
 
-  // Apply Color Palette
+  // Apply Color Palette & Archetype
   if (settings.primaryColor) {
     const hex = settings.primaryColor.trim();
     const matchedPalette = STORE_COLOR_PALETTES.find(
       (p) => p.hex.toLowerCase() === hex.toLowerCase() || p.id.toLowerCase() === hex.toLowerCase()
     );
+
+    const archKey = matchedPalette?.archetype || 'modern';
+    const config = archetypeConfig[archKey];
+
+    // Apply Radii
+    root.style.setProperty('--brand-radius-sm', config.radius.sm);
+    root.style.setProperty('--brand-radius-md', config.radius.md);
+    root.style.setProperty('--brand-radius-lg', config.radius.lg);
+    root.style.setProperty('--brand-radius-xl', config.radius.xl);
+    root.style.setProperty('--brand-radius-2xl', config.radius['2xl']);
+    root.style.setProperty('--brand-radius-3xl', config.radius['3xl']);
+
+    // Apply Shadows
+    root.style.setProperty('--brand-shadow-sm', config.shadow.sm);
+    root.style.setProperty('--brand-shadow-md', config.shadow.md);
+    root.style.setProperty('--brand-shadow-lg', config.shadow.lg);
 
     if (matchedPalette) {
       root.style.setProperty('--brand-primary', matchedPalette.hex);
@@ -260,6 +290,23 @@ export function applyStoreTheme(settings?: { fontFamily?: string; primaryColor?:
       root.style.setProperty('--brand-bg-alt', adjustColorBrightness(bgHex, -4));
       root.style.setProperty('--brand-border', adjustColorBrightness(bgHex, -10));
       root.style.setProperty('--brand-border-dark', adjustColorBrightness(bgHex, -18));
+    }
+  }
+
+  // Apply Font (should come after primary color as it might depend on the archetype)
+  if (settings.fontFamily) {
+    const fontCss = getFontFamilyCss(settings.fontFamily);
+    root.style.setProperty('--font-serif-luxury', fontCss);
+    
+    // Check if it's a clean sans-serif font
+    const cleanFontId = settings.fontFamily.toLowerCase().trim();
+    const isSans = ['montserrat', 'plus-jakarta', 'poppins', 'raleway', 'outfit'].some(
+      (s) => cleanFontId.includes(s)
+    );
+    if (isSans) {
+      root.style.setProperty('--font-body', fontCss);
+    } else {
+      root.style.setProperty('--font-body', "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif");
     }
   }
 }
