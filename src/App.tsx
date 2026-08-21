@@ -99,10 +99,14 @@ export default function App() {
   // View state: 'store' (Vitrine do Cliente) | 'landing' (Página Oficial) | 'admin' (Painel do Dono) | 'super_admin' (Painel SaaS)
   const [activeView, setActiveView] = useState<'store' | 'admin' | 'super_admin' | 'landing'>(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('page') === 'landing' || urlParams.get('landing') === 'true') {
-      return 'landing';
+    if (urlParams.get('page') === 'admin' || urlParams.get('admin') === '1') {
+      return 'store'; // Will trigger login modal in useEffect
     }
-    return 'store';
+    if (urlParams.get('page') === 'store' || urlParams.get('u')) {
+      return 'store';
+    }
+    // Default to landing page as requested
+    return 'landing';
   });
   const [currentClient, setCurrentClient] = useState<any>(() => {
     const saved = localStorage.getItem('store_current_client');
