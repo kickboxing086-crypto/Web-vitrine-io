@@ -1008,7 +1008,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
             <button
               type="button"
-              onClick={onEnterStore}
+              onClick={() => onEnterStore("Teste@123")}
               className="w-full sm:w-auto px-6 py-4 bg-stone-900 hover:bg-stone-800 text-stone-200 rounded-2xl font-semibold text-xs border border-white/10 transition-colors cursor-pointer"
             >
               Ver Vitrine de Demonstração

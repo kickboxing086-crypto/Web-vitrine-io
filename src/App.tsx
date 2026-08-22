@@ -168,8 +168,8 @@ export default function App() {
     setActiveView('store');
   };
 
-  const handleEnterStore = async (slug?: string) => {
-    if (slug) {
+  const handleEnterStore = async (slug?: string | any) => {
+    if (slug && typeof slug === 'string') {
       const module = await import('./lib/firestoreService');
       const client = await module.getClientByUsername(slug.trim().toLowerCase());
       if (client) {
@@ -194,6 +194,8 @@ export default function App() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [sharingProduct, setSharingProduct] = useState<Product | null>(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isStoreSetupOpen, setIsStoreSetupOpen] = useState(false);
   const [isFirstOnboarding, setIsFirstOnboarding] = useState(false);
@@ -711,6 +713,11 @@ export default function App() {
   const handleOpenProductDetails = (product: Product) => {
     setSelectedProduct(product);
     setIsProductModalOpen(true);
+  };
+
+  const handleShareProduct = (product: Product) => {
+    setSharingProduct(product);
+    setIsShareModalOpen(true);
   };
 
   // Filter and Sort Products for Vitrine
