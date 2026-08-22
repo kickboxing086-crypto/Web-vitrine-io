@@ -105,7 +105,20 @@ export default function App() {
     if (urlParams.get('page') === 'store' || urlParams.get('u')) {
       return 'store';
     }
-    // Default to landing page as requested
+    
+    // If it's an official store account, bypass landing page
+    try {
+      const saved = localStorage.getItem('store_current_client');
+      if (saved) {
+        const client = JSON.parse(saved);
+        const isOfficial = client.username !== 'teste@123' && client.id !== 'client-test-natural' && client.isOfficial !== false;
+        if (isOfficial) {
+          return 'store';
+        }
+      }
+    } catch (e) {}
+
+    // Default to landing page for test account or visitors
     return 'landing';
   });
   const [currentClient, setCurrentClient] = useState<any>(() => {

@@ -213,8 +213,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 >
                   <MessageCircle className="w-5 h-5 fill-white" />
                   <span>Adquirir Minha Vitrine • R$ 29,99/mês</span>
-                  <ArrowRight className="w-4 h-4" />
                 </a>
+
+                <button
+                  type="button"
+                  onClick={() => onEnterStore('Teste@123')}
+                  className="w-full sm:w-auto px-8 py-4 bg-stone-900 hover:bg-stone-800 text-stone-200 rounded-2xl font-bold text-sm shadow-xl flex items-center justify-center space-x-3 border border-stone-800 transition-all cursor-pointer"
+                >
+                  <ShoppingBag className="w-5 h-5 text-stone-400" />
+                  <span>Ver Loja de Demonstração</span>
+                </button>
               </div>
 
               {/* Key Trust Points Under CTA */}
