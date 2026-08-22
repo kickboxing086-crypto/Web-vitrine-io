@@ -2283,8 +2283,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </div>
 
                   <div className="flex items-center space-x-1.5 bg-stone-50 px-2.5 py-1 border border-stone-300 rounded-lg text-xs font-bold">
-                    <span className={(productForm.images?.length || 0) >= 1 ? 'text-amber-600' : 'text-stone-800'}>
-                      {productForm.images?.length || 0} / 1 foto
+                    <span className={(productForm.images?.length || 0) >= 10 ? 'text-amber-600' : 'text-stone-800'}>
+                      {productForm.images?.length || 0} / 10 fotos
                     </span>
                   </div>
                 </div>
@@ -2297,15 +2297,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   onChange={handleProductImageFiles}
                   className="hidden"
                   id="product-photo-upload-input"
+                  multiple
                 />
 
                 <div className="flex flex-col sm:flex-row gap-2">
                   <button
                     type="button"
-                    disabled={isUploadingImages || (productForm.images?.length || 0) >= 1}
+                    disabled={isUploadingImages || (productForm.images?.length || 0) >= 10}
                     onClick={() => fileInputRef.current?.click()}
                     className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl border-2 border-dashed font-semibold text-xs transition-all cursor-pointer ${
-                      (productForm.images?.length || 0) >= 1
+                      (productForm.images?.length || 0) >= 10
                         ? 'bg-stone-100 border-stone-300 text-stone-400 cursor-not-allowed'
                         : 'bg-stone-50 hover:bg-[#F4ECE1] border-stone-300 text-stone-800'
                     }`}
@@ -2313,10 +2314,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     <Upload className="w-4 h-4 text-brand-primary-darker" />
                     <span>
                       {isUploadingImages
-                        ? 'Processando foto (Base64)...'
-                        : (productForm.images?.length || 0) >= 1
-                        ? 'Limite de 1 foto atingido'
-                        : 'Selecionar Foto Principal (Base64)'}
+                        ? 'Processando fotos (Base64)...'
+                        : (productForm.images?.length || 0) >= 10
+                        ? 'Limite de 10 fotos atingido'
+                        : 'Selecionar Fotos (Base64)'}
                     </span>
                   </button>
                 </div>
@@ -2328,16 +2329,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     placeholder="Ou cole o link direto da imagem (URL)..."
                     value={newImageInput}
                     onChange={(e) => setNewImageInput(e.target.value)}
-                    disabled={(productForm.images?.length || 0) >= 1}
+                    disabled={(productForm.images?.length || 0) >= 10}
                     className="flex-1 px-3 py-1.5 bg-stone-50 border border-stone-300 rounded-xl text-xs disabled:opacity-50"
                   />
                   <button
                     type="button"
-                    disabled={(productForm.images?.length || 0) >= 1 || !newImageInput.trim()}
+                    disabled={(productForm.images?.length || 0) >= 10 || !newImageInput.trim()}
                     onClick={() => {
                       if (!newImageInput.trim()) return;
                       const cur = productForm.images || [];
-                      if (cur.length >= 1) return;
+                      if (cur.length >= 10) return;
                       setProductForm({ ...productForm, images: [...cur, newImageInput.trim()] });
                       setNewImageInput('');
                     }}
@@ -2349,25 +2350,44 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                 {/* Main Photo Preview (Only Principal) */}
                 {productForm.images && productForm.images.length > 0 && (
-                  <div className="pt-2">
-                    <div className="relative aspect-[3/4] w-full max-w-[200px] mx-auto rounded-2xl overflow-hidden border-2 border-brand-primary-darker shadow-lg">
-                      <img
-                        src={productForm.images[0]}
-                        alt="Foto Principal"
-                        className="w-full h-full object-cover object-top"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveProductImage(0)}
-                        className="absolute top-2 right-2 p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-md cursor-pointer transition-colors"
-                        title="Remover foto"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                      <div className="absolute bottom-0 inset-x-0 bg-brand-primary-darker/90 text-white text-[10px] font-bold py-1.5 text-center">
-                        ⭐ FOTO PRINCIPAL
+                  <div className="pt-4 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
+                    {productForm.images.map((imgUrl, idx) => (
+                      <div key={idx} className={`relative aspect-[3/4] w-full rounded-2xl overflow-hidden shadow-sm border-2 ${idx === 0 ? 'border-brand-primary-darker shadow-lg' : 'border-stone-200'}`}>
+                        <img
+                          src={imgUrl}
+                          alt={`Foto ${idx + 1}`}
+                          className="w-full h-full object-cover object-top"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveProductImage(idx)}
+                          className="absolute top-1.5 right-1.5 p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-md cursor-pointer transition-colors"
+                          title="Remover foto"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                        {idx === 0 && (
+                          <div className="absolute bottom-0 inset-x-0 bg-brand-primary-darker/90 text-white text-[9px] font-bold py-1 text-center uppercase tracking-wider">
+                            ⭐ Capa
+                          </div>
+                        )}
+                        {idx > 0 && (
+                           <button
+                             type="button"
+                             onClick={() => {
+                               const arr = [...(productForm.images || [])];
+                               const temp = arr[0];
+                               arr[0] = arr[idx];
+                               arr[idx] = temp;
+                               setProductForm({ ...productForm, images: arr });
+                             }}
+                             className="absolute bottom-1.5 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-stone-900/80 hover:bg-stone-900 backdrop-blur-xs text-white text-[9px] font-bold rounded-lg cursor-pointer whitespace-nowrap"
+                           >
+                             Tornar Capa
+                           </button>
+                        )}
                       </div>
-                    </div>
+                    ))}
                   </div>
                 )}
               </div>

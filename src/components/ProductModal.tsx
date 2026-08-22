@@ -62,7 +62,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     ])
   ).filter((img) => img && img.trim().length > 0);
 
-  const images = allImages.length > 0 ? [allImages[0]] : [];
+  const images = allImages;
 
   const currentPrice = product.isOnSale && product.promotionalPrice
     ? product.promotionalPrice
@@ -132,15 +132,41 @@ export const ProductModal: React.FC<ProductModalProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 flex-1 min-h-0 overflow-hidden">
             {/* Gallery Column */}
-            <div className="relative bg-[#F2EDE7] flex flex-col justify-between p-4 sm:p-6 overflow-y-auto max-h-[40vh] md:max-h-full">
+            <div className="relative bg-[#F2EDE7] flex flex-col justify-start p-4 sm:p-6 overflow-y-auto max-h-[40vh] md:max-h-full space-y-4">
               {/* Main Image */}
               <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden bg-white shadow-inner border border-brand-border/40 group">
                 <img
-                  src={images[0]}
+                  src={images[activeImageIndex] || images[0]}
                   alt={product.name}
                   onClick={() => setIsZoomOpen(true)}
                   className="w-full h-full object-contain object-center transition-transform duration-500 group-hover:scale-105 cursor-zoom-in"
                 />
+
+                {/* Navigation arrows for multiple images */}
+                {images.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+                      }}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 p-2 sm:p-2.5 bg-white/80 hover:bg-white text-stone-800 rounded-full shadow-md backdrop-blur-sm transition-all"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+                      }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-2 sm:p-2.5 bg-white/80 hover:bg-white text-stone-800 rounded-full shadow-md backdrop-blur-sm transition-all"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                    </button>
+                  </>
+                )}
 
                 {/* Badge tags */}
                 <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
@@ -156,6 +182,24 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                   )}
                 </div>
               </div>
+              
+              {/* Thumbnails row */}
+              {images.length > 1 && (
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 snap-x scrollbar-hide">
+                  {images.map((imgUrl, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setActiveImageIndex(idx)}
+                      className={`relative w-16 h-20 sm:w-20 sm:h-24 flex-shrink-0 rounded-xl overflow-hidden border-2 snap-center transition-all ${
+                        activeImageIndex === idx ? 'border-stone-900 shadow-md scale-105' : 'border-transparent opacity-60 hover:opacity-100'
+                      }`}
+                    >
+                      <img src={imgUrl} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Info & Buy Column (With Sticky Bottom Action Bar) */}
@@ -498,10 +542,45 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               className="relative max-w-full max-h-[75vh] aspect-[3/4] md:max-w-md rounded-2xl overflow-hidden bg-stone-900 border border-white/10 flex items-center justify-center shadow-2xl"
             >
               <img
-                src={images[0]}
+                src={images[activeImageIndex] || images[0]}
                 alt={product.name}
                 className="w-full h-full object-contain"
               />
+              {/* Zoom mode navigation */}
+              {images.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+                    }}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full transition-all"
+                  >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+                    }}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full transition-all"
+                  >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                  </button>
+                  
+                  {/* Thumbnails indicator */}
+                  <div className="absolute bottom-4 inset-x-0 flex justify-center gap-1.5">
+                    {images.map((_, idx) => (
+                      <div 
+                        key={idx} 
+                        className={`h-1.5 rounded-full transition-all ${activeImageIndex === idx ? 'w-6 bg-white' : 'w-1.5 bg-white/40'}`} 
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
             </motion.div>
 
             {/* Bottom Selector & Info */}
