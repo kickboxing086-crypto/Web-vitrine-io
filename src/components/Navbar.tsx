@@ -233,8 +233,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => onSelectCategory('all')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                 selectedCategory === 'all'
-                  ? 'bg-stone-900 text-white shadow-2xs'
-                  : 'bg-white/80 hover:bg-white text-stone-700 border border-brand-border'
+                  ? 'bg-stone-900 text-white shadow-2xl'
+                  : 'bg-brand-bg/80 hover:bg-brand-surface text-stone-700 border border-brand-border'
               }`}
             >
               Todas as Peças
@@ -249,8 +249,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                 onClick={() => onSelectCategory(cat)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                   selectedCategory === cat
-                    ? 'bg-stone-900 text-white shadow-2xs'
-                    : 'bg-white/80 hover:bg-white text-stone-700 border border-brand-border'
+                    ? 'bg-stone-900 text-white shadow-2xl'
+                    : 'bg-brand-bg/80 hover:bg-brand-surface text-stone-700 border border-brand-border'
                 }`}
               >
                 {cat}

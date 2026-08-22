@@ -200,7 +200,7 @@ export const ShareProductModal: React.FC<ShareProductModalProps> = ({
               <img
                 src={
                   product.images[0] ||
-                  'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=300&auto=format&fit=crop&q=80'
+                  ''
                 }
                 alt={product.name}
                 className="w-full h-full object-cover object-top"

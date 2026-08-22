@@ -59,11 +59,10 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   const allImages = Array.from(
     new Set([
       ...(product.images || []),
-      ...colorImages,
     ])
   ).filter((img) => img && img.trim().length > 0);
 
-  const images = allImages;
+  const images = allImages.length > 0 ? [allImages[0]] : [];
 
   const currentPrice = product.isOnSale && product.promotionalPrice
     ? product.promotionalPrice
@@ -137,7 +136,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               {/* Main Image */}
               <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden bg-white shadow-inner border border-brand-border/40 group">
                 <img
-                  src={images[activeImageIndex]}
+                  src={images[0]}
                   alt={product.name}
                   onClick={() => setIsZoomOpen(true)}
                   className="w-full h-full object-contain object-center transition-transform duration-500 group-hover:scale-105 cursor-zoom-in"
@@ -156,28 +155,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                     </span>
                   )}
                 </div>
-
-                {/* Nav arrows if multiple images */}
-                {images.length > 1 && (
-                  <>
-                    <button
-                      onClick={() =>
-                        setActiveImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))
-                      }
-                      className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-white/80 hover:bg-white text-stone-800 rounded-full shadow transition-all opacity-80 hover:opacity-100"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() =>
-                        setActiveImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))
-                      }
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white/80 hover:bg-white text-stone-800 rounded-full shadow transition-all opacity-80 hover:opacity-100"
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </>
-                )}
               </div>
             </div>
 
@@ -315,10 +292,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                           type="button"
                           onClick={() => {
                             setSelectedColor(color);
-                            const matchingImageIdx = images.findIndex((img) => img === color.imageUrl);
-                            if (matchingImageIdx !== -1) {
-                              setActiveImageIndex(matchingImageIdx);
-                            }
                           }}
                           className={`group relative flex items-center space-x-2 px-3 py-1.5 rounded-xl border text-xs transition-all cursor-pointer ${
                             selectedColor.name === color.name
@@ -525,7 +498,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               className="relative max-w-full max-h-[75vh] aspect-[3/4] md:max-w-md rounded-2xl overflow-hidden bg-stone-900 border border-white/10 flex items-center justify-center shadow-2xl"
             >
               <img
-                src={images[activeImageIndex]}
+                src={images[0]}
                 alt={product.name}
                 className="w-full h-full object-contain"
               />
@@ -535,30 +508,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({
             <div className="mt-6 text-center space-y-4 max-w-lg w-full">
               <div>
                 <h3 className="text-sm font-bold text-white uppercase tracking-wider">{product.name}</h3>
-                <p className="text-xs text-stone-400 mt-1">Navegue pelas fotos da peça bem de perto</p>
-              </div>
-
-              {/* Carousel Navigation */}
-              <div className="flex items-center justify-center space-x-6">
-                <button
-                  type="button"
-                  onClick={() => setActiveImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))}
-                  className="p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all cursor-pointer"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                
-                <span className="text-xs font-semibold text-stone-300 tracking-wider">
-                  Foto {activeImageIndex + 1} de {images.length}
-                </span>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))}
-                  className="p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all cursor-pointer"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
               </div>
 
               {/* Selection Action directly inside the Lightbox Zoom! */}

@@ -1106,79 +1106,8 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
               </div>
             </div>
 
-            {/* Section 4: Áreas de Entrega & Políticas de Cobertura */}
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2 text-stone-900 border-b border-brand-border pb-2">
-                <Truck className="w-4 h-4 text-brand-primary-dark" />
-                <h3 className="font-semibold text-sm tracking-wide uppercase text-stone-800">
-                  4. Áreas de Entrega & Políticas de Cobertura
-                </h3>
-              </div>
-
-              <div className="p-4 bg-white border border-brand-border-dark rounded-2xl space-y-3.5">
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 mb-1">
-                    Bairros e Regiões Atendidas com Entrega Direta
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={
-                      formData.deliveryAreasList ||
-                      'Centro, Zona Sul, Jardins, Ponta Negra, Tianguá e Região Metropolitana'
-                    }
-                    onChange={(e) =>
-                      setFormData({ ...formData, deliveryAreasList: e.target.value })
-                    }
-                    placeholder="Ex: Centro, Zona Sul, Jardins, Bairro Alto, Região Metropolitana..."
-                    className="w-full px-3 py-2 bg-brand-bg border border-stone-300 rounded-xl text-xs text-stone-900 leading-relaxed"
-                  />
-                  <span className="text-[10px] text-stone-500">
-                    Estes bairros aparecerão de forma transparente para o cliente ao calcular frete e finalizar o pedido.
-                  </span>
-                </div>
-
-                {/* Toggle: Allow or restrict out of area orders */}
-                <div className="p-3 bg-stone-50 border border-stone-200 rounded-xl flex items-start justify-between gap-3">
-                  <div>
-                    <span className="text-xs font-bold text-stone-900 block">
-                      Permitir pedidos de regiões fora das áreas cadastradas?
-                    </span>
-                    <span className="text-[11px] text-stone-600 block mt-0.5">
-                      {formData.allowOutOfAreaOrders ?? true
-                        ? 'Sim: Clientes de outras regiões podem pedir com consulta de frete via WhatsApp.'
-                        : 'Não: Entrega estritamente restrita aos bairros e regiões especificadas.'}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-2 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, allowOutOfAreaOrders: true })}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        formData.allowOutOfAreaOrders ?? true
-                          ? 'bg-stone-900 text-white'
-                          : 'bg-white border border-stone-300 text-stone-600'
-                      }`}
-                    >
-                      Permitir
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, allowOutOfAreaOrders: false })}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        formData.allowOutOfAreaOrders === false
-                          ? 'bg-stone-900 text-white'
-                          : 'bg-white border border-stone-300 text-stone-600'
-                      }`}
-                    >
-                      Restringir
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Section 4: Endereço & Pagamento */}
-            <div className="space-y-4">
+            <div className="space-y-4 pt-4 border-t border-stone-100">
               <div className="flex items-center space-x-2 text-stone-900 border-b border-brand-border pb-2">
                 <MapPin className="w-4 h-4 text-brand-primary-dark" />
                 <h3 className="font-semibold text-sm tracking-wide uppercase text-stone-800">

@@ -470,7 +470,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Admin Top Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-brand-border">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-stone-200">
         <div className="flex items-center space-x-3">
           {/* Hamburger Menu on the left */}
           <div className="relative" ref={settingsMenuRef}>
@@ -487,9 +487,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute left-0 top-14 w-64 bg-white border border-brand-border-dark rounded-2xl shadow-2xl overflow-hidden z-50 flex flex-col"
+                  className="absolute left-0 top-14 w-64 bg-white border border-stone-300 rounded-2xl shadow-2xl overflow-hidden z-50 flex flex-col"
                 >
-                  <div className="p-3 bg-stone-50 border-b border-brand-border-dark">
+                  <div className="p-3 bg-stone-50 border-b border-stone-300">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500">
                       Configurações e Ações
                     </span>
@@ -566,7 +566,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </div>
                   
                   {onLogout && (
-                    <div className="p-2 border-t border-brand-border-dark bg-stone-50">
+                    <div className="p-2 border-t border-stone-300 bg-stone-50">
                       <button
                         type="button"
                         onClick={() => {
@@ -653,7 +653,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex items-center space-x-2 overflow-x-auto py-4 no-scrollbar border-b border-brand-border/70 mb-6">
+      <div className="flex items-center space-x-2 overflow-x-auto py-4 no-scrollbar border-b border-stone-200/70 mb-6">
         {[
           { id: 'dashboard', label: 'Controlador Financeiro & Dashboard', icon: DollarSign },
           { id: 'products', label: `Catálogo de Peças (${products.length})`, icon: Package },
@@ -677,7 +677,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   ? 'bg-stone-900 text-white shadow-sm'
                   : tab.id === 'plan'
                   ? 'bg-amber-100/50 hover:bg-amber-100 text-amber-900 border border-amber-300'
-                  : 'bg-white/80 hover:bg-white text-stone-700 border border-brand-border'
+                  : 'bg-white hover:bg-white text-stone-700 border border-stone-200'
               }`}
               id={`tab-${tab.id}`}
             >
@@ -695,7 +695,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         <div className="space-y-6">
           {/* Key KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="p-5 bg-white rounded-2xl border border-brand-border shadow-xs">
+            <div className="p-5 bg-white rounded-2xl border border-stone-200 shadow-xs">
               <div className="flex items-center justify-between text-stone-500 text-xs font-bold uppercase tracking-wider mb-2">
                 <span>Faturamento Total</span>
                 <div className="p-2 bg-emerald-100 text-emerald-800 rounded-xl">
@@ -710,7 +710,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               </span>
             </div>
 
-            <div className="p-5 bg-white rounded-2xl border border-brand-border shadow-xs">
+            <div className="p-5 bg-white rounded-2xl border border-stone-200 shadow-xs">
               <div className="flex items-center justify-between text-stone-500 text-xs font-bold uppercase tracking-wider mb-2">
                 <span>Despesas / Custos</span>
                 <div className="p-2 bg-red-100 text-red-800 rounded-xl">
@@ -725,10 +725,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               </span>
             </div>
 
-            <div className="p-5 bg-white rounded-2xl border border-brand-border shadow-xs">
+            <div className="p-5 bg-white rounded-2xl border border-stone-200 shadow-xs">
               <div className="flex items-center justify-between text-stone-500 text-xs font-bold uppercase tracking-wider mb-2">
                 <span>Lucro Líquido</span>
-                <div className="p-2 bg-brand-bg text-brand-primary-dark rounded-xl border border-brand-border">
+                <div className="p-2 bg-stone-50 text-brand-primary-dark rounded-xl border border-stone-200">
                   <TrendingUp className="w-4 h-4" />
                 </div>
               </div>
@@ -744,7 +744,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               </span>
             </div>
 
-            <div className="p-5 bg-white rounded-2xl border border-brand-border shadow-xs">
+            <div className="p-5 bg-white rounded-2xl border border-stone-200 shadow-xs">
               <div className="flex items-center justify-between text-stone-500 text-xs font-bold uppercase tracking-wider mb-2">
                 <span>Ticket Médio</span>
                 <div className="p-2 bg-stone-100 text-stone-700 rounded-xl">
@@ -763,7 +763,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           {/* Charts Row */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Category Performance Bar Chart */}
-            <div className="lg:col-span-2 p-6 bg-white rounded-2xl border border-brand-border shadow-xs">
+            <div className="lg:col-span-2 p-6 bg-white rounded-2xl border border-stone-200 shadow-xs">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="font-serif-luxury text-lg font-bold text-stone-900">
@@ -804,7 +804,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
 
             {/* Distribution Summary */}
-            <div className="p-6 bg-white rounded-2xl border border-brand-border shadow-xs flex flex-col justify-between">
+            <div className="p-6 bg-white rounded-2xl border border-stone-200 shadow-xs flex flex-col justify-between">
               <div>
                 <h3 className="font-serif-luxury text-lg font-bold text-stone-900 mb-1">
                   Resumo de Atendimento
@@ -821,15 +821,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </p>
 
                 <div className="space-y-3 text-xs">
-                  <div className="p-3 bg-brand-bg rounded-xl border border-brand-bg-alt flex items-center justify-between">
+                  <div className="p-3 bg-stone-50 rounded-xl border border-brand-bg-alt flex items-center justify-between">
                     <span className="text-stone-600">Total de Pedidos Gerados:</span>
                     <strong className="text-stone-900 font-bold">{orders.length} pedidos</strong>
                   </div>
-                  <div className="p-3 bg-brand-bg rounded-xl border border-brand-bg-alt flex items-center justify-between">
+                  <div className="p-3 bg-stone-50 rounded-xl border border-brand-bg-alt flex items-center justify-between">
                     <span className="text-stone-600">Peças no Catálogo:</span>
                     <strong className="text-stone-900 font-bold">{products.length} modelos</strong>
                   </div>
-                  <div className="p-3 bg-brand-bg rounded-xl border border-brand-bg-alt flex items-center justify-between">
+                  <div className="p-3 bg-stone-50 rounded-xl border border-brand-bg-alt flex items-center justify-between">
                     <span className="text-stone-600">WhatsApp de Vendas:</span>
                     <strong className="text-stone-900 font-bold">
                       {formatPhone(settings.phoneWhatsapp)}
@@ -842,7 +842,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 <button
                   type="button"
                   onClick={onOpenSettingsModal}
-                  className="w-full py-2.5 bg-brand-bg hover:bg-brand-bg-alt text-brand-primary-darker border border-brand-border rounded-xl text-xs font-bold transition-colors"
+                  className="w-full py-2.5 bg-stone-50 hover:bg-stone-50-alt text-brand-primary-darker border border-stone-200 rounded-xl text-xs font-bold transition-colors"
                 >
                   Editar Dados da Loja
                 </button>
@@ -851,7 +851,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           </div>
 
           {/* Cash Flow / Transactions Table */}
-          <div className="p-6 bg-white rounded-2xl border border-brand-border shadow-xs space-y-4">
+          <div className="p-6 bg-white rounded-2xl border border-stone-200 shadow-xs space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h3 className="font-serif-luxury text-lg font-bold text-stone-900">
@@ -877,7 +877,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             {isAddingFinance && (
               <form
                 onSubmit={handleCreateFinanceRecord}
-                className="p-4 bg-brand-bg rounded-2xl border border-brand-border space-y-3 animate-in fade-in duration-200"
+                className="p-4 bg-stone-50 rounded-2xl border border-stone-200 space-y-3 animate-in fade-in duration-200"
               >
                 <div className="flex items-center justify-between text-xs font-bold text-stone-800">
                   <span>Novo Registro Financeiro</span>
@@ -898,7 +898,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       placeholder="Descrição (ex: Venda Balcão, Tecidos, Embalagens...)"
                       value={finDesc}
                       onChange={(e) => setFinDesc(e.target.value)}
-                      className="w-full px-3 py-2 bg-white border border-brand-border-dark rounded-xl text-xs text-stone-900 placeholder:text-stone-400"
+                      className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-xs text-stone-900 placeholder:text-stone-400"
                     />
                   </div>
 
@@ -911,7 +911,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       placeholder="Valor (R$)"
                       value={finAmount || ''}
                       onChange={(e) => setFinAmount(parseFloat(e.target.value) || 0)}
-                      className="w-full px-3 py-2 bg-white border border-brand-border-dark rounded-xl text-xs text-stone-900 placeholder:text-stone-400"
+                      className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-xs text-stone-900 placeholder:text-stone-400"
                     />
                   </div>
 
@@ -919,7 +919,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     <button
                       type="button"
                       onClick={() => setIsFinTypeOpen(!isFinTypeOpen)}
-                      className="w-full px-3 py-2 bg-white border border-brand-border-dark rounded-xl text-xs text-stone-900 flex items-center justify-between shadow-2xs cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all"
+                      className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-xs text-stone-900 flex items-center justify-between shadow-2xs cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all"
                     >
                       <span>{finType === 'income' ? 'Entrada (+)' : 'Saída (-)'}</span>
                       <ChevronDown className="w-3.5 h-3.5 opacity-70" />
@@ -937,7 +937,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 5 }}
                             transition={{ duration: 0.12, ease: "easeOut" }}
-                            className="absolute left-0 right-0 top-full mt-2 bg-stone-900 border border-brand-border-dark shadow-xl rounded-2xl p-2 z-50 space-y-1"
+                            className="absolute left-0 right-0 top-full mt-2 bg-stone-900 border border-stone-300 shadow-xl rounded-2xl p-2 z-50 space-y-1"
                           >
                             {[
                               { value: 'income', label: 'Entrada (+)' },
@@ -996,7 +996,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </thead>
                 <tbody className="divide-y divide-stone-100">
                   {finance.map((rec) => (
-                    <tr key={rec.id} className="hover:bg-brand-bg/80 transition-colors">
+                    <tr key={rec.id} className="hover:bg-stone-50/80 transition-colors">
                       <td className="py-3 px-3 text-stone-500">{formatDate(rec.date)}</td>
                       <td className="py-3 px-3 font-semibold text-stone-900">{rec.description}</td>
                       <td className="py-3 px-3 text-stone-600">{rec.category}</td>
@@ -1063,7 +1063,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           </div>
 
           {/* Search Bar (Lupa) & View Controls */}
-          <div className="bg-white p-4 rounded-2xl border border-brand-border shadow-2xs space-y-3">
+          <div className="bg-white p-4 rounded-2xl border border-stone-200 shadow-2xs space-y-3">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
               {/* Lupa / Search Input */}
               <div className="relative flex-1">
@@ -1072,7 +1072,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   value={productSearchQuery}
                   onChange={(e) => setProductSearchQuery(e.target.value)}
                   placeholder="Pesquisar por nome, tag (#Lançamento), categoria, tecido, tamanho..."
-                  className="w-full pl-10 pr-9 py-2.5 bg-brand-bg border border-brand-border-dark rounded-xl text-stone-900 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand-primary-dark/30 focus:border-brand-primary-dark transition-all"
+                  className="w-full pl-10 pr-9 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-stone-900 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand-primary-dark/30 focus:border-brand-primary-dark transition-all"
                   id="input-search-products-admin"
                 />
                 <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-3" />
@@ -1089,7 +1089,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               </div>
 
               {/* View Mode Toggle (Agrupado por Tags vs Grade Geral) */}
-              <div className="flex items-center bg-brand-bg p-1 border border-brand-border-dark rounded-xl self-start sm:self-auto">
+              <div className="flex items-center bg-stone-50 p-1 border border-stone-300 rounded-xl self-start sm:self-auto">
                 <button
                   type="button"
                   onClick={() => setProductViewMode('grouped')}
@@ -1132,7 +1132,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all flex-shrink-0 flex items-center space-x-1.5 ${
                   productTagFilter === 'all'
                     ? 'bg-brand-secondary text-white'
-                    : 'bg-brand-bg text-stone-600 hover:bg-stone-200 border border-stone-200'
+                    : 'bg-stone-50 text-stone-600 hover:bg-stone-200 border border-stone-200'
                 }`}
               >
                 <span>Todas as Peças</span>
@@ -1152,7 +1152,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all flex-shrink-0 flex items-center space-x-1.5 ${
                       isSelected
                         ? 'bg-brand-primary-darker text-white shadow-xs'
-                        : 'bg-brand-bg text-stone-700 hover:bg-stone-200 border border-brand-border-dark'
+                        : 'bg-stone-50 text-stone-700 hover:bg-stone-200 border border-stone-300'
                     }`}
                   >
                     <span>#{tagName}</span>
@@ -1167,7 +1167,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
           {/* Active Filter / Search feedback bar */}
           {(productSearchQuery || productTagFilter !== 'all') && (
-            <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAF4ED] border border-brand-border rounded-xl text-xs text-stone-800">
+            <div className="flex items-center justify-between px-4 py-2.5 bg-[#FAF4ED] border border-stone-200 rounded-xl text-xs text-stone-800">
               <div className="flex items-center gap-2">
                 <span className="font-bold text-stone-900">
                   {filteredProducts.length} peça{filteredProducts.length === 1 ? '' : 's'} encontrada{filteredProducts.length === 1 ? '' : 's'}
@@ -1198,7 +1198,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
           {/* No products found state */}
           {filteredProducts.length === 0 && (
-            <div className="text-center py-12 bg-white rounded-3xl border border-brand-border p-8">
+            <div className="text-center py-12 bg-white rounded-3xl border border-stone-200 p-8">
               <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center mx-auto text-stone-400 mb-3">
                 <Search className="w-6 h-6" />
               </div>
@@ -1227,7 +1227,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               {tagGroups.map((group) => (
                 <div key={group.tag} className="space-y-3">
                   {/* Tag Group Header */}
-                  <div className="flex items-center justify-between pb-2 border-b border-brand-border">
+                  <div className="flex items-center justify-between pb-2 border-b border-stone-200">
                     <div className="flex items-center space-x-2.5">
                       <span
                         className="w-3 h-3 rounded-full"
@@ -1236,7 +1236,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       <h3 className="font-serif-luxury text-lg font-bold text-stone-900">
                         #{group.tag}
                       </h3>
-                      <span className="text-xs font-semibold px-2 py-0.5 bg-brand-bg border border-brand-border-dark text-stone-700 rounded-full">
+                      <span className="text-xs font-semibold px-2 py-0.5 bg-stone-50 border border-stone-300 text-stone-700 rounded-full">
                         {group.products.length} {group.products.length === 1 ? 'peça' : 'peças'}
                       </span>
                     </div>
@@ -1249,7 +1249,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       return (
                         <div
                           key={`${group.tag}-${p.id}`}
-                          className="bg-white rounded-2xl border border-brand-border overflow-hidden p-4 flex space-x-4 shadow-2xs hover:shadow-md transition-shadow"
+                          className="bg-white rounded-2xl border border-stone-200 overflow-hidden p-4 flex space-x-4 shadow-2xs hover:shadow-md transition-shadow"
                         >
                           <div className="relative w-24 h-32 flex-shrink-0">
                             <img
@@ -1363,13 +1363,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
               {/* Untagged pieces section if any exist */}
               {untaggedProducts.length > 0 && (
-                <div className="space-y-3 pt-4 border-t border-brand-border">
+                <div className="space-y-3 pt-4 border-t border-stone-200">
                   <div className="flex items-center space-x-2.5 pb-2">
                     <span className="w-3 h-3 rounded-full bg-stone-400" />
                     <h3 className="font-serif-luxury text-lg font-bold text-stone-900">
                       Peças Gerais / Sem Tag
                     </h3>
-                    <span className="text-xs font-semibold px-2 py-0.5 bg-brand-bg border border-brand-border-dark text-stone-700 rounded-full">
+                    <span className="text-xs font-semibold px-2 py-0.5 bg-stone-50 border border-stone-300 text-stone-700 rounded-full">
                       {untaggedProducts.length} peças
                     </span>
                   </div>
@@ -1380,7 +1380,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       return (
                         <div
                           key={`untagged-${p.id}`}
-                          className="bg-white rounded-2xl border border-brand-border overflow-hidden p-4 flex space-x-4 shadow-2xs hover:shadow-md transition-shadow"
+                          className="bg-white rounded-2xl border border-stone-200 overflow-hidden p-4 flex space-x-4 shadow-2xs hover:shadow-md transition-shadow"
                         >
                           <div className="relative w-24 h-32 flex-shrink-0">
                             <img
@@ -1479,7 +1479,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 return (
                   <div
                     key={p.id}
-                    className="bg-white rounded-2xl border border-brand-border overflow-hidden p-4 flex space-x-4 shadow-2xs hover:shadow-md transition-shadow"
+                    className="bg-white rounded-2xl border border-stone-200 overflow-hidden p-4 flex space-x-4 shadow-2xs hover:shadow-md transition-shadow"
                   >
                     <div className="relative w-24 h-32 flex-shrink-0">
                       <img
@@ -1487,12 +1487,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         alt={p.name}
                         className="w-full h-full rounded-xl object-cover object-top bg-stone-100"
                       />
-                      {p.images.length > 1 && (
-                        <span className="absolute bottom-1 right-1 px-1.5 py-0.5 bg-black/70 backdrop-blur-xs text-white text-[9px] font-bold rounded-md flex items-center gap-0.5">
-                          <ImageIcon className="w-2.5 h-2.5" />
-                          {p.images.length}
-                        </span>
-                      )}
+                      {/* Single image view - no count needed */}
                     </div>
 
                     <div className="flex-1 flex flex-col justify-between min-w-0">
@@ -1583,8 +1578,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       {/* Product Edit / Create Modal with Base64 Photos & Max 10 Photos */}
       {isEditingProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/70 backdrop-blur-xs overflow-y-auto">
-          <div className="relative w-full max-w-2xl bg-brand-bg rounded-3xl border border-[#E3D7CA] shadow-2xl p-6 sm:p-8 my-auto max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-4 border-b border-brand-border mb-6">
+          <div className="relative w-full max-w-2xl bg-stone-50 rounded-3xl border border-[#E3D7CA] shadow-2xl p-6 sm:p-8 my-auto max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-stone-200 mb-6">
               <div>
                 <h3 className="font-serif-luxury text-xl font-bold text-stone-900">
                   {productForm.id?.startsWith('prod-') && !products.find((p) => p.id === productForm.id)
@@ -1615,7 +1610,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   value={productForm.name || ''}
                   onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
                   placeholder="Ex: Blazer Alfaiataria Italiano"
-                  className="w-full px-3.5 py-2.5 bg-white border border-brand-border-dark rounded-xl text-xs text-stone-900 font-medium"
+                  className="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-xs text-stone-900 font-medium"
                 />
               </div>
 
@@ -1627,7 +1622,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsProductCategoryOpen(!isProductCategoryOpen)}
-                    className="w-full px-3.5 py-2.5 bg-white border border-brand-border-dark rounded-xl text-xs text-stone-900 font-medium flex items-center justify-between shadow-2xs cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all"
+                    className="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-xs text-stone-900 font-medium flex items-center justify-between shadow-2xs cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all"
                   >
                     <span>{productForm.category || categories[0]?.name || 'Selecione a Categoria'}</span>
                     <ChevronDown className="w-3.5 h-3.5 opacity-70" />
@@ -1645,7 +1640,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           animate={{ opacity: 1, scale: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.95, y: 5 }}
                           transition={{ duration: 0.12, ease: "easeOut" }}
-                          className="absolute left-0 right-0 top-full mt-2 max-h-60 overflow-y-auto bg-stone-900 border border-brand-border-dark shadow-xl rounded-2xl p-2 z-50 space-y-1"
+                          className="absolute left-0 right-0 top-full mt-2 max-h-60 overflow-y-auto bg-stone-900 border border-stone-300 shadow-xl rounded-2xl p-2 z-50 space-y-1"
                         >
                           {categories.map((c) => {
                             const isSelected = (productForm.category || categories[0]?.name) === c.name;
@@ -1687,13 +1682,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     onChange={(e) =>
                       setProductForm({ ...productForm, stock: parseInt(e.target.value) || 0 })
                     }
-                    className="w-full px-3.5 py-2.5 bg-white border border-brand-border-dark rounded-xl text-xs text-stone-900 font-medium"
+                    className="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-xs text-stone-900 font-medium"
                   />
                 </div>
               </div>
 
               {/* Pricing & Promo */}
-              <div className="p-4 bg-white rounded-2xl border border-brand-border space-y-3">
+              <div className="p-4 bg-white rounded-2xl border border-stone-200 space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-stone-700 mb-1">
@@ -1707,7 +1702,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       onChange={(e) =>
                         setProductForm({ ...productForm, price: parseFloat(e.target.value) || 0 })
                       }
-                      className="w-full px-3.5 py-2.5 bg-brand-bg border border-brand-border-dark rounded-xl text-xs text-stone-900 font-bold"
+                      className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs text-stone-900 font-bold"
                     />
                   </div>
 
@@ -1728,7 +1723,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         });
                       }}
                       placeholder="Deixe vazio se sem promoção"
-                      className="w-full px-3.5 py-2.5 bg-brand-bg border border-brand-border-dark rounded-xl text-xs text-stone-900 font-bold text-red-700"
+                      className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs text-stone-900 font-bold text-red-700"
                     />
                   </div>
                 </div>
@@ -1773,7 +1768,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               </div>
 
               {/* Tags Selector & Quick Add */}
-              <div className="p-4 bg-white rounded-2xl border border-brand-border space-y-3">
+              <div className="p-4 bg-white rounded-2xl border border-stone-200 space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-bold text-stone-800 uppercase tracking-wide">
                     Tags da Peça (para organização no catálogo)
@@ -1808,7 +1803,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center space-x-1 ${
                           isSelected
                             ? 'bg-brand-primary-darker text-white shadow-xs'
-                            : 'bg-brand-bg text-stone-700 hover:bg-stone-200 border border-brand-border-dark'
+                            : 'bg-stone-50 text-stone-700 hover:bg-stone-200 border border-stone-300'
                         }`}
                       >
                         <span>#{tName}</span>
@@ -1825,7 +1820,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     placeholder="Adicionar nova tag personalizada..."
                     value={newTagInput}
                     onChange={(e) => setNewTagInput(e.target.value)}
-                    className="flex-1 px-3 py-1.5 bg-brand-bg border border-brand-border-dark rounded-xl text-xs"
+                    className="flex-1 px-3 py-1.5 bg-stone-50 border border-stone-300 rounded-xl text-xs"
                   />
                   <button
                     type="button"
@@ -1856,7 +1851,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   onChange={(e) =>
                     setProductForm({ ...productForm, description: e.target.value })
                   }
-                  className="w-full px-3.5 py-2 bg-white border border-brand-border-dark rounded-xl text-xs text-stone-900"
+                  className="w-full px-3.5 py-2 bg-white border border-stone-300 rounded-xl text-xs text-stone-900"
                 />
               </div>
 
@@ -1873,7 +1868,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       setProductForm({ ...productForm, fabricDetails: e.target.value })
                     }
                     placeholder="Ex: 100% Linho Puro Europeu"
-                    className="w-full px-3.5 py-2 bg-white border border-brand-border-dark rounded-xl text-xs text-stone-900"
+                    className="w-full px-3.5 py-2 bg-white border border-stone-300 rounded-xl text-xs text-stone-900"
                   />
                 </div>
 
@@ -1888,7 +1883,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       setProductForm({ ...productForm, careInstructions: e.target.value })
                     }
                     placeholder="Ex: Lavagem suave à mão"
-                    className="w-full px-3.5 py-2 bg-white border border-brand-border-dark rounded-xl text-xs text-stone-900"
+                    className="w-full px-3.5 py-2 bg-white border border-stone-300 rounded-xl text-xs text-stone-900"
                   />
                 </div>
               </div>
@@ -1904,7 +1899,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     placeholder="Adicionar tamanho (ex: P, M, 38, 40...)"
                     value={newSizeInput}
                     onChange={(e) => setNewSizeInput(e.target.value.toUpperCase())}
-                    className="flex-1 px-3 py-1.5 bg-white border border-brand-border-dark rounded-xl text-xs"
+                    className="flex-1 px-3 py-1.5 bg-white border border-stone-300 rounded-xl text-xs"
                   />
                   <button
                     type="button"
@@ -1928,7 +1923,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   {productForm.sizes?.map((sz, szIdx) => (
                     <span
                       key={`${sz}-${szIdx}`}
-                      className="inline-flex items-center gap-1 bg-white border border-brand-border-dark text-stone-800 text-xs px-2.5 py-1 rounded-lg"
+                      className="inline-flex items-center gap-1 bg-white border border-stone-300 text-stone-800 text-xs px-2.5 py-1 rounded-lg"
                     >
                       {sz}
                       <button
@@ -1949,7 +1944,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               </div>
 
               {/* Shopee-Style Color Palette Variants with Instant Image Binding */}
-              <div className="p-4 bg-white rounded-2xl border border-brand-border space-y-3.5">
+              <div className="p-4 bg-white rounded-2xl border border-stone-200 space-y-3.5">
                 <div className="flex items-center justify-between">
                   <div>
                     <label className="block text-xs font-bold text-stone-900 uppercase tracking-wide">
@@ -1960,7 +1955,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </p>
                   </div>
 
-                  <label className="flex items-center space-x-2 cursor-pointer bg-brand-bg px-3 py-1.5 rounded-xl border border-brand-border-dark">
+                  <label className="flex items-center space-x-2 cursor-pointer bg-stone-50 px-3 py-1.5 rounded-xl border border-stone-300">
                     <input
                       type="checkbox"
                       checked={productForm.hasColors !== false}
@@ -2004,7 +1999,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                               setNewColorName(preset.name);
                               setNewColorHex(preset.hex);
                             }}
-                            className="inline-flex items-center space-x-1.5 px-2.5 py-1 bg-brand-bg hover:bg-stone-200 border border-brand-border-dark rounded-lg text-xs text-stone-800 transition-all cursor-pointer"
+                            className="inline-flex items-center space-x-1.5 px-2.5 py-1 bg-stone-50 hover:bg-stone-200 border border-stone-300 rounded-lg text-xs text-stone-800 transition-all cursor-pointer"
                           >
                             <span
                               className="w-3 h-3 rounded-full border border-black/15 flex-shrink-0"
@@ -2017,7 +2012,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </div>
 
                     {/* Add Color Form */}
-                    <div className="p-3 bg-brand-bg rounded-xl border border-brand-border space-y-2.5">
+                    <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 space-y-2.5">
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                         <div className="sm:col-span-1">
                           <label className="block text-[11px] font-semibold text-stone-700 mb-1">
@@ -2087,7 +2082,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                   animate={{ opacity: 1, scale: 1, y: 0 }}
                                   exit={{ opacity: 0, scale: 0.95, y: 5 }}
                                   transition={{ duration: 0.12, ease: "easeOut" }}
-                                  className="absolute left-0 right-0 top-full mt-2 max-h-60 overflow-y-auto bg-stone-900 border border-brand-border-dark shadow-xl rounded-2xl p-2 z-50 space-y-1 text-left"
+                                  className="absolute left-0 right-0 top-full mt-2 max-h-60 overflow-y-auto bg-stone-900 border border-stone-300 shadow-xl rounded-2xl p-2 z-50 space-y-1 text-left"
                                 >
                                   <button
                                     type="button"
@@ -2181,7 +2176,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         {productForm.colors?.map((c, idx) => (
                           <div
                             key={idx}
-                            className="flex items-center justify-between p-2 bg-brand-bg border border-stone-200 rounded-xl text-xs"
+                            className="flex items-center justify-between p-2 bg-stone-50 border border-stone-200 rounded-xl text-xs"
                           >
                             <div className="flex items-center space-x-2.5">
                               <span
@@ -2228,7 +2223,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               </div>
 
               {/* Photos Management (Base64 + Max 10 Photos) */}
-              <div className="p-4 bg-white rounded-2xl border border-brand-border space-y-3">
+              <div className="p-4 bg-white rounded-2xl border border-stone-200 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
                     <label className="block text-xs font-bold text-stone-900 uppercase tracking-wide">
@@ -2239,9 +2234,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </p>
                   </div>
 
-                  <div className="flex items-center space-x-1.5 bg-brand-bg px-2.5 py-1 border border-brand-border-dark rounded-lg text-xs font-bold">
-                    <span className={(productForm.images?.length || 0) >= 10 ? 'text-amber-600' : 'text-stone-800'}>
-                      {productForm.images?.length || 0} / 10 fotos
+                  <div className="flex items-center space-x-1.5 bg-stone-50 px-2.5 py-1 border border-stone-300 rounded-lg text-xs font-bold">
+                    <span className={(productForm.images?.length || 0) >= 1 ? 'text-amber-600' : 'text-stone-800'}>
+                      {productForm.images?.length || 0} / 1 foto
                     </span>
                   </div>
                 </div>
@@ -2250,7 +2245,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 <input
                   ref={fileInputRef}
                   type="file"
-                  multiple
                   accept="image/*"
                   onChange={handleProductImageFiles}
                   className="hidden"
@@ -2260,21 +2254,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 <div className="flex flex-col sm:flex-row gap-2">
                   <button
                     type="button"
-                    disabled={isUploadingImages || (productForm.images?.length || 0) >= 10}
+                    disabled={isUploadingImages || (productForm.images?.length || 0) >= 1}
                     onClick={() => fileInputRef.current?.click()}
                     className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl border-2 border-dashed font-semibold text-xs transition-all cursor-pointer ${
-                      (productForm.images?.length || 0) >= 10
+                      (productForm.images?.length || 0) >= 1
                         ? 'bg-stone-100 border-stone-300 text-stone-400 cursor-not-allowed'
-                        : 'bg-brand-bg hover:bg-[#F4ECE1] border-brand-border-dark text-stone-800'
+                        : 'bg-stone-50 hover:bg-[#F4ECE1] border-stone-300 text-stone-800'
                     }`}
                   >
                     <Upload className="w-4 h-4 text-brand-primary-darker" />
                     <span>
                       {isUploadingImages
-                        ? 'Processando fotos (Base64)...'
-                        : (productForm.images?.length || 0) >= 10
-                        ? 'Limite máximo de 10 fotos atingido'
-                        : 'Selecionar Fotos do Computador / Celular (Base64)'}
+                        ? 'Processando foto (Base64)...'
+                        : (productForm.images?.length || 0) >= 1
+                        ? 'Limite de 1 foto atingido'
+                        : 'Selecionar Foto Principal (Base64)'}
                     </span>
                   </button>
                 </div>
@@ -2286,16 +2280,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     placeholder="Ou cole o link direto da imagem (URL)..."
                     value={newImageInput}
                     onChange={(e) => setNewImageInput(e.target.value)}
-                    disabled={(productForm.images?.length || 0) >= 10}
-                    className="flex-1 px-3 py-1.5 bg-brand-bg border border-brand-border-dark rounded-xl text-xs disabled:opacity-50"
+                    disabled={(productForm.images?.length || 0) >= 1}
+                    className="flex-1 px-3 py-1.5 bg-stone-50 border border-stone-300 rounded-xl text-xs disabled:opacity-50"
                   />
                   <button
                     type="button"
-                    disabled={(productForm.images?.length || 0) >= 10 || !newImageInput.trim()}
+                    disabled={(productForm.images?.length || 0) >= 1 || !newImageInput.trim()}
                     onClick={() => {
                       if (!newImageInput.trim()) return;
                       const cur = productForm.images || [];
-                      if (cur.length >= 10) return;
+                      if (cur.length >= 1) return;
                       setProductForm({ ...productForm, images: [...cur, newImageInput.trim()] });
                       setNewImageInput('');
                     }}
@@ -2305,76 +2299,33 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </button>
                 </div>
 
-                {/* Photo Grid Preview with Reorder and Delete */}
+                {/* Main Photo Preview (Only Principal) */}
                 {productForm.images && productForm.images.length > 0 && (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 pt-2">
-                    {productForm.images.map((img, idx) => (
-                      <div
-                        key={idx}
-                        className={`relative aspect-[3/4] rounded-xl overflow-hidden border group ${
-                          idx === 0
-                            ? 'ring-2 ring-brand-primary-darker border-brand-primary-darker'
-                            : 'border-brand-border'
-                        }`}
+                  <div className="pt-2">
+                    <div className="relative aspect-[3/4] w-full max-w-[200px] mx-auto rounded-2xl overflow-hidden border-2 border-brand-primary-darker shadow-lg">
+                      <img
+                        src={productForm.images[0]}
+                        alt="Foto Principal"
+                        className="w-full h-full object-cover object-top"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveProductImage(0)}
+                        className="absolute top-2 right-2 p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-md cursor-pointer transition-colors"
+                        title="Remover foto"
                       >
-                        <img
-                          src={img}
-                          alt=""
-                          className="w-full h-full object-cover object-top"
-                        />
-
-                        {/* Top badges & remove */}
-                        <div className="absolute top-1 inset-x-1 flex items-center justify-between pointer-events-none">
-                          {idx === 0 ? (
-                            <span className="px-1.5 py-0.5 bg-brand-primary-darker text-white text-[8px] font-bold rounded shadow-xs">
-                              ⭐ Capa
-                            </span>
-                          ) : (
-                            <span className="px-1.5 py-0.5 bg-black/60 text-white text-[8px] font-bold rounded">
-                              Foto {idx + 1}
-                            </span>
-                          )}
-
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveProductImage(idx)}
-                            className="p-1 bg-red-600 hover:bg-red-700 text-white rounded-full text-[9px] pointer-events-auto cursor-pointer shadow-xs"
-                            title="Remover foto"
-                          >
-                            <X className="w-2.5 h-2.5" />
-                          </button>
-                        </div>
-
-                        {/* Bottom reorder buttons */}
-                        <div className="absolute bottom-1 inset-x-1 flex items-center justify-between gap-1">
-                          <button
-                            type="button"
-                            disabled={idx === 0}
-                            onClick={() => handleMoveProductImage(idx, idx - 1)}
-                            className="p-1 bg-black/65 hover:bg-black disabled:opacity-20 text-white rounded-md text-[9px] cursor-pointer"
-                            title="Mover para a esquerda"
-                          >
-                            <ArrowLeft className="w-2.5 h-2.5" />
-                          </button>
-
-                          <button
-                            type="button"
-                            disabled={idx === (productForm.images?.length || 1) - 1}
-                            onClick={() => handleMoveProductImage(idx, idx + 1)}
-                            className="p-1 bg-black/65 hover:bg-black disabled:opacity-20 text-white rounded-md text-[9px] cursor-pointer"
-                            title="Mover para a direita"
-                          >
-                            <ArrowRight className="w-2.5 h-2.5" />
-                          </button>
-                        </div>
+                        <X className="w-4 h-4" />
+                      </button>
+                      <div className="absolute bottom-0 inset-x-0 bg-brand-primary-darker/90 text-white text-[10px] font-bold py-1.5 text-center">
+                        ⭐ FOTO PRINCIPAL
                       </div>
-                    ))}
+                    </div>
                   </div>
                 )}
               </div>
 
               {/* Modal Footer */}
-              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-brand-border">
+              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-stone-200">
                 <button
                   type="button"
                   onClick={() => setIsEditingProduct(false)}
@@ -2414,7 +2365,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
           <div className="space-y-4">
             {orders.length === 0 ? (
-              <div className="p-12 text-center bg-white rounded-2xl border border-brand-border space-y-3">
+              <div className="p-12 text-center bg-white rounded-2xl border border-stone-200 space-y-3">
                 <ShoppingBag className="w-12 h-12 text-stone-300 mx-auto" />
                 <h3 className="font-serif-luxury text-base font-bold text-stone-800">
                   Nenhum pedido recebido até o momento
@@ -2431,12 +2382,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   return (
                     <div
                       key={ord.id}
-                      className="bg-white rounded-2xl border border-brand-border p-5 shadow-xs space-y-4"
+                      className="bg-white rounded-2xl border border-stone-200 p-5 shadow-xs space-y-4"
                     >
                   {/* Top line */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-stone-100">
                     <div className="flex items-center space-x-3">
-                      <span className="font-mono text-xs font-bold text-brand-primary-darker bg-brand-bg px-2.5 py-1 rounded-lg border border-brand-border">
+                      <span className="font-mono text-xs font-bold text-brand-primary-darker bg-stone-50 px-2.5 py-1 rounded-lg border border-stone-200">
                         #{ord.orderNumber}
                       </span>
                       <span className="font-semibold text-stone-900 text-sm">
@@ -2495,7 +2446,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95, y: 5 }}
                                 transition={{ duration: 0.12, ease: "easeOut" }}
-                                className="absolute right-0 mt-2 w-64 bg-stone-900 border border-brand-border-dark shadow-xl rounded-2xl p-2 z-50 space-y-1"
+                                className="absolute right-0 mt-2 w-64 bg-stone-900 border border-stone-300 shadow-xl rounded-2xl p-2 z-50 space-y-1"
                               >
                                 {[
                                   { value: 'pending', label: 'Pendente (Recebido)', color: 'border-l-stone-500' },
@@ -2548,7 +2499,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     {ord.items.map((item, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center space-x-2.5 p-2 bg-brand-bg rounded-xl border border-stone-200 text-xs"
+                        className="flex items-center space-x-2.5 p-2 bg-stone-50 rounded-xl border border-stone-200 text-xs"
                       >
                         <img
                           src={item.productImage}
@@ -2611,7 +2562,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           {/* Add Form */}
           <form
             onSubmit={handleCreateTag}
-            className="p-5 bg-white rounded-2xl border border-brand-border shadow-xs space-y-3"
+            className="p-5 bg-white rounded-2xl border border-stone-200 shadow-xs space-y-3"
           >
             <span className="text-xs font-bold uppercase tracking-wider text-stone-800 block">
               Criar Nova Categoria ou Tag
@@ -2625,7 +2576,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   placeholder="Nome (ex: Seda Italiana, Alfaiataria, Verão...)"
                   value={newTagName}
                   onChange={(e) => setNewTagName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-brand-bg border border-brand-border-dark rounded-xl text-xs text-stone-900 font-medium"
+                  className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs text-stone-900 font-medium"
                 />
               </div>
 
@@ -2633,7 +2584,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsNewTagTypeOpen(!isNewTagTypeOpen)}
-                  className="w-full px-3.5 py-2.5 bg-brand-bg border border-brand-border-dark rounded-xl text-xs text-stone-900 font-medium flex items-center justify-between shadow-2xs cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all"
+                  className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs text-stone-900 font-medium flex items-center justify-between shadow-2xs cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all"
                 >
                   <span>{newTagType === 'category' ? 'Categoria do Catálogo' : 'Tag de Destaque / Selo'}</span>
                   <ChevronDown className="w-3.5 h-3.5 opacity-70" />
@@ -2651,7 +2602,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 5 }}
                         transition={{ duration: 0.12, ease: "easeOut" }}
-                        className="absolute left-0 right-0 top-full mt-2 bg-stone-900 border border-brand-border-dark shadow-xl rounded-2xl p-2 z-50 space-y-1"
+                        className="absolute left-0 right-0 top-full mt-2 bg-stone-900 border border-stone-300 shadow-xl rounded-2xl p-2 z-50 space-y-1"
                       >
                         {[
                           { value: 'category', label: 'Categoria do Catálogo' },
@@ -2698,7 +2649,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           {/* Existing Lists */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Categories */}
-            <div className="p-5 bg-white rounded-2xl border border-brand-border shadow-xs space-y-3">
+            <div className="p-5 bg-white rounded-2xl border border-stone-200 shadow-xs space-y-3">
               <h3 className="font-serif-luxury text-base font-bold text-stone-900">
                 Categorias Ativas ({categories.length})
               </h3>
@@ -2708,7 +2659,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   return (
                     <div
                       key={c.id}
-                      className="flex items-center justify-between p-2.5 bg-brand-bg rounded-xl border border-stone-200 text-xs gap-2"
+                      className="flex items-center justify-between p-2.5 bg-stone-50 rounded-xl border border-stone-200 text-xs gap-2"
                     >
                       {isEditing ? (
                         <div className="flex items-center space-x-2 flex-1">
@@ -2716,7 +2667,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             type="text"
                             value={editingTagName}
                             onChange={(e) => setEditingTagName(e.target.value)}
-                            className="flex-1 px-2.5 py-1.5 bg-white border border-brand-border-dark rounded-lg text-xs font-bold text-stone-900"
+                            className="flex-1 px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs font-bold text-stone-900"
                             placeholder="Nome da Categoria"
                             autoFocus
                           />
@@ -2769,7 +2720,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
 
             {/* Tags */}
-            <div className="p-5 bg-white rounded-2xl border border-brand-border shadow-xs space-y-3">
+            <div className="p-5 bg-white rounded-2xl border border-stone-200 shadow-xs space-y-3">
               <h3 className="font-serif-luxury text-base font-bold text-stone-900">
                 Tags & Selos de Destaque ({tags.length})
               </h3>
@@ -2779,7 +2730,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   return (
                     <div
                       key={t.id}
-                      className="flex items-center justify-between p-2.5 bg-brand-bg rounded-xl border border-stone-200 text-xs gap-2"
+                      className="flex items-center justify-between p-2.5 bg-stone-50 rounded-xl border border-stone-200 text-xs gap-2"
                     >
                       {isEditing ? (
                         <div className="flex items-center space-x-2 flex-1">
@@ -2794,7 +2745,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             type="text"
                             value={editingTagName}
                             onChange={(e) => setEditingTagName(e.target.value)}
-                            className="flex-1 px-2.5 py-1.5 bg-white border border-brand-border-dark rounded-lg text-xs font-bold text-stone-900"
+                            className="flex-1 px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs font-bold text-stone-900"
                             placeholder="Nome da Tag"
                             autoFocus
                           />
@@ -2890,7 +2841,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           {isAddingCoupon && (
             <form
               onSubmit={handleCreateCoupon}
-              className="p-5 bg-white rounded-2xl border border-brand-border shadow-xs space-y-3"
+              className="p-5 bg-white rounded-2xl border border-stone-200 shadow-xs space-y-3"
             >
               <div className="flex items-center justify-between text-xs font-bold text-stone-800">
                 <span>{editingCouponId ? 'Editar Cupom de Desconto' : 'Criar Novo Cupom de Desconto'}</span>
@@ -2919,7 +2870,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     placeholder="ex: VERAO15"
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                    className="w-full px-3 py-2 bg-brand-bg border border-brand-border-dark rounded-xl text-xs font-mono font-bold text-stone-900 uppercase"
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs font-mono font-bold text-stone-900 uppercase"
                   />
                 </div>
 
@@ -2928,7 +2879,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsCouponTypeOpen(!isCouponTypeOpen)}
-                    className="w-full px-3 py-2 bg-brand-bg border border-brand-border-dark rounded-xl text-xs font-medium text-stone-900 flex items-center justify-between shadow-2xs cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all text-left"
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs font-medium text-stone-900 flex items-center justify-between shadow-2xs cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all text-left"
                   >
                     <span>{couponType === 'percentage' ? 'Porcentagem (%)' : 'Valor Fixo (R$)'}</span>
                     <ChevronDown className="w-3.5 h-3.5 opacity-70" />
@@ -2946,7 +2897,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           animate={{ opacity: 1, scale: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.95, y: 5 }}
                           transition={{ duration: 0.12, ease: "easeOut" }}
-                          className="absolute left-0 right-0 top-full mt-2 bg-stone-900 border border-brand-border-dark shadow-xl rounded-2xl p-2 z-50 space-y-1 text-left"
+                          className="absolute left-0 right-0 top-full mt-2 bg-stone-900 border border-stone-300 shadow-xl rounded-2xl p-2 z-50 space-y-1 text-left"
                         >
                           {[
                             { value: 'percentage', label: 'Porcentagem (%)' },
@@ -2989,7 +2940,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     placeholder={couponType === 'percentage' ? 'Ex: 15 (%)' : 'Ex: 50 (R$)'}
                     value={couponValue || ''}
                     onChange={(e) => setCouponValue(parseFloat(e.target.value) || 0)}
-                    className="w-full px-3 py-2 bg-brand-bg border border-brand-border-dark rounded-xl text-xs text-stone-900 font-bold"
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs text-stone-900 font-bold"
                   />
                 </div>
 
@@ -3001,7 +2952,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     placeholder="Ilimitado se 0"
                     value={couponMaxUses || ''}
                     onChange={(e) => setCouponMaxUses(parseInt(e.target.value) || 0)}
-                    className="w-full px-3 py-2 bg-brand-bg border border-brand-border-dark rounded-xl text-xs text-stone-900 font-bold"
+                    className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs text-stone-900 font-bold"
                   />
                 </div>
 
@@ -3022,10 +2973,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             {coupons.map((coup) => (
               <div
                 key={coup.id}
-                className="p-4 bg-white rounded-2xl border border-brand-border shadow-xs flex items-center justify-between"
+                className="p-4 bg-white rounded-2xl border border-stone-200 shadow-xs flex items-center justify-between"
               >
                 <div>
-                  <span className="font-mono text-sm font-bold text-brand-primary-darker bg-brand-bg px-2.5 py-1 rounded-lg border border-brand-border block w-fit mb-1">
+                  <span className="font-mono text-sm font-bold text-brand-primary-darker bg-stone-50 px-2.5 py-1 rounded-lg border border-stone-200 block w-fit mb-1">
                     {coup.code}
                   </span>
                   <p className="text-xs font-bold text-stone-900">
@@ -3150,7 +3101,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           {/* KPI Stock Overview Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Total items in stock */}
-            <div className="p-4 bg-white rounded-2xl border border-brand-border shadow-xs">
+            <div className="p-4 bg-white rounded-2xl border border-stone-200 shadow-xs">
               <span className="text-[10px] uppercase font-extrabold text-stone-400 block tracking-wider">Peças Totais no Estoque</span>
               <div className="flex items-baseline space-x-1.5 mt-1">
                 <span className="text-2xl font-bold text-stone-900">
@@ -3161,7 +3112,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
 
             {/* Total value of stock */}
-            <div className="p-4 bg-white rounded-2xl border border-brand-border shadow-xs">
+            <div className="p-4 bg-white rounded-2xl border border-stone-200 shadow-xs">
               <span className="text-[10px] uppercase font-extrabold text-stone-400 block tracking-wider">Valor Estimado do Estoque</span>
               <div className="flex items-baseline space-x-1.5 mt-1">
                 <span className="text-2xl font-bold text-stone-900">
@@ -3171,7 +3122,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
 
             {/* Esgotados */}
-            <div className="p-4 bg-white rounded-2xl border border-brand-border shadow-xs">
+            <div className="p-4 bg-white rounded-2xl border border-stone-200 shadow-xs">
               <span className="text-[10px] uppercase font-extrabold text-stone-400 block tracking-wider">Produtos Esgotados</span>
               <div className="flex items-center space-x-2 mt-1">
                 <span className="text-2xl font-bold text-red-600">
@@ -3184,7 +3135,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
 
             {/* Estoque Crítico */}
-            <div className="p-4 bg-white rounded-2xl border border-brand-border shadow-xs">
+            <div className="p-4 bg-white rounded-2xl border border-stone-200 shadow-xs">
               <span className="text-[10px] uppercase font-extrabold text-stone-400 block tracking-wider">Estoque Crítico (≤ 3 un.)</span>
               <div className="flex items-center space-x-2 mt-1">
                 <span className="text-2xl font-bold text-amber-600">
@@ -3198,7 +3149,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           </div>
 
           {/* Filter and Search Bar */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-brand-border shadow-xs">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-stone-200 shadow-xs">
             {/* Search */}
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-2.5 w-4 h-4 text-stone-400" />
@@ -3207,7 +3158,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 placeholder="Pesquisar produto ou categoria no estoque..."
                 value={stockSearchQuery}
                 onChange={(e) => setStockSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-brand-bg border border-brand-border-dark rounded-xl text-xs text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-primary"
+                className="w-full pl-9 pr-4 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-primary"
               />
             </div>
 
@@ -3225,7 +3176,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap cursor-pointer ${
                     stockFilterMode === filt.id
                       ? 'bg-stone-900 text-white shadow-3xs'
-                      : 'bg-brand-bg text-stone-600 hover:text-stone-900'
+                      : 'bg-stone-50 text-stone-600 hover:text-stone-900'
                   }`}
                 >
                   {filt.label}
@@ -3235,7 +3186,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           </div>
 
           {/* Stock Table List */}
-          <div className="bg-white border border-brand-border rounded-2xl shadow-xs overflow-hidden">
+          <div className="bg-white border border-stone-200 rounded-2xl shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -3299,7 +3250,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           <td className="py-3 px-4">
                             <div className="flex items-center space-x-3">
                               <img
-                                src={prod.images[0] || 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=200'}
+                                src={prod.images[0] || ''}
                                 alt={prod.name}
                                 className="w-10 h-10 object-cover rounded-xl border border-stone-200"
                                 referrerPolicy="no-referrer"
@@ -3369,7 +3320,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                     handleUpdateStock(val);
                                   }
                                 }}
-                                className="w-16 py-1 bg-brand-bg border border-brand-border-dark rounded-lg text-center text-xs font-bold text-stone-900"
+                                className="w-16 py-1 bg-stone-50 border border-stone-300 rounded-lg text-center text-xs font-bold text-stone-900"
                               />
 
                               {/* Plus Button */}

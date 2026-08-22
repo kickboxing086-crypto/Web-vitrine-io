@@ -9,6 +9,9 @@
   --color-brand-bg-alt: var(--brand-bg-alt);
   --color-brand-border: var(--brand-border);
   --color-brand-border-dark: var(--brand-border-dark);
+  --color-brand-surface: var(--brand-surface);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-muted: var(--brand-muted);
   
   --font-serif-luxury: var(--font-serif-luxury);
   --font-heading: var(--font-serif-luxury);
@@ -41,6 +44,9 @@
   --brand-bg-alt: #F2ECE3;
   --brand-border: #E5DACD;
   --brand-border-dark: #D5C7B7;
+  --brand-surface: #FFFFFF;
+  --brand-accent: #B8860B;
+  --brand-muted: #F5F1EB;
 
   /* Default Border Radii (Luxury) */
   --brand-radius-sm: 0.25rem;

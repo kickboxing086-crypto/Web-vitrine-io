@@ -224,6 +224,21 @@ export function adjustColorBrightness(hex: string, percent: number): string {
   return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 }
 
+export function getLuminance(hex: string): number {
+  let cleanHex = hex.replace('#', '');
+  if (cleanHex.length === 3) {
+    cleanHex = cleanHex.split('').map((c) => c + c).join('');
+  }
+  const r = parseInt(cleanHex.substring(0, 2), 16) / 255;
+  const g = parseInt(cleanHex.substring(2, 4), 16) / 255;
+  const b = parseInt(cleanHex.substring(4, 6), 16) / 255;
+
+  const a = [r, g, b].map((v) => {
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  });
+  return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
+}
+
 export function applyStoreTheme(settings?: { fontFamily?: string; primaryColor?: string }) {
   if (typeof document === 'undefined' || !settings) return;
   const root = document.documentElement;
@@ -258,6 +273,14 @@ export function applyStoreTheme(settings?: { fontFamily?: string; primaryColor?:
     const archKey = matchedPalette?.archetype || 'modern';
     const config = archetypeConfig[archKey];
 
+    // Smart Contrast Color
+    const luminance = getLuminance(hex);
+    const contrastColor = luminance > 0.5 ? '#000000' : '#ffffff';
+    root.style.setProperty('--brand-primary-fg', contrastColor);
+
+    // Also determine a readable background for cards if the theme color is used as BG
+    const isDarkTheme = luminance < 0.4;
+    
     // Apply Radii
     root.style.setProperty('--brand-radius-sm', config.radius.sm);
     root.style.setProperty('--brand-radius-md', config.radius.md);
@@ -276,20 +299,39 @@ export function applyStoreTheme(settings?: { fontFamily?: string; primaryColor?:
       root.style.setProperty('--brand-primary-dark', matchedPalette.darkHex);
       root.style.setProperty('--brand-primary-darker', adjustColorBrightness(matchedPalette.darkHex, -15));
       root.style.setProperty('--brand-bg', matchedPalette.bgHex);
-      root.style.setProperty('--brand-bg-alt', adjustColorBrightness(matchedPalette.bgHex, -4));
-      root.style.setProperty('--brand-border', adjustColorBrightness(matchedPalette.bgHex, -10));
-      root.style.setProperty('--brand-border-dark', adjustColorBrightness(matchedPalette.bgHex, -18));
+      root.style.setProperty('--brand-bg-alt', adjustColorBrightness(matchedPalette.bgHex, -6));
+      root.style.setProperty('--brand-border', adjustColorBrightness(matchedPalette.bgHex, -12));
+      root.style.setProperty('--brand-border-dark', adjustColorBrightness(matchedPalette.bgHex, -22));
+      
+      // Additional variables for a more complete visual change
+      root.style.setProperty('--brand-surface', matchedPalette.bgHex === '#FAF7EE' || matchedPalette.bgHex === '#FFFFFF' ? '#FFFFFF' : adjustColorBrightness(matchedPalette.bgHex, 2));
+      root.style.setProperty('--brand-accent', adjustColorBrightness(matchedPalette.hex, 10));
+      root.style.setProperty('--brand-muted', adjustColorBrightness(matchedPalette.bgHex, -2));
+      root.style.setProperty('--brand-secondary', matchedPalette.darkHex);
+      
+      // Semantic colors for text visibility
+      root.style.setProperty('--brand-text-main', isDarkTheme ? '#FFFFFF' : '#1C1917');
+      root.style.setProperty('--brand-text-muted', isDarkTheme ? '#D1D5DB' : '#57534E');
     } else {
       root.style.setProperty('--brand-primary', hex);
       const darkHex = adjustColorBrightness(hex, -20);
       const darkerHex = adjustColorBrightness(hex, -35);
-      const bgHex = adjustColorBrightness(hex, 82);
+      const bgHex = adjustColorBrightness(hex, 92); // even lighter BG for custom colors
       root.style.setProperty('--brand-primary-dark', darkHex);
       root.style.setProperty('--brand-primary-darker', darkerHex);
       root.style.setProperty('--brand-bg', bgHex);
-      root.style.setProperty('--brand-bg-alt', adjustColorBrightness(bgHex, -4));
-      root.style.setProperty('--brand-border', adjustColorBrightness(bgHex, -10));
-      root.style.setProperty('--brand-border-dark', adjustColorBrightness(bgHex, -18));
+      root.style.setProperty('--brand-bg-alt', adjustColorBrightness(bgHex, -6));
+      root.style.setProperty('--brand-border', adjustColorBrightness(bgHex, -12));
+      root.style.setProperty('--brand-border-dark', adjustColorBrightness(bgHex, -22));
+      
+      root.style.setProperty('--brand-surface', '#FFFFFF');
+      root.style.setProperty('--brand-accent', adjustColorBrightness(hex, 10));
+      root.style.setProperty('--brand-muted', adjustColorBrightness(bgHex, -2));
+      root.style.setProperty('--brand-secondary', darkHex);
+
+      const isCustomDark = getLuminance(hex) < 0.4;
+      root.style.setProperty('--brand-text-main', isCustomDark ? '#FFFFFF' : '#1C1917');
+      root.style.setProperty('--brand-text-muted', isCustomDark ? '#D1D5DB' : '#57534E');
     }
   }
 

@@ -107,7 +107,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           )}
         </div>
 
-        {/* Top Right Controls: Share Button & Photo count */}
+        {/* Top Right Controls: Share Button - Photo count REMOVED per user request */}
         <div className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1.5">
           {/* Share Button (Always Visible) */}
           <button
@@ -119,14 +119,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           >
             <Share2 className="w-3.5 h-3.5" />
           </button>
-
-          {/* Photo count indicator */}
-          {product.images && product.images.length > 1 && (
-            <div className="px-2 py-0.5 bg-black/65 backdrop-blur-xs text-white text-[10px] font-bold rounded-full flex items-center gap-1 shadow-xs">
-              <Images className="w-3 h-3 text-brand-primary" />
-              <span>{product.images.length}</span>
-            </div>
-          )}
         </div>
 
         {/* Quick Action Overlay Buttons (Desktop Hover) */}

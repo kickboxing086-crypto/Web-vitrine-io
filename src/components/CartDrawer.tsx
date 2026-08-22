@@ -89,8 +89,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const [cashAmount, setCashAmount] = useState<string>('');
   const [noChangeNeeded, setNoChangeNeeded] = useState(false);
   const [cardType, setCardType] = useState<'credit' | 'debit'>('credit');
-  const [shakeWhatsapp, setShakeWhatsapp] = useState(false);
-
+  const [checkoutStep, setCheckoutStep] = useState<1 | 2 | 3>(1);
+  const [shakeName, setShakeName] = useState(false);
+  const [shakePhone, setShakePhone] = useState(false);
+  const [shakeStreet, setShakeStreet] = useState(false);
+  const [shakeNumber, setShakeNumber] = useState(false);
+  const [shakeNeighborhood, setShakeNeighborhood] = useState(false);
 
   // CEP Lookup
   const handleCepSearch = async (cepVal: string) => {
@@ -195,16 +199,37 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     if (cart.length === 0) return;
 
     if (!customerName.trim() || !customerPhone.trim()) {
-      if (!customerPhone.trim()) {
-        setShakeWhatsapp(true);
-        setTimeout(() => setShakeWhatsapp(false), 500);
+      if (!customerName.trim()) {
+        setShakeName(true);
+        setTimeout(() => setShakeName(false), 500);
       }
-      alert('Por favor, informe seu Nome e WhatsApp de contato.');
+      if (!customerPhone.trim()) {
+        setShakePhone(true);
+        setTimeout(() => setShakePhone(false), 500);
+      }
+      
+      // Auto-scroll to first error
+      const firstError = !customerName.trim() ? 'input-name' : 'input-phone';
+      document.getElementById(firstError)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 
     if (isDelivery && (!street.trim() || !number.trim() || !neighborhood.trim())) {
-      alert('Por favor, informe seu endereço completo de entrega (Rua, Número e Bairro).');
+      if (!street.trim()) {
+        setShakeStreet(true);
+        setTimeout(() => setShakeStreet(false), 500);
+      }
+      if (!number.trim()) {
+        setShakeNumber(true);
+        setTimeout(() => setShakeNumber(false), 500);
+      }
+      if (!neighborhood.trim()) {
+        setShakeNeighborhood(true);
+        setTimeout(() => setShakeNeighborhood(false), 500);
+      }
+      
+      // Scroll to delivery section
+      document.getElementById('delivery-section-header')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 
@@ -343,8 +368,30 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               </div>
             </div>
 
+            {/* Progress Bar (Only if cart not empty) */}
+            {cart.length > 0 && (
+              <div className="px-6 sm:px-10 py-3 bg-stone-50/50 border-b border-stone-100 flex items-center justify-center space-x-2">
+                {[1, 2, 3].map((step) => (
+                  <React.Fragment key={step}>
+                    <div 
+                      className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold transition-all ${
+                        checkoutStep === step 
+                          ? 'bg-stone-900 text-white shadow-md scale-110' 
+                          : checkoutStep > step 
+                          ? 'bg-emerald-500 text-white' 
+                          : 'bg-stone-200 text-stone-500'
+                      }`}
+                    >
+                      {checkoutStep > step ? '✓' : (step as number)}
+                    </div>
+                    {step < 3 && <div className={`w-8 h-0.5 rounded-full ${checkoutStep > step ? 'bg-emerald-500' : 'bg-stone-200'}`} />}
+                  </React.Fragment>
+                ))}
+              </div>
+            )}
+
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto p-6 sm:p-10 space-y-8">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6">
               {cart.length === 0 ? (
                 <div className="text-center py-16 space-y-3">
                   <div className="w-16 h-16 mx-auto bg-brand-bg-alt rounded-full flex items-center justify-center text-stone-400">
@@ -367,766 +414,485 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   </button>
                 </div>
               ) : (
-                <>
-                  {/* Items List */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between text-[11px] text-stone-500 pb-1.5 border-b border-stone-100">
-                      <span className="font-bold uppercase tracking-widest text-stone-900">
-                        Sua Seleção
-                      </span>
-                      <button
-                        onClick={onClearCart}
-                        className="text-stone-400 hover:text-red-600 transition-colors font-semibold"
-                      >
-                        Remover Tudo
-                      </button>
-                    </div>
-
-                    {cart.map((item, index) => {
-                      const itemPrice = item.product.isOnSale && item.product.promotionalPrice
-                        ? item.product.promotionalPrice
-                        : item.product.price;
-                      return (
-                        <div
-                          key={`${item.product.id}-${index}`}
-                          className="flex gap-4 p-5 bg-white rounded-3xl border border-brand-border shadow-sm hover:shadow-md transition-all group"
-                        >
-                          <div className="w-20 h-24 sm:w-24 sm:h-32 rounded-2xl overflow-hidden bg-brand-bg border border-brand-border/40 shrink-0">
-                            <img
-                              src={item.product.images[0]}
-                              alt={item.product.name}
-                              className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
-                            />
-                          </div>
-
-                          <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
-                            <div>
-                              <div className="flex justify-between items-start gap-2">
-                                <h4 className="text-sm font-bold text-stone-900 truncate pr-2">
-                                  {item.product.name}
-                                </h4>
-                                <button
-                                  onClick={() => onRemoveItem(index)}
-                                  className="p-1 text-stone-300 hover:text-red-500 transition-colors shrink-0"
-                                  title="Remover item"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                              
-                              <div className="flex flex-wrap gap-2 mt-2">
-                                <span className="inline-flex items-center px-2 py-0.5 bg-stone-50 border border-stone-100 rounded-lg text-[10px] font-bold text-stone-500 uppercase tracking-wider">
-                                  TAM: {item.selectedSize}
-                                </span>
-                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-stone-50 border border-stone-100 rounded-lg text-[10px] font-bold text-stone-500 uppercase tracking-wider">
-                                  <span
-                                    className="w-2.5 h-2.5 rounded-full border border-black/10"
-                                    style={{ backgroundColor: item.selectedColor.hex }}
-                                  />
-                                  {item.selectedColor.name}
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center justify-between mt-4">
-                              <span className="text-base font-bold text-stone-900">
-                                {formatCurrency(itemPrice * item.quantity)}
-                              </span>
-
-                              {/* Quantity Controls */}
-                              <div className="flex items-center border border-brand-border rounded-xl bg-brand-bg p-1 shadow-2xs">
-                                <button
-                                  onClick={() => onUpdateQuantity(index, -1)}
-                                  className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white text-stone-400 hover:text-stone-900 transition-colors"
-                                >
-                                  <Minus className="w-3.5 h-3.5" />
-                                </button>
-                                <span className="w-8 text-center text-xs font-bold text-stone-800">
-                                  {item.quantity}
-                                </span>
-                                <button
-                                  onClick={() => onUpdateQuantity(index, 1)}
-                                  className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white text-stone-400 hover:text-stone-900 transition-colors"
-                                >
-                                  <Plus className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-
-                    {/* Quick action to continue browsing catalog */}
-                    <button
-                      type="button"
-                      onClick={onClose}
-                      className="w-full py-3.5 px-4 border border-dashed border-stone-300 hover:border-brand-primary-dark rounded-2xl text-xs font-bold text-stone-600 hover:text-stone-900 bg-white/80 hover:bg-white flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-2xs"
-                      id="btn-cart-items-add-more"
+                <AnimatePresence mode="wait">
+                  {checkoutStep === 1 && (
+                    <motion.div
+                      key="step1"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      className="space-y-6"
                     >
-                      <ShoppingBag className="w-4 h-4 text-brand-primary-dark" />
-                      <span>Adicionar mais peças ao pedido</span>
-                    </button>
-                  </div>
+                      {/* Step 1: Items List */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between text-[11px] text-stone-500 pb-1.5 border-b border-stone-100">
+                          <span className="font-bold uppercase tracking-widest text-stone-900 flex items-center gap-2">
+                            <ShoppingBag className="w-3.5 h-3.5" />
+                            Sua Seleção ({cart.length})
+                          </span>
+                          <button
+                            onClick={onClearCart}
+                            className="text-stone-400 hover:text-red-600 transition-colors font-semibold"
+                          >
+                            Remover Tudo
+                          </button>
+                        </div>
 
-                  {/* Coupon Area */}
-                  <div className="p-3.5 bg-white rounded-2xl border border-brand-border">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <Tag className="w-4 h-4 text-brand-primary-dark" />
-                      <span className="text-xs font-bold text-stone-800">Possui cupom de desconto?</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={couponInput}
-                        onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                        placeholder="Ex: ELEGANCE10"
-                        className="flex-1 px-3 py-1.5 bg-brand-bg border border-brand-border-dark rounded-xl text-xs uppercase font-mono font-semibold text-stone-900 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleApplyCoupon}
-                        className="px-3.5 py-1.5 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold"
-                      >
-                        Aplicar
-                      </button>
-                    </div>
-                    {couponError && <p className="text-[11px] text-red-600 mt-1.5">{couponError}</p>}
-                    {appliedCoupon && (
-                      <div className="flex items-center justify-between text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-lg mt-2">
-                        <span>
-                          Cupom <strong>{appliedCoupon.code}</strong> aplicado (-
-                          {appliedCoupon.discountType === 'percentage'
-                            ? `${appliedCoupon.discountValue}%`
-                            : formatCurrency(appliedCoupon.discountValue)}
-                          )
-                        </span>
+                        {cart.map((item, index) => {
+                          const itemPrice = item.product.isOnSale && item.product.promotionalPrice
+                            ? item.product.promotionalPrice
+                            : item.product.price;
+                          return (
+                            <div
+                              key={`${item.product.id}-${index}`}
+                              className="flex gap-4 p-4 bg-white rounded-2xl border border-brand-border shadow-sm hover:shadow-md transition-all group"
+                            >
+                              <div className="w-16 h-20 sm:w-20 sm:h-28 rounded-xl overflow-hidden bg-brand-bg border border-brand-border/40 shrink-0">
+                                <img
+                                  src={item.product.images[0]}
+                                  alt={item.product.name}
+                                  className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                                />
+                              </div>
+
+                              <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
+                                <div>
+                                  <div className="flex justify-between items-start gap-2">
+                                    <h4 className="text-xs sm:text-sm font-bold text-stone-900 truncate pr-2">
+                                      {item.product.name}
+                                    </h4>
+                                    <button
+                                      onClick={() => onRemoveItem(index)}
+                                      className="p-1 text-stone-300 hover:text-red-500 transition-colors shrink-0"
+                                      title="Remover item"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                  
+                                  <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                    <span className="inline-flex items-center px-1.5 py-0.5 bg-stone-50 border border-stone-100 rounded text-[9px] font-bold text-stone-500 uppercase tracking-wider">
+                                      {item.selectedSize}
+                                    </span>
+                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-stone-50 border border-stone-100 rounded text-[9px] font-bold text-stone-500 uppercase tracking-wider">
+                                      <span
+                                        className="w-2 h-2 rounded-full border border-black/10"
+                                        style={{ backgroundColor: item.selectedColor.hex }}
+                                      />
+                                      {item.selectedColor.name}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center justify-between mt-3">
+                                  <span className="text-sm font-bold text-stone-900">
+                                    {formatCurrency(itemPrice * item.quantity)}
+                                  </span>
+
+                                  <div className="flex items-center border border-brand-border rounded-lg bg-brand-bg p-0.5 shadow-2xs">
+                                    <button
+                                      onClick={() => onUpdateQuantity(index, -1)}
+                                      className="w-6 h-6 flex items-center justify-center rounded hover:bg-white text-stone-400 hover:text-stone-900 transition-colors"
+                                    >
+                                      <Minus className="w-3 h-3" />
+                                    </button>
+                                    <span className="w-6 text-center text-[10px] font-bold text-stone-800">
+                                      {item.quantity}
+                                    </span>
+                                    <button
+                                      onClick={() => onUpdateQuantity(index, 1)}
+                                      className="w-6 h-6 flex items-center justify-center rounded hover:bg-white text-stone-400 hover:text-stone-900 transition-colors"
+                                    >
+                                      <Plus className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+
                         <button
-                          onClick={() => setAppliedCoupon(null)}
-                          className="text-stone-400 hover:text-red-500 font-bold"
+                          type="button"
+                          onClick={onClose}
+                          className="w-full py-3 px-4 border border-dashed border-stone-300 hover:border-brand-primary-dark rounded-xl text-[10px] font-bold text-stone-600 hover:text-stone-900 bg-white/50 hover:bg-white flex items-center justify-center space-x-2 transition-all cursor-pointer"
                         >
-                          ✕
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Adicionar mais itens</span>
                         </button>
                       </div>
-                    )}
-                  </div>
 
-                  {/* Order Mode (Retirada vs Entrega) */}
-                  <div className="space-y-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-stone-700 block">
-                      Opção de Entrega / Retirada
-                    </span>
-
-                    {settings.deliveryMode === 'both' ? (
-                      <div className="grid grid-cols-2 gap-2">
-                        <motion.button
-                          type="button"
-                          whileHover={{ scale: 1.03 }}
-                          whileTap={{ scale: 0.97 }}
-                          transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-                          onClick={() => setOrderType('delivery')}
-                          className={`p-3 rounded-xl border text-left flex items-center space-x-2 transition-all cursor-pointer ${
-                            orderType === 'delivery'
-                              ? 'bg-brand-bg-alt border-brand-primary-dark ring-1 ring-brand-primary-dark text-stone-900'
-                              : 'bg-white border-brand-border text-stone-600 hover:border-stone-400'
-                          }`}
-                        >
-                          <Truck className="w-4 h-4 text-brand-primary-dark" />
-                          <div>
-                            <span className="text-xs font-bold block">Entrega</span>
-                            <span className="text-[10px] text-stone-500">No seu endereço</span>
-                          </div>
-                        </motion.button>
-
-                        <motion.button
-                          type="button"
-                          whileHover={{ scale: 1.03 }}
-                          whileTap={{ scale: 0.97 }}
-                          transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-                          onClick={() => setOrderType('pickup')}
-                          className={`p-3 rounded-xl border text-left flex items-center space-x-2 transition-all cursor-pointer ${
-                            orderType === 'pickup'
-                              ? 'bg-brand-bg-alt border-brand-primary-dark ring-1 ring-brand-primary-dark text-stone-900'
-                              : 'bg-white border-brand-border text-stone-600 hover:border-stone-400'
-                          }`}
-                        >
-                          <Building2 className="w-4 h-4 text-brand-primary-dark" />
-                          <div>
-                            <span className="text-xs font-bold block">Retirada</span>
-                            <span className="text-[10px] text-stone-500">Na loja física</span>
-                          </div>
-                        </motion.button>
-                      </div>
-                    ) : settings.deliveryMode === 'pickup' ? (
-                      <div className="p-3 bg-stone-100 rounded-xl border border-stone-200 text-xs text-stone-700 flex items-center space-x-2">
-                        <Building2 className="w-4 h-4 text-stone-600 flex-shrink-0" />
-                        <div>
-                          <strong>Retirada na Loja Física:</strong> {settings.address || 'Consulte nosso endereço'}
+                      {/* Coupon Area */}
+                      <div className="p-4 bg-white rounded-2xl border border-brand-border">
+                        <div className="flex items-center space-x-2 mb-3">
+                          <Tag className="w-3.5 h-3.5 text-brand-primary-dark" />
+                          <span className="text-xs font-bold text-stone-800 uppercase tracking-tight">Cupom de Desconto</span>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="p-3 bg-stone-100 rounded-xl border border-stone-200 text-xs text-stone-700 flex items-center space-x-2">
-                        <Truck className="w-4 h-4 text-stone-600 flex-shrink-0" />
-                        <div>
-                          <strong>Entrega no seu Endereço:</strong> Enviaremos com todo cuidado.
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Customer Information Form */}
-                  <div className="space-y-8 p-6 sm:p-10 bg-white rounded-3xl border border-brand-border shadow-sm">
-                    <span className="text-xs font-bold uppercase tracking-widest text-stone-900 flex items-center space-x-2.5 pb-2 border-b border-stone-50">
-                      <div className="p-1.5 bg-brand-bg rounded-lg border border-[#E8DACB]">
-                        <User className="w-4 h-4 text-brand-primary-dark" />
-                      </div>
-                      <span>Informações de Entrega</span>
-                    </span>
-
-                    <div className="space-y-6">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-stone-400 uppercase ml-1 tracking-wider">Nome Completo</label>
-                        <input
-                          type="text"
-                          required
-                          value={customerName}
-                          onChange={(e) => setCustomerName(e.target.value)}
-                          placeholder="Digite seu nome..."
-                          className="w-full px-5 py-4 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark transition-all shadow-xs"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-stone-400 uppercase ml-1 tracking-wider">WhatsApp de Contato</label>
-                        <motion.div
-                          animate={shakeWhatsapp ? { 
-                            x: [-6, 6, -6, 6, -3, 3, 0],
-                            scale: [1, 1.02, 1],
-                            boxShadow: ["0 0 0 0px rgba(239, 68, 68, 0)", "0 0 0 4px rgba(239, 68, 68, 0.2)", "0 0 0 0px rgba(239, 68, 68, 0)"]
-                          } : {}}
-                          transition={{ duration: 0.5 }}
-                        >
+                        <div className="flex gap-2">
                           <input
                             type="text"
-                            required
-                            value={customerPhone}
-                            onChange={(e) => setCustomerPhone(e.target.value)}
-                            placeholder="(00) 00000-0000"
-                            className={`w-full px-5 py-4 bg-brand-bg border rounded-2xl text-sm text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-1 transition-all shadow-xs ${
-                              shakeWhatsapp ? 'border-red-500 ring-1 ring-red-500' : 'border-brand-border-dark focus:ring-brand-primary-dark'
-                            }`}
+                            value={couponInput}
+                            onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                            placeholder="CÓDIGO"
+                            className="flex-1 px-3 py-2 bg-brand-bg border border-brand-border-dark rounded-xl text-xs uppercase font-mono font-semibold text-stone-900 focus:outline-none"
                           />
-                        </motion.div>
+                          <button
+                            type="button"
+                            onClick={handleApplyCoupon}
+                            className="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-bold transition-colors"
+                          >
+                            Aplicar
+                          </button>
+                        </div>
+                        {appliedCoupon && (
+                          <div className="flex items-center justify-between text-[10px] text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-lg mt-2 font-bold">
+                            <span>✓ CUPOM {appliedCoupon.code} ATIVADO</span>
+                            <button onClick={() => setAppliedCoupon(null)} className="text-emerald-500">✕</button>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {checkoutStep === 2 && (
+                    <motion.div
+                      key="step2"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      className="space-y-6"
+                    >
+                      {/* Step 2: Delivery Option */}
+                      <div className="space-y-4">
+                        <div className="flex items-center space-x-2 pb-1 border-b border-stone-100">
+                          <Truck className="w-4 h-4 text-brand-primary-dark" />
+                          <span className="text-xs font-bold uppercase tracking-widest text-stone-900">Entrega ou Retirada</span>
+                        </div>
+
+                        {settings.deliveryMode === 'both' ? (
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              onClick={() => setOrderType('delivery')}
+                              className={`p-4 rounded-2xl border text-left flex flex-col space-y-1 transition-all ${
+                                orderType === 'delivery'
+                                  ? 'bg-stone-900 border-stone-900 text-white shadow-md'
+                                  : 'bg-white border-brand-border text-stone-600 hover:border-stone-400'
+                              }`}
+                            >
+                              <span className="text-xs font-bold">Receber</span>
+                              <span className={`text-[10px] ${orderType === 'delivery' ? 'text-white/60' : 'text-stone-400'}`}>Entrega rápida</span>
+                            </button>
+                            <button
+                              onClick={() => setOrderType('pickup')}
+                              className={`p-4 rounded-2xl border text-left flex flex-col space-y-1 transition-all ${
+                                orderType === 'pickup'
+                                  ? 'bg-stone-900 border-stone-900 text-white shadow-md'
+                                  : 'bg-white border-brand-border text-stone-600 hover:border-stone-400'
+                              }`}
+                            >
+                              <span className="text-xs font-bold">Retirar</span>
+                              <span className={`text-[10px] ${orderType === 'pickup' ? 'text-white/60' : 'text-stone-400'}`}>Na nossa loja</span>
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="p-4 bg-stone-100 rounded-2xl text-xs font-bold text-stone-700 flex items-center gap-3">
+                            {settings.deliveryMode === 'pickup' ? <Building2 className="w-4 h-4" /> : <Truck className="w-4 h-4" />}
+                            <span>{settings.deliveryMode === 'pickup' ? 'Somente Retirada na Loja' : 'Somente Entrega via Motoboy/Envio'}</span>
+                          </div>
+                        )}
                       </div>
 
-                      {/* Delivery Address Fields */}
-                      {isDelivery && (
-                        <div className="space-y-6 pt-6 border-t border-stone-50">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-bold text-stone-800 uppercase tracking-tight flex items-center gap-2">
-                              <MapPin className="w-3.5 h-3.5 text-brand-primary-dark" /> 
-                              Endereço para Entrega
-                            </span>
-                          </div>
+                      {/* Customer Info Form */}
+                      <div className="space-y-4">
+                        <div className="flex items-center space-x-2 pb-1 border-b border-stone-100">
+                          <User className="w-4 h-4 text-brand-primary-dark" />
+                          <span className="text-xs font-bold uppercase tracking-widest text-stone-900">Seus Dados</span>
+                        </div>
 
-                          {/* CEP Field */}
-                          <div className="relative space-y-2">
-                            <label className="text-[10px] font-bold text-stone-400 uppercase ml-1 tracking-wider">CEP (opcional)</label>
-                            <input
+                        <div className="space-y-4">
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider ml-1">Nome Completo</label>
+                            <motion.input
+                              animate={shakeName ? { x: [-5, 5, -5, 5, 0] } : {}}
                               type="text"
-                              value={cep}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                setCep(val);
-                                handleCepSearch(val);
-                              }}
-                              placeholder="00000-000"
-                              maxLength={9}
-                              className="w-full px-5 py-4 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark shadow-xs"
+                              value={customerName}
+                              onChange={(e) => setCustomerName(e.target.value)}
+                              placeholder="Como quer ser chamado?"
+                              className={`w-full px-4 py-3 bg-white border rounded-xl text-sm focus:outline-none transition-all ${
+                                shakeName ? 'border-red-500 ring-1 ring-red-500' : 'border-brand-border-dark focus:ring-brand-primary-dark'
+                              }`}
                             />
-                            {isLoadingCep && (
-                              <span className="absolute right-5 bottom-4 text-[10px] text-brand-primary-dark font-bold animate-pulse">
-                                BUSCANDO...
-                              </span>
-                            )}
                           </div>
 
-                          <div className="grid grid-cols-1 gap-6">
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-bold text-stone-400 uppercase ml-1 tracking-wider">Rua / Avenida</label>
-                              <input
-                                type="text"
-                                required
-                                value={street}
-                                onChange={(e) => setStreet(e.target.value)}
-                                placeholder="Nome da rua..."
-                                className="w-full px-5 py-4 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark shadow-xs"
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-bold text-stone-400 uppercase ml-1 tracking-wider">Número</label>
-                              <input
-                                type="text"
-                                required
-                                value={number}
-                                onChange={(e) => setNumber(e.target.value)}
-                                placeholder="S/N ou Nº"
-                                className="w-full px-5 py-4 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark shadow-xs"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="space-y-6">
-                            {settings.deliveryFeeType === 'custom' &&
-                            settings.customDeliveryRates &&
-                            settings.customDeliveryRates.length > 0 ? (
-                              <div className="relative space-y-2">
-                                <label className="text-[10px] font-bold text-stone-400 uppercase ml-1 tracking-wider">Bairro de Entrega</label>
-                                <button
-                                  type="button"
-                                  onClick={() => setIsNeighborhoodOpen(!isNeighborhoodOpen)}
-                                  className="w-full px-5 py-4 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 focus:outline-none flex items-center justify-between hover:scale-[1.01] active:scale-[0.99] transition-all shadow-xs"
-                                  id="select-neighborhood-btn"
-                                >
-                                  <span className="truncate">
-                                    {neighborhood ? (
-                                      <>
-                                        {neighborhood}
-                                        {(() => {
-                                          const rate = settings.customDeliveryRates?.find(r => r.neighborhood === neighborhood);
-                                          return rate ? ` (Taxa: R$ ${rate.fee.toFixed(2)})` : '';
-                                        })()}
-                                      </>
-                                    ) : (
-                                      'Selecione seu bairro...'
-                                    )}
-                                  </span>
-                                  <ChevronDown className="w-4 h-4 opacity-70 shrink-0" />
-                                </button>
-
-                                <AnimatePresence>
-                                  {isNeighborhoodOpen && (
-                                    <>
-                                      <div
-                                        className="fixed inset-0 z-40"
-                                        onClick={() => setIsNeighborhoodOpen(false)}
-                                      />
-                                      <motion.div
-                                        initial={{ opacity: 0, scale: 0.95, y: 5 }}
-                                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                                        exit={{ opacity: 0, scale: 0.95, y: 5 }}
-                                        transition={{ duration: 0.12, ease: "easeOut" }}
-                                        className="absolute left-0 right-0 bottom-full mb-2 max-h-60 overflow-y-auto bg-stone-900 border border-brand-border-dark shadow-xl rounded-2xl p-2 z-50 space-y-1"
-                                      >
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            setNeighborhood('');
-                                            setIsNeighborhoodOpen(false);
-                                          }}
-                                          className={`w-full text-left px-4 py-2.5 text-xs rounded-xl transition-all flex items-center justify-between cursor-pointer ${
-                                            !neighborhood
-                                              ? 'bg-stone-800 text-brand-primary font-bold shadow-xs'
-                                              : 'text-stone-300 hover:bg-stone-800/60 hover:text-white'
-                                          }`}
-                                        >
-                                          <span>Selecione o Bairro *</span>
-                                          {!neighborhood && (
-                                            <Check className="w-4 h-4 text-brand-primary" />
-                                          )}
-                                        </button>
-
-                                        {settings.customDeliveryRates.map((r, idx) => {
-                                          const isSelected = neighborhood === r.neighborhood;
-                                          return (
-                                            <button
-                                              key={`rate-${idx}`}
-                                              type="button"
-                                              onClick={() => {
-                                                setNeighborhood(r.neighborhood);
-                                                if (r.city) setCity(r.city);
-                                                if (r.state) setAddressState(r.state);
-                                                setIsNeighborhoodOpen(false);
-                                              }}
-                                              className={`w-full text-left px-4 py-2.5 text-xs rounded-xl transition-all flex items-center justify-between cursor-pointer ${
-                                                isSelected
-                                                  ? 'bg-stone-800 text-brand-primary font-bold shadow-xs'
-                                                  : 'text-stone-300 hover:bg-stone-800/60 hover:text-white'
-                                              }`}
-                                            >
-                                              <span className="truncate">
-                                                {r.neighborhood} - {r.city}/{r.state || 'SP'} (R$ {r.fee.toFixed(2)})
-                                              </span>
-                                              {isSelected && (
-                                                <Check className="w-4 h-4 text-brand-primary" />
-                                              )}
-                                            </button>
-                                          );
-                                        })}
-
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            setNeighborhood('Outro');
-                                            setIsNeighborhoodOpen(false);
-                                          }}
-                                          className={`w-full text-left px-4 py-2.5 text-xs rounded-xl transition-all flex items-center justify-between cursor-pointer ${
-                                            neighborhood === 'Outro'
-                                              ? 'bg-stone-800 text-brand-primary font-bold shadow-xs'
-                                              : 'text-stone-300 hover:bg-stone-800/60 hover:text-white'
-                                          }`}
-                                        >
-                                          <span>Outro Bairro</span>
-                                          {neighborhood === 'Outro' && (
-                                            <Check className="w-4 h-4 text-brand-primary" />
-                                          )}
-                                        </button>
-                                      </motion.div>
-                                    </>
-                                  )}
-                                </AnimatePresence>
-                              </div>
-                            ) : (
-                              <div className="space-y-2">
-                                <label className="text-[10px] font-bold text-stone-400 uppercase ml-1 tracking-wider">Bairro</label>
-                                <input
-                                  type="text"
-                                  required
-                                  value={neighborhood}
-                                  onChange={(e) => setNeighborhood(e.target.value)}
-                                  placeholder="Digite seu bairro..."
-                                  className="w-full px-5 py-4 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark shadow-xs"
-                                />
-                              </div>
-                            )}
-
-                            <div className="grid grid-cols-1 gap-6">
-                              <div className="space-y-2">
-                                <label className="text-[10px] font-bold text-stone-400 uppercase ml-1 tracking-wider">Cidade</label>
-                                <input
-                                  type="text"
-                                  required
-                                  value={city}
-                                  onChange={(e) => setCity(e.target.value)}
-                                  className="w-full px-5 py-4 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark shadow-xs"
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <label className="text-[10px] font-bold text-stone-400 uppercase ml-1 tracking-wider">UF</label>
-                                <input
-                                  type="text"
-                                  required
-                                  maxLength={2}
-                                  value={addressState}
-                                  onChange={(e) => setAddressState(e.target.value.toUpperCase())}
-                                  className="w-full px-5 py-4 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark uppercase shadow-xs"
-                                />
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-bold text-stone-400 uppercase ml-1 tracking-wider">Complemento</label>
-                            <input
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider ml-1">Seu WhatsApp</label>
+                            <motion.input
+                              animate={shakePhone ? { x: [-5, 5, -5, 5, 0] } : {}}
                               type="text"
-                              value={complement}
-                              onChange={(e) => setComplement(e.target.value)}
-                              placeholder="Apto, Bloco, Casa..."
-                              className="w-full px-5 py-4 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark shadow-xs"
+                              value={customerPhone}
+                              onChange={(e) => setCustomerPhone(e.target.value)}
+                              placeholder="(00) 00000-0000"
+                              className={`w-full px-4 py-3 bg-white border rounded-xl text-sm focus:outline-none transition-all ${
+                                shakePhone ? 'border-red-500 ring-1 ring-red-500' : 'border-brand-border-dark focus:ring-brand-primary-dark'
+                              }`}
                             />
                           </div>
                         </div>
-                      )}
-                    </div>
 
-                    {/* Payment Method Option */}
-                    <div className="pt-6 border-t border-stone-100">
-                      <label className="block text-xs font-bold uppercase tracking-widest text-stone-900 mb-4 flex items-center gap-2">
-                        <CreditCard className="w-4 h-4 text-brand-primary-dark" />
-                        Forma de Pagamento
-                      </label>
-                      
-                      <div className="space-y-3">
-                        {[
-                          { id: 'pix', label: 'Pix (Pagamento Instantâneo)', icon: <CheckCircle2 className="w-4 h-4" />, detail: 'Chave Pix será exibida após selecionar' },
-                          {
-                            id: isDelivery ? 'card_delivery' : 'card_pickup',
-                            label: isDelivery ? 'Cartão de Débito ou Crédito (Na Entrega)' : 'Cartão de Débito ou Crédito (Na Retirada)',
-                            icon: <CreditCard className="w-4 h-4" />,
-                            detail: 'Levaremos a maquininha até você'
-                          },
-                          { id: 'cash', label: 'Dinheiro (Pagamento na Entrega)', icon: <div className="font-bold text-xs">R$</div>, detail: 'Informe se precisará de troco abaixo' },
-                        ].map((p) => (
-                          <motion.button
-                            key={p.id}
-                            type="button"
-                            onClick={() => setPaymentMethod(p.id as any)}
-                            className={`w-full py-4 px-5 rounded-2xl border flex items-center justify-between transition-all cursor-pointer group ${
-                              paymentMethod === p.id
-                                ? 'bg-stone-900 text-white border-stone-900 shadow-lg ring-2 ring-stone-900/10'
-                                : 'bg-white border-brand-border text-stone-700 hover:border-stone-400 hover:bg-stone-50/50'
-                            }`}
-                          >
-                            <div className="flex items-center gap-4">
-                              <div className={`p-2.5 rounded-xl transition-colors ${paymentMethod === p.id ? 'bg-white/15 text-white' : 'bg-brand-bg text-stone-500 group-hover:text-stone-700'}`}>
-                                {p.icon}
-                              </div>
-                              <div className="text-left">
-                                <span className="text-xs font-bold block">{p.label}</span>
-                                <span className={`text-[10px] block mt-0.5 ${paymentMethod === p.id ? 'text-white/60' : 'text-stone-400'}`}>
-                                  {p.detail}
-                                </span>
+                        {/* Address if delivery */}
+                        {isDelivery && (
+                          <div className="space-y-4 pt-4 border-t border-stone-50">
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider ml-1">Endereço de Entrega</label>
+                              <div className="grid grid-cols-3 gap-2">
+                                <motion.input
+                                  animate={shakeStreet ? { x: [-5, 5, -5, 5, 0] } : {}}
+                                  type="text"
+                                  value={street}
+                                  onChange={(e) => setStreet(e.target.value)}
+                                  placeholder="Rua / Logradouro"
+                                  className={`col-span-2 px-4 py-3 bg-white border rounded-xl text-sm focus:outline-none ${
+                                    shakeStreet ? 'border-red-500' : 'border-brand-border-dark'
+                                  }`}
+                                />
+                                <motion.input
+                                  animate={shakeNumber ? { x: [-5, 5, -5, 5, 0] } : {}}
+                                  type="text"
+                                  value={number}
+                                  onChange={(e) => setNumber(e.target.value)}
+                                  placeholder="Nº"
+                                  className={`px-4 py-3 bg-white border rounded-xl text-sm focus:outline-none ${
+                                    shakeNumber ? 'border-red-500' : 'border-brand-border-dark'
+                                  }`}
+                                />
                               </div>
                             </div>
-                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                              paymentMethod === p.id ? 'bg-brand-primary border-brand-primary scale-110 shadow-sm' : 'border-stone-200 group-hover:border-stone-300'
-                            }`}>
-                              {paymentMethod === p.id && <Check className="w-4 h-4 text-stone-900" strokeWidth={3} />}
-                            </div>
-                          </motion.button>
-                        ))}
-                      </div>
 
-                      {(paymentMethod === 'card_delivery' || paymentMethod === 'card_pickup') && (
-                        <motion.div 
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="mt-4 p-4 bg-brand-bg rounded-2xl border border-brand-border-dark space-y-3"
-                        >
-                          <label className="text-[11px] font-bold text-stone-700 uppercase tracking-wider block mb-2">
-                            Tipo de Cartão
-                          </label>
-                          <div className="grid grid-cols-2 gap-2">
-                            {(['credit', 'debit'] as const).map((type) => (
-                              <button
-                                key={type}
-                                type="button"
-                                onClick={() => setCardType(type)}
-                                className={`py-2.5 px-4 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                                  cardType === type
-                                    ? 'bg-stone-900 text-white border-stone-900 shadow-sm'
-                                    : 'bg-white border-brand-border text-stone-600 hover:border-stone-400'
-                                }`}
-                              >
-                                {type === 'credit' ? 'Crédito' : 'Débito'}
-                                {cardType === type && <Check className="w-3.5 h-3.5 text-emerald-400" />}
-                              </button>
-                            ))}
+                            <div className="space-y-1.5">
+                              <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider ml-1">Bairro de Entrega</label>
+                              {settings.deliveryFeeType === 'custom' && settings.customDeliveryRates?.length ? (
+                                <div className="relative">
+                                  <motion.button
+                                    animate={shakeNeighborhood ? { x: [-5, 5, -5, 5, 0] } : {}}
+                                    onClick={() => setIsNeighborhoodOpen(!isNeighborhoodOpen)}
+                                    className={`w-full px-4 py-3 bg-white border rounded-xl text-sm flex items-center justify-between ${
+                                      shakeNeighborhood ? 'border-red-500' : 'border-brand-border-dark'
+                                    }`}
+                                  >
+                                    <span className={neighborhood ? 'text-stone-900' : 'text-stone-400'}>
+                                      {neighborhood || 'Escolha o bairro...'}
+                                    </span>
+                                    <ChevronDown className="w-4 h-4 opacity-50" />
+                                  </motion.button>
+                                  <AnimatePresence>
+                                    {isNeighborhoodOpen && (
+                                      <motion.div
+                                        initial={{ opacity: 0, y: 5 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: 5 }}
+                                        className="absolute z-50 left-0 right-0 top-full mt-1 bg-white border border-brand-border-dark shadow-xl rounded-xl p-1 max-h-48 overflow-y-auto"
+                                      >
+                                        {settings.customDeliveryRates.map((r, i) => (
+                                          <button
+                                            key={i}
+                                            onClick={() => {
+                                              setNeighborhood(r.neighborhood);
+                                              setIsNeighborhoodOpen(false);
+                                            }}
+                                            className="w-full text-left px-3 py-2 text-xs hover:bg-stone-50 rounded-lg flex items-center justify-between"
+                                          >
+                                            <span>{r.neighborhood}</span>
+                                            <span className="font-bold text-brand-primary-dark">R$ {r.fee.toFixed(2)}</span>
+                                          </button>
+                                        ))}
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+                                </div>
+                              ) : (
+                                <motion.input
+                                  animate={shakeNeighborhood ? { x: [-5, 5, -5, 5, 0] } : {}}
+                                  type="text"
+                                  value={neighborhood}
+                                  onChange={(e) => setNeighborhood(e.target.value)}
+                                  placeholder="Digite seu bairro"
+                                  className={`w-full px-4 py-3 bg-white border rounded-xl text-sm focus:outline-none ${
+                                    shakeNeighborhood ? 'border-red-500' : 'border-brand-border-dark'
+                                  }`}
+                                />
+                              )}
+                            </div>
                           </div>
-                        </motion.div>
-                      )}
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
 
-                      {paymentMethod === 'cash' && (
-                        <motion.div 
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="mt-4 p-5 bg-brand-bg rounded-2xl border border-brand-border-dark space-y-4"
-                        >
-                          <div className="flex items-center justify-between">
-                            <label className="text-[11px] font-bold text-stone-700 uppercase tracking-wider">
-                              Informações para Troco
-                            </label>
-                            <label className="flex items-center space-x-2.5 cursor-pointer group">
+                  {checkoutStep === 3 && (
+                    <motion.div
+                      key="step3"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      className="space-y-6"
+                    >
+                      {/* Step 3: Payment Method */}
+                      <div className="space-y-4">
+                        <div className="flex items-center space-x-2 pb-1 border-b border-stone-100">
+                          <CreditCard className="w-4 h-4 text-brand-primary-dark" />
+                          <span className="text-xs font-bold uppercase tracking-widest text-stone-900">Forma de Pagamento</span>
+                        </div>
+
+                        <div className="space-y-2">
+                          {[
+                            { id: 'pix', label: 'Pix', sub: 'Instantâneo', icon: <CheckCircle2 className="w-4 h-4" /> },
+                            { id: orderType === 'delivery' ? 'card_delivery' : 'card_pickup', label: 'Cartão', sub: 'Pagar na entrega', icon: <CreditCard className="w-4 h-4" /> },
+                            { id: 'cash', label: 'Dinheiro', sub: 'Com troco se precisar', icon: <span className="font-bold text-[10px]">R$</span> },
+                          ].map((p) => (
+                            <button
+                              key={p.id}
+                              onClick={() => setPaymentMethod(p.id as any)}
+                              className={`w-full p-4 rounded-2xl border flex items-center justify-between transition-all ${
+                                paymentMethod === p.id
+                                  ? 'bg-stone-900 border-stone-900 text-white shadow-md'
+                                  : 'bg-white border-brand-border text-stone-600 hover:border-stone-400'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className={`p-2 rounded-xl ${paymentMethod === p.id ? 'bg-white/10 text-white' : 'bg-stone-50 text-stone-400'}`}>
+                                  {p.icon}
+                                </div>
+                                <div className="text-left">
+                                  <span className="text-xs font-bold block">{p.label}</span>
+                                  <span className={`text-[10px] ${paymentMethod === p.id ? 'text-white/50' : 'text-stone-400'}`}>{p.sub}</span>
+                                </div>
+                              </div>
+                              {paymentMethod === p.id && <Check className="w-4 h-4 text-brand-primary" />}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Cash Info */}
+                        {paymentMethod === 'cash' && (
+                          <div className="p-4 bg-brand-bg rounded-2xl border border-brand-border-dark space-y-3">
+                            <label className="flex items-center space-x-2 cursor-pointer">
                               <input
                                 type="checkbox"
                                 checked={noChangeNeeded}
                                 onChange={(e) => setNoChangeNeeded(e.target.checked)}
-                                className="w-4 h-4 rounded border-stone-300 text-stone-900 focus:ring-stone-900 cursor-pointer"
+                                className="w-4 h-4 rounded text-stone-900"
                               />
-                              <span className="text-xs font-bold text-stone-600 group-hover:text-stone-900 transition-colors">Não preciso de troco</span>
+                              <span className="text-[11px] font-bold text-stone-700 uppercase tracking-tight">Não preciso de troco</span>
                             </label>
-                          </div>
-                          
-                          {!noChangeNeeded && (
-                            <div className="relative">
-                              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-500 font-bold text-sm">
-                                R$
+                            {!noChangeNeeded && (
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-stone-400 uppercase">Troco para quanto?</label>
+                                <input
+                                  type="number"
+                                  value={cashAmount}
+                                  onChange={(e) => setCashAmount(e.target.value)}
+                                  placeholder="R$ 100,00"
+                                  className="w-full px-4 py-3 bg-white border border-brand-border-dark rounded-xl text-sm font-bold focus:outline-none"
+                                />
                               </div>
-                              <input
-                                type="number"
-                                step="0.01"
-                                placeholder="Vou pagar com..."
-                                value={cashAmount}
-                                onChange={(e) => setCashAmount(e.target.value)}
-                                className="w-full pl-11 pr-4 py-3.5 bg-white border border-brand-border-dark rounded-xl text-sm text-stone-900 font-bold focus:ring-1 focus:ring-stone-900 focus:outline-none shadow-sm"
-                              />
-                              {parseFloat(cashAmount) > finalTotal && (
-                                <div className="flex items-center gap-2 mt-2 ml-1 text-emerald-600">
-                                  <CheckCircle2 className="w-3.5 h-3.5" />
-                                  <p className="text-[11px] font-bold uppercase tracking-tight">
-                                    Seu troco: {formatCurrency(parseFloat(cashAmount) - finalTotal)}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </motion.div>
-                      )}
-
-                      {paymentMethod === 'pix' && settings.pixKey && (
-                        <motion.div 
-                          initial={{ opacity: 0, scale: 0.98 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          className="mt-3 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-[11px] text-emerald-900 flex items-center justify-between"
-                        >
-                          <div className="flex flex-col">
-                            <span className="font-bold uppercase text-[9px] tracking-widest text-emerald-600 mb-0.5">Chave Pix</span>
-                            <strong className="text-xs font-mono">{settings.pixKey}</strong>
+                            )}
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] bg-emerald-200 px-2 py-1 rounded-lg font-bold text-emerald-800">PIX ATIVO</span>
-                          </div>
-                        </motion.div>
-                      )}
-                    </div>
+                        )}
+                      </div>
 
-                    {/* Customer Notes */}
-                    <div className="pt-4 space-y-1.5">
-                      <label className="text-[10px] font-bold text-stone-400 uppercase ml-1">Observações Adicionais</label>
-                      <textarea
-                        value={customerNotes}
-                        onChange={(e) => setCustomerNotes(e.target.value)}
-                        placeholder="Ex: Tocar campainha, deixar na portaria..."
-                        rows={2}
-                        className="w-full px-4 py-3 bg-brand-bg border border-brand-border-dark rounded-2xl text-sm text-stone-900 placeholder:text-stone-300 focus:outline-none focus:ring-1 focus:ring-brand-primary-dark transition-all resize-none"
-                      />
-                    </div>
-                  </div>
-                </>
+                      {/* Observations */}
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-stone-400 uppercase ml-1">Observações do Pedido</label>
+                        <textarea
+                          value={customerNotes}
+                          onChange={(e) => setCustomerNotes(e.target.value)}
+                          placeholder="Ex: Deixar na portaria, campainha com defeito..."
+                          rows={2}
+                          className="w-full px-4 py-3 bg-white border border-brand-border-dark rounded-xl text-xs text-stone-900 focus:outline-none"
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               )}
             </div>
 
-            {/* Footer Summary & Action */}
+            {/* Sticky Footer Summary */}
             {cart.length > 0 && (
-              <div className="p-5 sm:p-6 bg-white border-t border-brand-border space-y-4">
-                {/* Financial Summary */}
-                <div className="space-y-1.5 text-xs text-stone-600">
-                  <div className="flex justify-between">
-                    <span>Subtotal:</span>
+              <div className="p-6 bg-white border-t border-brand-border space-y-4">
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex justify-between text-stone-500">
+                    <span>Subtotal</span>
                     <span>{formatCurrency(subtotal)}</span>
                   </div>
-
                   {discountAmount > 0 && (
-                    <div className="flex justify-between text-emerald-700 font-semibold">
-                      <span>Desconto ({appliedCoupon?.code}):</span>
+                    <div className="flex justify-between text-emerald-600 font-bold">
+                      <span>Desconto</span>
                       <span>-{formatCurrency(discountAmount)}</span>
                     </div>
                   )}
-
-                  {isDelivery && (
-                    <div className="flex justify-between">
-                      <span>Taxa de Entrega:</span>
-                      <span>
-                        {deliveryFee === 0 ? (
-                          <span className="text-emerald-700 font-bold">Grátis</span>
-                        ) : (
-                          formatCurrency(deliveryFee)
-                        )}
-                      </span>
+                  {isDelivery && deliveryFee > 0 && (
+                    <div className="flex justify-between text-stone-500">
+                      <span>Taxa de Entrega</span>
+                      <span>{formatCurrency(deliveryFee)}</span>
                     </div>
                   )}
-
-                  <div className="flex justify-between text-base font-bold text-stone-900 pt-2 border-t border-stone-100">
-                    <span>Total do Pedido:</span>
+                  <div className="flex justify-between text-base font-bold text-stone-900 pt-1 border-t border-stone-50">
+                    <span>Total</span>
                     <span>{formatCurrency(finalTotal)}</span>
                   </div>
                 </div>
 
-                {/* Operating hours context banner */}
-                {(() => {
-                  const hoursStatus = checkStoreHoursStatus(settings);
-                  if (hoursStatus.isBreakNow) {
-                    return (
-                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs flex items-start space-x-2 text-amber-900">
-                        <Clock className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-                        <div>
-                          <span className="font-bold block">Loja em Intervalo de Almoço</span>
-                          <span className="text-[11px] opacity-90 block mt-0.5 leading-tight">
-                            {settings.acceptOrdersDuringBreak ?? true
-                              ? 'Você pode enviar o pedido agora! Nossa equipe atenderá na volta do intervalo.'
-                              : 'Atendimento temporariamente pausado. Retornamos em breve!'}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  }
-
-                  if (!hoursStatus.isOpenNow) {
-                    if (hoursStatus.acceptsOrdersNow) {
-                      return (
-                        <div className="p-3 bg-stone-50 border border-stone-200 rounded-xl text-xs flex items-start space-x-2 text-stone-800">
-                          <Clock className="w-4 h-4 text-brand-primary-dark mt-0.5 shrink-0" />
-                          <div>
-                            <span className="font-bold block">{hoursStatus.statusLabel}</span>
-                            <span className="text-[11px] text-stone-600 block mt-0.5 leading-tight">
-                              Seu pedido será enviado normalmente pelo WhatsApp e processado no início do próximo expediente!
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    } else {
-                      return (
-                        <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs flex items-start space-x-2 text-amber-900">
-                          <Clock className="w-4 h-4 text-amber-700 mt-0.5 shrink-0" />
-                          <div>
-                            <span className="font-bold block">Atendimento Pausado ({hoursStatus.statusLabel})</span>
-                            <span className="text-[11px] opacity-90 block mt-0.5 leading-tight">
-                              A loja não está recebendo pedidos fora do expediente ({settings.businessDaysLabel || 'Segunda a Sábado'}, {settings.openingTime || '08:00'} às {settings.closingTime || '18:00'}).
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    }
-                  }
-
-                  return null;
-                })()}
-
-                {/* Confirm & Send to WhatsApp Button */}
-                {(() => {
-                  const hoursStatus = checkStoreHoursStatus(settings);
-                  const isBlocked = !hoursStatus.acceptsOrdersNow;
-
-                  if (isBlocked) {
-                    return (
-                      <button
-                        type="button"
-                        disabled
-                        className="w-full flex items-center justify-center space-x-2.5 py-4 bg-stone-300 text-stone-600 rounded-2xl font-bold text-sm cursor-not-allowed shadow-none"
-                        id="btn-send-whatsapp-order-disabled"
-                      >
-                        <Clock className="w-5 h-5 text-stone-500" />
-                        <span>Pedidos Temporariamente Fechados</span>
-                      </button>
-                    );
-                  }
-
-                  return (
+                <div className="flex gap-2">
+                  {checkoutStep > 1 && (
                     <button
-                      type="button"
-                      onClick={handleCheckout}
-                      className="w-full flex items-center justify-center space-x-2.5 py-4 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-2xl font-bold text-sm shadow-lg shadow-emerald-600/20 transition-all cursor-pointer"
-                      id="btn-send-whatsapp-order"
+                      onClick={() => setCheckoutStep((prev) => (prev - 1) as any)}
+                      className="flex-1 py-4 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-2xl text-[11px] font-bold transition-all flex items-center justify-center gap-2"
                     >
-                      <MessageCircle className="w-5 h-5 fill-white" />
-                      <span>Enviar Pedido pelo WhatsApp</span>
+                      <ArrowLeft className="w-3.5 h-3.5" />
+                      <span>Voltar</span>
                     </button>
-                  );
-                })()}
+                  )}
+                  
+                  {checkoutStep < 3 ? (
+                    <button
+                      onClick={() => {
+                        // Minimal validation before moving to step 3
+                        if (checkoutStep === 2) {
+                          let hasError = false;
+                          if (!customerName.trim()) { setShakeName(true); hasError = true; }
+                          if (!customerPhone.trim()) { setShakePhone(true); hasError = true; }
+                          if (isDelivery && !street.trim()) { setShakeStreet(true); hasError = true; }
+                          if (isDelivery && !number.trim()) { setShakeNumber(true); hasError = true; }
+                          if (isDelivery && !neighborhood.trim()) { setShakeNeighborhood(true); hasError = true; }
+                          
+                          if (hasError) {
+                            setTimeout(() => {
+                              setShakeName(false); setShakePhone(false); setShakeStreet(false); setShakeNumber(false); setShakeNeighborhood(false);
+                            }, 500);
+                            return;
+                          }
+                        }
+                        setCheckoutStep((prev) => (prev + 1) as any);
+                      }}
+                      className="flex-[2] py-4 bg-stone-900 hover:bg-stone-800 text-white rounded-2xl text-[11px] font-bold shadow-lg transition-all flex items-center justify-center gap-2"
+                    >
+                      <span>Continuar</span>
+                      <ArrowLeft className="w-3.5 h-3.5 rotate-180" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleCheckout}
+                      className="flex-[2] py-4 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-2xl text-[11px] font-bold shadow-lg transition-all flex items-center justify-center gap-2"
+                    >
+                      <MessageCircle className="w-4 h-4 fill-white" />
+                      <span>Finalizar no WhatsApp</span>
+                    </button>
+                  )}
+                </div>
 
-                {/* Secondary Continue Shopping Button */}
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="w-full flex items-center justify-center space-x-2 py-3 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-2xl font-bold text-xs transition-all cursor-pointer"
-                  id="btn-continue-shopping-cart-footer"
-                >
-                  <ArrowLeft className="w-4 h-4 text-stone-600" />
-                  <span>Continuar Comprando (Explorar Catálogo)</span>
-                </button>
-
-                <p className="text-[10px] text-center text-stone-400">
-                  Ao clicar, você será direcionado para o WhatsApp oficial da {settings.storeName} com a mensagem pronta.
+                <p className="text-[9px] text-center text-stone-400 font-medium">
+                  Atendimento via WhatsApp: {settings.openingTime || '08:00'} - {settings.closingTime || '18:00'}
                 </p>
               </div>
             )}

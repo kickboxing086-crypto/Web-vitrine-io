@@ -73,22 +73,16 @@ export const generateWhatsappOrderMessage = (
   }\n`;
 
   if (order.paymentMethod === 'cash') {
-    if (order.noChangeNeeded) {
-      msg += `*Troco:* Não precisa de troco (Valor exato)\n`;
-    } else if (order.cashAmount && order.cashAmount > order.finalTotal) {
-      const change = order.cashAmount - order.finalTotal;
-      msg += `*Pagar com:* ${formatCurrency(order.cashAmount)}\n`;
-      msg += `*Troco necessário:* ${formatCurrency(change)}\n`;
-    }
+    msg += `*TROCO:* ${order.noChangeNeeded ? 'Nao precisa de troco (Valor exato)' : `PRECISA DE TROCO PARA ${formatCurrency(order.cashAmount || 0)} (Valor do Troco: ${formatCurrency((order.cashAmount || 0) - order.finalTotal)})`}\n`;
   }
 
   msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
-  msg += `*ITENS DO PEDIDO:*\n\n`;
+  msg += `ITENS DO PEDIDO:\n\n`;
 
   order.items.forEach((item, index) => {
     msg += `${index + 1}. *${item.productName}*\n`;
-    msg += `   • Tam: *${item.selectedSize}* | Cor: *${item.selectedColorName}*\n`;
-    msg += `   • Qtd: ${item.quantity}x de ${formatCurrency(item.unitPrice)} = *${formatCurrency(item.totalPrice)}*\n\n`;
+    msg += `   - Tam: *${item.selectedSize}* | Cor: *${item.selectedColorName}*\n`;
+    msg += `   - Qtd: ${item.quantity}x de ${formatCurrency(item.unitPrice)} = *${formatCurrency(item.totalPrice)}*\n\n`;
   });
 
   msg += `━━━━━━━━━━━━━━━━━━━━━\n`;

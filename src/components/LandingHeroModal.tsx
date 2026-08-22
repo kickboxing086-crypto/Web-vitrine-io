@@ -63,8 +63,8 @@ export const LandingHeroModal: React.FC<LandingHeroModalProps> = ({
             <div className="lg:col-span-5 relative bg-stone-900 overflow-hidden flex flex-col justify-between p-6 sm:p-8 min-h-[280px] lg:min-h-full">
               {/* Background Luxury Vitrine Image with dark luxury gradient overlay */}
               <img
-                src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1200&auto=format&fit=crop&q=80"
-                alt="Web Vitrine de Roupas de Luxo"
+                src=""
+                alt="Web Vitrine"
                 className="absolute inset-0 w-full h-full object-cover object-center opacity-45 scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#121110] via-[#121110]/60 to-transparent" />

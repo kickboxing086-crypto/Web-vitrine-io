@@ -18,7 +18,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
 }) => {
   const bannerImage =
     settings.bannerUrl ||
-    'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1600&auto=format&fit=crop&q=80';
+    '';
 
   const whatsappLink = `https://wa.me/${cleanPhoneForWhatsapp(settings.phoneWhatsapp)}`;
   const instagramUrl = settings.instagramHandle

@@ -185,13 +185,23 @@ export default function App() {
   const [isStoreSetupOpen, setIsStoreSetupOpen] = useState(false);
   const [isFirstOnboarding, setIsFirstOnboarding] = useState(false);
 
-  // Share Product Modal State
-  const [sharingProduct, setSharingProduct] = useState<Product | null>(null);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  // Smart Checkout Validation Animations
+  const [shakeName, setShakeName] = useState(false);
+  const [shakeWhatsapp, setShakeWhatsapp] = useState(false);
 
-  const handleShareProduct = (product: Product) => {
-    setSharingProduct(product);
-    setIsShareModalOpen(true);
+  const validateStep2 = (name: string, whatsapp: string) => {
+    let isValid = true;
+    if (!name.trim()) {
+      setShakeName(true);
+      setTimeout(() => setShakeName(false), 500);
+      isValid = false;
+    }
+    if (!whatsapp.trim() || whatsapp.length < 8) {
+      setShakeWhatsapp(true);
+      setTimeout(() => setShakeWhatsapp(false), 500);
+      isValid = false;
+    }
+    return isValid;
   };
 
   // 2-Step Delete Modal State
@@ -1219,66 +1229,7 @@ export default function App() {
         onClose={() => setDeleteModalState((prev) => ({ ...prev, isOpen: false }))}
       />
 
-      {/* Floating Sticky Bottom Action Bar (Fixed on Screen when Items Selected) */}
-      <AnimatePresence>
-        {cart.length > 0 && activeView === 'store' && !isCartOpen && !selectedProduct && (
-          <motion.div
-            initial={{ y: 80, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 80, opacity: 0 }}
-            className="fixed bottom-4 inset-x-3 sm:inset-x-auto sm:right-6 z-40 max-w-lg mx-auto sm:mx-0 bg-stone-900/95 backdrop-blur-md text-white p-3 sm:p-3.5 rounded-2xl shadow-2xl border border-stone-700/80 flex items-center justify-between gap-2.5"
-            id="floating-fixed-cart-bar"
-          >
-            <div className="flex items-center space-x-3 min-w-0">
-              <div className="relative p-2 bg-brand-primary/20 text-brand-primary rounded-xl border border-brand-primary/30 shrink-0">
-                <ShoppingBag className="w-5 h-5 text-brand-primary" />
-                <span className="absolute -top-1 -right-1 bg-[#9C3A3A] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                  {cart.reduce((acc, item) => acc + item.quantity, 0)}
-                </span>
-              </div>
-              <div className="min-w-0">
-                <span className="text-xs font-bold text-white block truncate">
-                  {cart.reduce((acc, item) => acc + item.quantity, 0)} {cart.reduce((acc, item) => acc + item.quantity, 0) === 1 ? 'peça na sacola' : 'peças na sacola'}
-                </span>
-                <span className="text-[11px] text-stone-300 font-mono">
-                  {formatCurrency(
-                    cart.reduce((acc, item) => {
-                      const p = item.product.isOnSale && item.product.promotionalPrice
-                        ? item.product.promotionalPrice
-                        : item.product.price;
-                      return acc + p * item.quantity;
-                    }, 0)
-                  )}
-                </span>
-              </div>
-            </div>
 
-            <div className="flex items-center space-x-1.5 shrink-0">
-              <button
-                type="button"
-                onClick={() => {
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                className="px-2.5 py-2 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-xl font-medium text-xs transition-colors hidden sm:flex items-center space-x-1 cursor-pointer"
-                id="btn-floating-keep-browsing"
-                title="Continuar Comprando"
-              >
-                <span>+ Ver Catálogo</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setIsCartOpen(true)}
-                className="px-3.5 py-2 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl font-bold text-xs shadow-md transition-all flex items-center space-x-1.5 cursor-pointer"
-                id="btn-floating-open-cart"
-              >
-                <ShoppingBag className="w-3.5 h-3.5 text-white" />
-                <span>Ver Sacola & Finalizar</span>
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Centered Post-Payment Success Notification Modal */}
       <PaymentSuccessModal
