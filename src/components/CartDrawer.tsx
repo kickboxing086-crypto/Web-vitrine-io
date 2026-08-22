@@ -93,6 +93,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const [shakeName, setShakeName] = useState(false);
   const [shakePhone, setShakePhone] = useState(false);
   const [shakeStreet, setShakeStreet] = useState(false);
+  const [shakeCash, setShakeCash] = useState(false);
+  const [cashError, setCashError] = useState('');
   const [shakeNumber, setShakeNumber] = useState(false);
   const [shakeNeighborhood, setShakeNeighborhood] = useState(false);
 
@@ -212,6 +214,18 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       const firstError = !customerName.trim() ? 'input-name' : 'input-phone';
       document.getElementById(firstError)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
+    }
+
+    if (paymentMethod === 'cash' && !noChangeNeeded) {
+      const parsedAmount = parseFloat(cashAmount.replace(',', '.'));
+      if (isNaN(parsedAmount) || parsedAmount < finalTotal) {
+        setShakeCash(true);
+        setCashError('O valor precisa ser maior ou igual ao total (R$ ' + finalTotal.toFixed(2).replace('.', ',') + ')');
+        setTimeout(() => setShakeCash(false), 500);
+        document.getElementById('cash-input-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      setCashError('');
     }
 
     if (isDelivery && (!street.trim() || !number.trim() || !neighborhood.trim())) {
@@ -785,15 +799,62 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                               <span className="text-[11px] font-bold text-stone-700 uppercase tracking-tight">Não preciso de troco</span>
                             </label>
                             {!noChangeNeeded && (
-                              <div className="space-y-1.5">
-                                <label className="text-[10px] font-bold text-stone-400 uppercase">Troco para quanto?</label>
-                                <input
-                                  type="number"
-                                  value={cashAmount}
-                                  onChange={(e) => setCashAmount(e.target.value)}
-                                  placeholder="R$ 100,00"
-                                  className="w-full px-4 py-3 bg-white border border-brand-border-dark rounded-xl text-sm font-bold focus:outline-none"
-                                />
+                              <div className="space-y-3" id="cash-input-section">
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-bold text-stone-400 uppercase">Troco para quanto?</label>
+                                  <motion.input
+                                    animate={shakeCash ? { x: [-5, 5, -5, 5, 0] } : {}}
+                                    type="number"
+                                    value={cashAmount}
+                                    onChange={(e) => {
+                                      setCashAmount(e.target.value);
+                                      setCashError('');
+                                    }}
+                                    placeholder="R$ 100,00"
+                                    className={`w-full px-4 py-3 bg-white border rounded-xl text-sm font-bold focus:outline-none transition-colors ${
+                                      shakeCash ? 'border-red-500 ring-1 ring-red-500' : 'border-brand-border-dark'
+                                    }`}
+                                  />
+                                  {cashError && <p className="text-xs text-red-500 font-medium">{cashError}</p>}
+                                </div>
+                                
+                                <div className="space-y-2">
+                                  <label className="text-[10px] font-bold text-stone-400 uppercase">Selecionar Cédulas / Moedas</label>
+                                  <div className="grid grid-cols-4 gap-2">
+                                    {[
+                                      { value: 2, bg: 'bg-[#0d285c]', text: 'text-white' },
+                                      { value: 5, bg: 'bg-[#5a3c75]', text: 'text-white' },
+                                      { value: 10, bg: 'bg-[#a73c41]', text: 'text-white' },
+                                      { value: 20, bg: 'bg-[#cfa331]', text: 'text-white' },
+                                      { value: 50, bg: 'bg-[#a8794c]', text: 'text-white' },
+                                      { value: 100, bg: 'bg-[#488998]', text: 'text-white' },
+                                      { value: 200, bg: 'bg-[#847a6b]', text: 'text-white' },
+                                    ].map(bill => (
+                                      <button
+                                        key={bill.value}
+                                        type="button"
+                                        onClick={() => {
+                                          const current = parseFloat(cashAmount.replace(',', '.')) || 0;
+                                          setCashAmount((current + bill.value).toString());
+                                          setCashError('');
+                                        }}
+                                        className={`py-2 rounded-lg font-bold text-xs shadow-sm active:scale-95 transition-transform ${bill.bg} ${bill.text}`}
+                                      >
+                                        R$ {bill.value}
+                                      </button>
+                                    ))}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setCashAmount('');
+                                        setCashError('');
+                                      }}
+                                      className="py-2 rounded-lg font-bold text-xs shadow-sm bg-stone-200 text-stone-700 active:scale-95 transition-transform"
+                                    >
+                                      Limpar
+                                    </button>
+                                  </div>
+                                </div>
                               </div>
                             )}
                           </div>
