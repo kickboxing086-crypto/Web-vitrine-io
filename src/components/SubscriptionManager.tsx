@@ -112,6 +112,14 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settin
     }
   })();
 
+  const isPlanDisabled = (planId: string) => {
+    if (daysRemaining <= 5) return false;
+    if (planId === 'monthly') return true;
+    if (planId === 'quarterly' && daysRemaining > 35) return true;
+    if (planId === 'semiannual' && daysRemaining > 95) return true;
+    return false;
+  };
+
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (step === 'payment' && timeLeft > 0) {
@@ -284,27 +292,34 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settin
             {/* Commercial Plan Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {COMMERCIAL_PLANS.map((plan, index) => {
-                const isSelected = selectedPlan?.id === plan.id;
+                const disabled = isPlanDisabled(plan.id);
+                const isSelected = selectedPlan?.id === plan.id && !disabled;
                 return (
                   <motion.div
                     key={plan.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.08, duration: 0.3 }}
-                    whileHover={{ y: -6, transition: { duration: 0.18 } }}
-                    onClick={() => setSelectedPlan(plan)}
-                    className={`relative flex flex-col p-5 sm:p-6 bg-white rounded-3xl border-2 cursor-pointer transition-shadow shadow-xs hover:shadow-xl ${
-                      isSelected
-                        ? 'border-stone-900 ring-2 ring-stone-900/10 shadow-lg bg-gradient-to-b from-stone-50/80 to-white'
-                        : plan.popular
-                        ? 'border-amber-600 hover:border-amber-700'
-                        : 'border-brand-border hover:border-stone-400'
+                    whileHover={!disabled ? { y: -6, transition: { duration: 0.18 } } : {}}
+                    onClick={() => {
+                      if (!disabled) setSelectedPlan(plan);
+                    }}
+                    className={`relative flex flex-col p-5 sm:p-6 bg-white rounded-3xl border-2 transition-shadow shadow-xs ${
+                      disabled
+                        ? 'opacity-60 grayscale-[0.3] cursor-not-allowed border-stone-200'
+                        : `cursor-pointer hover:shadow-xl ${
+                            isSelected
+                              ? 'border-stone-900 ring-2 ring-stone-900/10 shadow-lg bg-gradient-to-b from-stone-50/80 to-white'
+                              : plan.popular
+                              ? 'border-amber-600 hover:border-amber-700'
+                              : 'border-brand-border hover:border-stone-400'
+                          }`
                     }`}
                   >
                     {/* Badge */}
                     {plan.badge && (
                       <div className="absolute -top-3.5 inset-x-0 flex justify-center">
-                        <span className="bg-stone-900 text-amber-300 text-[10px] font-extrabold uppercase tracking-wider px-3.5 py-1 rounded-full shadow-md border border-stone-700">
+                        <span className={`bg-stone-900 text-amber-300 text-[10px] font-extrabold uppercase tracking-wider px-3.5 py-1 rounded-full shadow-md border border-stone-700 ${disabled ? 'opacity-50' : ''}`}>
                           {plan.badge}
                         </span>
                       </div>
@@ -339,7 +354,7 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settin
                     )}
 
                     {plan.saveAmount ? (
-                      <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold px-2.5 py-1 rounded-xl mb-4 text-center">
+                      <div className={`bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold px-2.5 py-1 rounded-xl mb-4 text-center ${disabled ? 'grayscale opacity-80' : ''}`}>
                         {plan.saveAmount}
                       </div>
                     ) : (
@@ -354,7 +369,7 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settin
                     <ul className="space-y-2 mb-6 pt-3 border-t border-stone-100 text-[11px] text-stone-700">
                       {plan.features.map((feat, i) => (
                         <li key={i} className="flex items-start gap-1.5">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                          <CheckCircle2 className={`w-3.5 h-3.5 flex-shrink-0 mt-0.5 ${disabled ? 'text-stone-400' : 'text-emerald-600'}`} />
                           <span>{feat}</span>
                         </li>
                       ))}
@@ -364,18 +379,27 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settin
                     <div className="mt-auto pt-2">
                       <button
                         type="button"
+                        disabled={disabled}
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleSelectPlan(plan);
+                          if (!disabled) handleSelectPlan(plan);
                         }}
-                        className={`w-full py-3 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs ${
-                          isSelected
-                            ? 'bg-stone-900 hover:bg-stone-800 text-white'
-                            : 'bg-stone-100 hover:bg-stone-200 text-stone-900'
+                        className={`w-full py-3 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs ${
+                          disabled
+                            ? 'bg-stone-200 text-stone-500 cursor-not-allowed'
+                            : isSelected
+                            ? 'bg-stone-900 hover:bg-stone-800 text-white cursor-pointer'
+                            : 'bg-stone-100 hover:bg-stone-200 text-stone-900 cursor-pointer'
                         }`}
                       >
-                        <span>Contratar {plan.period}</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
+                        {disabled ? (
+                          <span className="text-center w-full block">Restam {Math.max(1, daysRemaining - 5)} dias para liberar</span>
+                        ) : (
+                          <>
+                            <span>Contratar {plan.period}</span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </>
+                        )}
                       </button>
                     </div>
                   </motion.div>

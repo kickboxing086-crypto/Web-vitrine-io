@@ -63,6 +63,8 @@ import {
   CreditCard,
   ShieldCheck,
   AlertCircle,
+  Lock,
+  RefreshCw,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -135,7 +137,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   >('dashboard');
 
   const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
+  const [refreshSuccessMsg, setRefreshSuccessMsg] = useState(false);
   const settingsMenuRef = useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (localStorage.getItem('admin_just_refreshed')) {
+      localStorage.removeItem('admin_just_refreshed');
+      setRefreshSuccessMsg(true);
+      setTimeout(() => {
+        setRefreshSuccessMsg(false);
+      }, 5000);
+    }
+  }, []);
 
   // Close settings menu when clicking outside
   React.useEffect(() => {
@@ -468,7 +481,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
+      <AnimatePresence>
+        {refreshSuccessMsg && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-emerald-50 text-emerald-800 px-6 py-4 rounded-2xl shadow-xl border border-emerald-200 flex items-center gap-3 font-semibold text-sm max-w-[90vw] w-max"
+          >
+            <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+              <Check className="w-5 h-5 text-emerald-600" />
+            </div>
+            <span>Vitrine, dados e assinatura atualizados com sucesso!</span>
+            <button 
+              onClick={() => setRefreshSuccessMsg(false)} 
+              className="ml-2 p-1 hover:bg-emerald-200 rounded-full transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4 text-emerald-600" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Admin Top Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-stone-200">
         <div className="flex items-center space-x-3">
@@ -566,7 +601,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </div>
                   
                   {onLogout && (
-                    <div className="p-2 border-t border-stone-300 bg-stone-50">
+                    <div className="p-2 border-t border-stone-300 bg-stone-50 space-y-1">
                       <button
                         type="button"
                         onClick={() => {
@@ -575,7 +610,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         }}
                         className="w-full flex items-center space-x-3 px-3 py-2.5 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-bold transition-colors cursor-pointer"
                       >
+                        <Lock className="w-4 h-4" />
                         <span>Sair / Bloquear Painel</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsSettingsMenuOpen(false);
+                          localStorage.setItem('admin_just_refreshed', 'true');
+                          window.location.reload();
+                        }}
+                        className="w-full flex items-center space-x-3 px-3 py-2.5 hover:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-bold transition-colors cursor-pointer mt-1"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                        <span>Atualizar (Sincronizar Plano)</span>
                       </button>
                     </div>
                   )}
