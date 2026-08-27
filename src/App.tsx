@@ -57,6 +57,7 @@ import { DeleteConfirmModal } from './components/DeleteConfirmModal';
 import { LoginModal } from './components/LoginModal';
 import { AdminPanel } from './components/AdminPanel';
 import { SuperAdminPanel } from './components/SuperAdminPanel';
+import { VulnerabilityPanel } from './components/VulnerabilityPanel';
 import { Footer } from './components/Footer';
 import { LandingPage } from './components/LandingPage';
 import { LandingHeroModal } from './components/LandingHeroModal';
@@ -97,7 +98,7 @@ export default function App() {
   });
 
   // View state: 'store' (Vitrine do Cliente) | 'landing' (Página Oficial) | 'admin' (Painel do Dono) | 'super_admin' (Painel SaaS)
-  const [activeView, setActiveView] = useState<'store' | 'admin' | 'super_admin' | 'landing'>(() => {
+  const [activeView, setActiveView] = useState<'store' | 'admin' | 'super_admin' | 'landing' | 'vulnerability_admin'>(() => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('page') === 'admin' || urlParams.get('admin') === '1') {
       return 'store'; // Will trigger login modal in useEffect
@@ -141,7 +142,7 @@ export default function App() {
     }
   };
 
-  const handleLoginSuccess = (type?: 'super_admin' | 'store_admin', client?: any) => {
+  const handleLoginSuccess = (type?: 'super_admin' | 'store_admin' | 'vulnerability_admin', client?: any) => {
     setIsAdminAuthenticated(true);
     saveAuthSession(true);
     if (client) {
@@ -155,6 +156,8 @@ export default function App() {
     }
     if (type === 'super_admin') {
       setActiveView('super_admin');
+    } else if (type === 'vulnerability_admin') {
+      setActiveView('vulnerability_admin');
     } else {
       setActiveView('admin');
     }
@@ -763,6 +766,10 @@ export default function App() {
 
 
   const activeStoreType = currentClient?.storeType || settings.storeType || 'clothing';
+
+  if (activeView === 'vulnerability_admin') {
+    return <VulnerabilityPanel onLogout={handleLogout} />;
+  }
 
   if (activeView === 'super_admin') {
     return (

@@ -20,7 +20,7 @@ import { authenticateClient } from '../lib/firestoreService';
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onLoginSuccess: (type?: 'super_admin' | 'store_admin', client?: any) => void;
+  onLoginSuccess: (type?: 'super_admin' | 'store_admin' | 'vulnerability_admin', client?: any) => void;
   adminUser: AdminUser;
   settings: StoreSettings;
 }
@@ -40,11 +40,57 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [isSuccess, setIsSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Lockout logic
+  const MAX_ATTEMPTS = 5;
+  const ATTEMPTS_KEY = 'store_login_attempts';
+  const LOCK_UNTIL_KEY = 'store_login_lock_until';
+  const [isLocked, setIsLocked] = useState(false);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      const lockUntil = localStorage.getItem(LOCK_UNTIL_KEY);
+      if (lockUntil && parseInt(lockUntil, 10) > Date.now()) {
+        setIsLocked(true);
+      } else if (lockUntil) {
+        localStorage.removeItem(LOCK_UNTIL_KEY);
+        localStorage.removeItem(ATTEMPTS_KEY);
+        setIsLocked(false);
+      }
+    }
+  }, [isOpen]);
+
+  const handleFailedAttempt = () => {
+    const currentAttempts = parseInt(localStorage.getItem(ATTEMPTS_KEY) || '0', 10) + 1;
+    localStorage.setItem(ATTEMPTS_KEY, currentAttempts.toString());
+    
+    if (currentAttempts >= MAX_ATTEMPTS) {
+      // Bloqueio de 30 minutos (ou permanente até suporte)
+      const lockTime = Date.now() + 30 * 60 * 1000; 
+      localStorage.setItem(LOCK_UNTIL_KEY, lockTime.toString());
+      setIsLocked(true);
+      setErrorMessage('Conta bloqueada por excesso de tentativas. Contate o suporte no WhatsApp (84) 98611-3980 para recuperação dos dados.');
+    } else {
+      setErrorMessage(`Credenciais inválidas. Tentativa ${currentAttempts} de ${MAX_ATTEMPTS}.`);
+    }
+    setIsLoading(false);
+  };
+
+  const clearFailedAttempts = () => {
+    localStorage.removeItem(ATTEMPTS_KEY);
+    localStorage.removeItem(LOCK_UNTIL_KEY);
+    setIsLocked(false);
+  };
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
+
+    if (isLocked) {
+      setErrorMessage('Conta bloqueada por excesso de tentativas. Contate o suporte no WhatsApp (84) 98611-3980 para recuperação dos dados.');
+      return;
+    }
 
     const cleanUser = username.trim().toLowerCase();
     const cleanPass = password.trim();
@@ -57,7 +103,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       setErrorMessage('Por favor, digite a sua senha de até 8 dígitos.');
       return;
     }
-
     if (cleanPass.length > 8) {
       setErrorMessage('A senha deve ter no máximo 8 dígitos.');
       return;
@@ -74,10 +119,28 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       (cleanUser === 'gestor' && cleanPass === '00112233');
 
     if (isMasterAdmin) {
+      clearFailedAttempts();
       setIsSuccess(true);
+      clearFailedAttempts();
       setIsLoading(false);
       setTimeout(() => {
         onLoginSuccess('super_admin');
+        setIsSuccess(false);
+        setUsername('');
+        setPassword('');
+        onClose();
+      }, 600);
+      return;
+    }
+
+    // Gerenciamento Account Bypass (Vulnerability & Conflict Management)
+    if (cleanUser === 'gerenciamento_01' && cleanPass === '12345678') {
+      clearFailedAttempts();
+      setIsSuccess(true);
+      clearFailedAttempts();
+      setIsLoading(false);
+      setTimeout(() => {
+        onLoginSuccess('vulnerability_admin');
         setIsSuccess(false);
         setUsername('');
         setPassword('');
@@ -90,7 +153,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     const client = await authenticateClient(cleanUser, cleanPass);
     
     if (client) {
+      clearFailedAttempts();
       setIsSuccess(true);
+      clearFailedAttempts();
       setIsLoading(false);
       setTimeout(() => {
         onLoginSuccess('store_admin', {
@@ -117,6 +182,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
     if (isFallbackAdmin) {
       setIsSuccess(true);
+      clearFailedAttempts();
       setIsLoading(false);
       setTimeout(() => {
         onLoginSuccess('store_admin', {
@@ -138,6 +204,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     // Fallback Test Client bypass only if explicit test credentials are provided
     if (cleanUser === 'teste@123' && cleanPass === '01020304') {
       setIsSuccess(true);
+      clearFailedAttempts();
       setIsLoading(false);
       setTimeout(() => {
         onLoginSuccess('store_admin', {
@@ -156,8 +223,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       return;
     }
 
-    setIsLoading(false);
-    setErrorMessage('Usuário ou senha incorretos. Verifique os dados digitados.');
+    handleFailedAttempt();
   };
 
   const handleFillCredentials = () => {
