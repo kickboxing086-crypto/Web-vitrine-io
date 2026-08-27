@@ -1022,7 +1022,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       {[
                         {
                           price: 29.99,
@@ -1063,7 +1063,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                             }}
                             className={`relative p-3 rounded-2xl border text-left flex flex-col justify-between transition-all cursor-pointer overflow-hidden select-none min-h-[96px] ${
                               isSelected
-                                ? 'bg-stone-50 border-stone-900 shadow-lg shadow-stone-200 ring-1 ring-stone-400'
+                                ? 'bg-stone-900 border-stone-900 shadow-xl'
                                 : 'bg-white hover:bg-stone-100 border-stone-200/80 hover:border-stone-300'
                             }`}
                             id={`btn-plan-select-${plan.price}`}
@@ -1072,26 +1072,26 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                             {isSelected && (
                               <motion.div
                                 layoutId="activeAdminPlanGlow"
-                                className="absolute inset-0 bg-stone-100 pointer-events-none rounded-2xl"
+                                className="absolute inset-0 bg-stone-900 pointer-events-none rounded-2xl"
                                 transition={{ type: 'spring', stiffness: 350, damping: 25 }}
                               />
                             )}
 
                             {/* Top Badge */}
                             {plan.badge && (
-                              <span className="self-start px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider bg-stone-900 text-white mb-1 shadow-2xs">
+                              <span className={`self-start px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider mb-1 shadow-2xs ${isSelected ? 'bg-white text-stone-900' : 'bg-stone-900 text-white'}`}>
                                 {plan.badge}
                               </span>
                             )}
 
                             <div className="flex items-center justify-between w-full mb-1">
-                              <span className={`text-xs font-bold ${isSelected ? 'text-stone-900' : 'text-stone-900'}`}>
+                              <span className={`text-xs font-bold ${isSelected ? 'text-white' : 'text-stone-900'}`}>
                                 {plan.title}
                               </span>
                               <div
                                 className={`w-4 h-4 rounded-full flex items-center justify-center border transition-all ${
                                   isSelected
-                                    ? 'bg-stone-900 text-white border-stone-900 text-white scale-110'
+                                    ? 'bg-white text-stone-900 border-white scale-110'
                                     : 'border-stone-300 bg-transparent'
                                 }`}
                               >
@@ -1108,12 +1108,12 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                             </div>
 
                             <div className="my-0.5">
-                              <span className={`text-sm sm:text-base font-black tracking-tight ${isSelected ? 'text-stone-900' : 'text-stone-900'}`}>
+                              <span className={`text-sm sm:text-base font-black tracking-tight ${isSelected ? 'text-white' : 'text-stone-900'}`}>
                                 R$ {plan.price.toFixed(2).replace('.', ',')}
                               </span>
                             </div>
 
-                            <span className="text-[10px] text-stone-500 font-medium">
+                            <span className={`text-[10px] font-medium ${isSelected ? 'text-stone-300' : 'text-stone-500'}`}>
                               {plan.period}
                             </span>
                           </motion.button>
