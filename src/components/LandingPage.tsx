@@ -19,6 +19,8 @@ interface LandingPageProps {
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
+  settings,
+  onEnterStore,
   onAdminLogin,
 }) => {
   const officialPhone = '5584986113980';
