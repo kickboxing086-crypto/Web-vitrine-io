@@ -63,7 +63,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
     password: string;
     planPrice: number | string;
     dueDate: string;
-    storeType: 'clothing' | 'natural';
+    
     phoneWhatsapp: string;
     notes: string;
     status: 'active' | 'inactive';
@@ -73,7 +73,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
     password: '',
     planPrice: 29.99,
     dueDate: getDefaultDueDate(30),
-    storeType: 'clothing',
+    
     phoneWhatsapp: '',
     notes: '',
     status: 'active',
@@ -103,7 +103,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
 
   // Calculate days remaining or days overdue
   const getDueStatus = (dueDateStr?: string) => {
-    if (!dueDateStr) return { days: 999, status: 'ok', label: 'Sem vencimento', color: 'text-slate-400 bg-slate-800/60 border-slate-700' };
+    if (!dueDateStr) return { days: 999, status: 'ok', label: 'Sem vencimento', color: 'text-stone-500 bg-white border-stone-200' };
     
     try {
       const today = new Date();
@@ -111,7 +111,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
       
       const due = new Date(dueDateStr + 'T00:00:00');
       if (isNaN(due.getTime())) {
-        return { days: 999, status: 'ok', label: 'Sem vencimento', color: 'text-slate-400 bg-slate-800/60 border-slate-700' };
+        return { days: 999, status: 'ok', label: 'Sem vencimento', color: 'text-stone-500 bg-white border-stone-200' };
       }
 
       const diffTime = due.getTime() - today.getTime();
@@ -130,7 +130,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
           days: diffDays,
           status: 'expiring_soon',
           label: diffDays === 0 ? 'Vence Hoje!' : `Vence em ${diffDays} ${diffDays === 1 ? 'dia' : 'dias'}`,
-          color: 'text-amber-400 bg-amber-500/10 border-amber-500/30',
+          color: 'text-stone-900 bg-stone-100 border-stone-300',
           badge: 'Vence em Breve',
         };
       } else {
@@ -138,12 +138,12 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
           days: diffDays,
           status: 'ok',
           label: `Em dia (${diffDays} dias)`,
-          color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
+          color: 'text-emerald-600 bg-emerald-500/10 border-emerald-200',
           badge: 'Ativa & Em Dia',
         };
       }
     } catch {
-      return { days: 999, status: 'ok', label: 'Sem vencimento', color: 'text-slate-400 bg-slate-800/60 border-slate-700' };
+      return { days: 999, status: 'ok', label: 'Sem vencimento', color: 'text-stone-500 bg-white border-stone-200' };
     }
   };
 
@@ -226,7 +226,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
       password: generateRandomPassword(),
       planPrice: 29.99,
       dueDate: getDefaultDueDate(30),
-      storeType: 'clothing',
+      
       phoneWhatsapp: '',
       notes: '',
       status: 'active',
@@ -243,7 +243,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
       password: client.password || '',
       planPrice: client.planPrice !== undefined ? client.planPrice : 29.99,
       dueDate: client.dueDate || getDefaultDueDate(30),
-      storeType: client.storeType || 'clothing',
+      
       phoneWhatsapp: client.phoneWhatsapp || '',
       notes: client.notes || '',
       status: client.status || 'active',
@@ -266,7 +266,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
       password: formData.password.trim(),
       planPrice: isNaN(priceNum) ? 29.99 : priceNum,
       dueDate: formData.dueDate || getDefaultDueDate(30),
-      storeType: formData.storeType,
+      
       phoneWhatsapp: formData.phoneWhatsapp.trim(),
       notes: formData.notes.trim(),
       status: formData.status,
@@ -406,7 +406,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0D14] text-slate-100 font-sans selection:bg-amber-500/30 selection:text-amber-200">
+    <div className="min-h-screen bg-stone-50 text-stone-900 font-sans selection:bg-stone-900 selection:text-white">
       {/* Toast Notification */}
       <AnimatePresence>
         {feedbackToast && (
@@ -414,32 +414,32 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
             initial={{ opacity: 0, y: -20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            className="fixed top-6 right-6 z-50 flex items-center space-x-3 px-5 py-3 rounded-2xl bg-[#141B2D] border border-amber-500/40 shadow-2xl shadow-stone-950/80 backdrop-blur-md"
+            className="fixed top-6 right-6 z-50 flex items-center space-x-3 px-5 py-3 rounded-2xl bg-[#141B2D] border border-stone-200 shadow-2xl shadow-stone-950/80 backdrop-blur-md"
           >
-            {feedbackToast.type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-400" />}
-            {feedbackToast.type === 'info' && <CheckCircle2 className="w-5 h-5 text-amber-400" />}
+            {feedbackToast.type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-600" />}
+            {feedbackToast.type === 'info' && <CheckCircle2 className="w-5 h-5 text-stone-900" />}
             {feedbackToast.type === 'error' && <AlertTriangle className="w-5 h-5 text-rose-400" />}
-            <span className="text-xs sm:text-sm font-semibold text-slate-100">{feedbackToast.message}</span>
+            <span className="text-xs sm:text-sm font-semibold text-stone-900">{feedbackToast.message}</span>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Subtle Luxury Ambient Glow */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[-10%] left-[20%] w-[500px] h-[500px] rounded-full bg-amber-500/5 blur-[120px]" />
+        <div className="absolute top-[-10%] left-[20%] w-[500px] h-[500px] rounded-full bg-stone-200 blur-[120px]" />
         <div className="absolute top-[30%] right-[10%] w-[600px] h-[600px] rounded-full bg-indigo-500/5 blur-[140px]" />
       </div>
 
       {/* Top Navbar */}
-      <header className="relative z-20 bg-[#0F1420]/90 backdrop-blur-md border-b border-amber-500/20 sticky top-0 shadow-2xl">
+      <header className="relative z-20 bg-stone-50/90 backdrop-blur-md border-b border-stone-200 sticky top-0 shadow-2xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             {/* Brand Logo & Identification */}
             <div className="flex items-center space-x-4">
               <div className="relative">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-600 to-amber-900 p-0.5 shadow-lg shadow-amber-950/40">
-                  <div className="w-full h-full bg-[#0F1420] rounded-[14px] flex items-center justify-center">
-                    <Crown className="w-6 h-6 text-amber-400" />
+                <div className="w-12 h-12 rounded-2xl bg-stone-900 text-white p-0.5 shadow-lg shadow-stone-200">
+                  <div className="w-full h-full bg-stone-50 rounded-[14px] flex items-center justify-center">
+                    <Crown className="w-6 h-6 text-stone-900" />
                   </div>
                 </div>
                 <span className="absolute -bottom-1 -right-1 flex h-3.5 w-3.5">
@@ -450,14 +450,14 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
 
               <div>
                 <div className="flex items-center space-x-2">
-                  <h1 className="font-bold text-lg text-white tracking-wide flex items-center gap-1.5">
+                  <h1 className="font-bold text-lg text-stone-900 tracking-wide flex items-center gap-1.5">
                     Webgestor Vitrine
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-stone-100 text-stone-900 border border-stone-300">
                       Master SaaS
                     </span>
                   </h1>
                 </div>
-                <p className="text-xs text-slate-400 font-medium">
+                <p className="text-xs text-stone-500 font-medium">
                   Gestão Financeira, Controle de Acessos & Logins
                 </p>
               </div>
@@ -469,7 +469,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleOpenAddModal}
-                className="flex items-center space-x-2 px-4 sm:px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-bold rounded-xl text-xs sm:text-sm shadow-lg shadow-amber-900/30 transition-all cursor-pointer"
+                className="flex items-center space-x-2 px-4 sm:px-5 py-2.5 bg-gradient-to-r   hover: hover: text-white font-bold rounded-xl text-xs sm:text-sm shadow-lg shadow-stone-200 transition-all cursor-pointer"
                 id="btn-gestor-new-store"
               >
                 <Plus className="w-4 h-4" />
@@ -479,10 +479,10 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
 
               <button
                 onClick={onLogout}
-                className="flex items-center space-x-2 px-3.5 py-2.5 bg-[#171E2D] hover:bg-[#20293D] text-slate-300 hover:text-white rounded-xl text-xs font-semibold border border-slate-700/50 transition-colors cursor-pointer"
+                className="flex items-center space-x-2 px-3.5 py-2.5 bg-[#171E2D] hover:bg-[#20293D] text-stone-600 hover:text-stone-900 rounded-xl text-xs font-semibold border border-stone-200 transition-colors cursor-pointer"
                 id="btn-gestor-logout"
               >
-                <LogOut className="w-4 h-4 text-slate-400" />
+                <LogOut className="w-4 h-4 text-stone-500" />
                 <span className="hidden sm:inline">Desconectar</span>
               </button>
             </div>
@@ -497,17 +497,17 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-950/40 via-[#161C2A] to-rose-950/30 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl"
+            className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r /40 via-[#161C2A] to-rose-950/30 border border-stone-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl"
           >
             <div className="flex items-center space-x-3.5">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center flex-shrink-0 border border-amber-500/40">
+              <div className="w-10 h-10 rounded-xl bg-stone-100 text-stone-900 flex items-center justify-center flex-shrink-0 border border-stone-200">
                 <AlertTriangle className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-amber-200">
+                <h4 className="text-sm font-bold text-stone-900">
                   Atenção de Renovação Inteligente
                 </h4>
-                <p className="text-xs text-slate-300">
+                <p className="text-xs text-stone-600">
                   Você tem{' '}
                   {metrics.overdueCount > 0 && (
                     <span className="text-rose-400 font-bold">
@@ -516,7 +516,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                   )}
                   {metrics.overdueCount > 0 && metrics.expiringSoonCount > 0 && ' e '}
                   {metrics.expiringSoonCount > 0 && (
-                    <span className="text-amber-300 font-bold">
+                    <span className="text-stone-900 font-bold">
                       {metrics.expiringSoonCount} a vencer nos próximos 5 dias (R$ {metrics.expiringSoonValue.toFixed(2).replace('.', ',')})
                     </span>
                   )}.
@@ -526,7 +526,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
 
             <button
               onClick={() => setStatusFilter(metrics.overdueCount > 0 ? 'overdue' : 'expiring_soon')}
-              className="px-4 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer whitespace-nowrap"
+              className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-900 border border-stone-200 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer whitespace-nowrap"
             >
               <span>Ver Lojas Pendentes</span>
               <ChevronRight className="w-3.5 h-3.5" />
@@ -541,22 +541,22 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="p-5 sm:p-6 rounded-3xl bg-[#121724] border border-amber-500/20 shadow-xl relative overflow-hidden group hover:border-amber-500/40 transition-all"
+            className="p-5 sm:p-6 rounded-3xl bg-[#121724] border border-stone-200 shadow-xl relative overflow-hidden group hover:border-stone-200 transition-all"
           >
-            <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-bl-full pointer-events-none" />
+            <div className="absolute top-0 right-0 w-24 h-24 bg-stone-200 rounded-bl-full pointer-events-none" />
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              <span className="text-xs font-bold uppercase tracking-wider text-stone-500">
                 Faturamento Mensal (MRR)
               </span>
-              <div className="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center">
+              <div className="w-9 h-9 rounded-xl bg-stone-100 text-stone-900 flex items-center justify-center">
                 <DollarSign className="w-5 h-5" />
               </div>
             </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <div className="text-2xl sm:text-3xl font-extrabold text-stone-900 tracking-tight">
               R$ {metrics.mrr.toFixed(2).replace('.', ',')}
-              <span className="text-xs font-semibold text-slate-400">/mês</span>
+              <span className="text-xs font-semibold text-stone-500">/mês</span>
             </div>
-            <div className="mt-2 flex items-center text-xs text-amber-400/90 font-medium">
+            <div className="mt-2 flex items-center text-xs text-stone-900/90 font-medium">
               <TrendingUp className="w-3.5 h-3.5 mr-1" />
               <span>Projeção anual: R$ {metrics.annualProjected.toFixed(2).replace('.', ',')}</span>
             </div>
@@ -570,18 +570,18 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
             className="p-5 sm:p-6 rounded-3xl bg-[#121724] border border-emerald-500/20 shadow-xl relative overflow-hidden group hover:border-emerald-500/40 transition-all"
           >
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              <span className="text-xs font-bold uppercase tracking-wider text-stone-500">
                 Lojas Em Dia
               </span>
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-600 flex items-center justify-center">
                 <CheckCircle2 className="w-5 h-5" />
               </div>
             </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <div className="text-2xl sm:text-3xl font-extrabold text-stone-900 tracking-tight">
               {metrics.activeInGoodStanding}{' '}
-              <span className="text-xs font-semibold text-slate-400">de {metrics.totalClients} lojas</span>
+              <span className="text-xs font-semibold text-stone-500">de {metrics.totalClients} lojas</span>
             </div>
-            <div className="mt-2 flex items-center text-xs text-emerald-400 font-medium">
+            <div className="mt-2 flex items-center text-xs text-emerald-600 font-medium">
               <Zap className="w-3.5 h-3.5 mr-1" />
               <span>{metrics.paymentHealth}% de adimplência na carteira</span>
             </div>
@@ -592,24 +592,24 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.1 }}
-            className="p-5 sm:p-6 rounded-3xl bg-[#121724] border border-amber-500/20 shadow-xl relative overflow-hidden group hover:border-amber-500/40 transition-all"
+            className="p-5 sm:p-6 rounded-3xl bg-[#121724] border border-stone-200 shadow-xl relative overflow-hidden group hover:border-stone-200 transition-all"
           >
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              <span className="text-xs font-bold uppercase tracking-wider text-stone-500">
                 A Vencer (Próx. 5 Dias)
               </span>
-              <div className="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center">
+              <div className="w-9 h-9 rounded-xl bg-stone-100 text-stone-900 flex items-center justify-center">
                 <Clock className="w-5 h-5" />
               </div>
             </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-amber-300 tracking-tight">
+            <div className="text-2xl sm:text-3xl font-extrabold text-stone-900 tracking-tight">
               {metrics.expiringSoonCount}
-              <span className="text-xs font-semibold text-slate-400 ml-1.5">
+              <span className="text-xs font-semibold text-stone-500 ml-1.5">
                 (R$ {metrics.expiringSoonValue.toFixed(2).replace('.', ',')})
               </span>
             </div>
-            <div className="mt-2 flex items-center text-xs text-slate-400">
-              <Calendar className="w-3.5 h-3.5 mr-1 text-amber-400" />
+            <div className="mt-2 flex items-center text-xs text-stone-500">
+              <Calendar className="w-3.5 h-3.5 mr-1 text-stone-900" />
               <span>Renovações da semana</span>
             </div>
           </motion.div>
@@ -622,7 +622,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
             className="p-5 sm:p-6 rounded-3xl bg-[#121724] border border-rose-500/20 shadow-xl relative overflow-hidden group hover:border-rose-500/40 transition-all"
           >
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              <span className="text-xs font-bold uppercase tracking-wider text-stone-500">
                 Faltam Renovar (Vencidas)
               </span>
               <div className="w-9 h-9 rounded-xl bg-rose-500/15 text-rose-400 flex items-center justify-center">
@@ -631,7 +631,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
             </div>
             <div className="text-2xl sm:text-3xl font-extrabold text-rose-400 tracking-tight">
               {metrics.overdueCount}
-              <span className="text-xs font-semibold text-slate-400 ml-1.5">
+              <span className="text-xs font-semibold text-stone-500 ml-1.5">
                 (R$ {metrics.overdueValue.toFixed(2).replace('.', ',')})
               </span>
             </div>
@@ -642,33 +642,33 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
         </div>
 
         {/* Section Header & Filters Bar */}
-        <div className="bg-[#121724] p-5 sm:p-6 rounded-3xl border border-slate-800 shadow-xl space-y-4">
+        <div className="bg-[#121724] p-5 sm:p-6 rounded-3xl border border-stone-200 shadow-xl space-y-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-                <Store className="w-5 h-5 text-amber-400" />
+              <h2 className="text-lg sm:text-xl font-bold text-stone-900 flex items-center gap-2">
+                <Store className="w-5 h-5 text-stone-900" />
                 Carteira de Lojas, Acessos & Logins
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-stone-500">
                 Gerencie credenciais, valores de mensalidade, status e exclusão com segurança em 2 etapas.
               </p>
             </div>
 
             {/* Real-time Search Box */}
             <div className="relative w-full md:w-72">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+              <Search className="w-4 h-4 text-stone-500 absolute left-3.5 top-3" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Buscar por loja, usuário..."
-                className="w-full pl-10 pr-4 py-2 bg-[#0B0F19] border border-slate-700/80 rounded-xl text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-amber-500 transition-colors"
+                className="w-full pl-10 pr-4 py-2 bg-white border border-stone-200/80 rounded-xl text-xs sm:text-sm text-stone-900 focus:outline-none focus:border-stone-900 transition-colors"
                 id="input-gestor-search"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-2.5 text-slate-400 hover:text-white"
+                  className="absolute right-3 top-2.5 text-stone-500 hover:text-stone-900"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -680,8 +680,8 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
           <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
             {[
               { id: 'all', label: `Todas (${clients.length})` },
-              { id: 'active', label: `Em Dia (${metrics.activeInGoodStanding})`, icon: CheckCircle2, color: 'text-emerald-400' },
-              { id: 'expiring_soon', label: `Vencem em Breve (${metrics.expiringSoonCount})`, icon: Clock, color: 'text-amber-400' },
+              { id: 'active', label: `Em Dia (${metrics.activeInGoodStanding})`, icon: CheckCircle2, color: 'text-emerald-600' },
+              { id: 'expiring_soon', label: `Vencem em Breve (${metrics.expiringSoonCount})`, icon: Clock, color: 'text-stone-900' },
               { id: 'overdue', label: `Faltam Renovar (${metrics.overdueCount})`, icon: AlertTriangle, color: 'text-rose-400' },
               { id: 'inactive', label: 'Suspensas / Inativas' },
             ].map((tab) => {
@@ -692,11 +692,11 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                   onClick={() => setStatusFilter(tab.id as any)}
                   className={`px-3.5 py-1.5 rounded-xl font-bold transition-all flex items-center space-x-1.5 flex-shrink-0 cursor-pointer ${
                     isSelected
-                      ? 'bg-amber-500 text-stone-950 shadow-md shadow-amber-950/40'
-                      : 'bg-[#182030] text-slate-300 hover:bg-[#20293D] border border-slate-700/50'
+                      ? 'bg-stone-900 text-white text-white shadow-md shadow-stone-200'
+                      : 'bg-[#182030] text-stone-600 hover:bg-[#20293D] border border-stone-200'
                   }`}
                 >
-                  {tab.icon && <tab.icon className={`w-3.5 h-3.5 ${isSelected ? 'text-stone-950' : tab.color}`} />}
+                  {tab.icon && <tab.icon className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : tab.color}`} />}
                   <span>{tab.label}</span>
                 </button>
               );
@@ -705,19 +705,19 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
         </div>
 
         {/* Clients Table / Cards List */}
-        <div className="bg-[#121724] rounded-3xl border border-slate-800 shadow-2xl overflow-hidden">
+        <div className="bg-[#121724] rounded-3xl border border-stone-200 shadow-2xl overflow-hidden">
           {filteredClients.length === 0 ? (
             <div className="p-12 text-center space-y-3">
-              <div className="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center mx-auto border border-amber-500/20">
+              <div className="w-16 h-16 rounded-2xl bg-stone-100 text-stone-900 flex items-center justify-center mx-auto border border-stone-200">
                 <Store className="w-8 h-8" />
               </div>
-              <h3 className="text-lg font-bold text-white">Nenhuma loja encontrada</h3>
-              <p className="text-xs text-slate-400 max-w-md mx-auto">
+              <h3 className="text-lg font-bold text-stone-900">Nenhuma loja encontrada</h3>
+              <p className="text-xs text-stone-500 max-w-md mx-auto">
                 Não localizamos nenhuma loja com os filtros aplicados. Cadastre uma nova loja ou altere os termos da busca.
               </p>
               <button
                 onClick={handleOpenAddModal}
-                className="mt-3 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold rounded-xl text-xs shadow-lg transition-all cursor-pointer"
+                className="mt-3 px-4 py-2 bg-stone-900 text-white hover:bg-stone-900 text-white text-white font-bold rounded-xl text-xs shadow-lg transition-all cursor-pointer"
               >
                 Cadastrar Primeira Loja
               </button>
@@ -726,7 +726,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-[#0B0F19]/80 border-b border-slate-800 text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
+                  <tr className="bg-white/80 border-b border-stone-200 text-[11px] font-extrabold uppercase tracking-wider text-stone-500">
                     <th className="px-6 py-4">Nome da Loja & Tipo</th>
                     <th className="px-6 py-4">Credenciais (Usuário / Senha)</th>
                     <th className="px-6 py-4">Valor do Plano</th>
@@ -750,20 +750,12 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                       >
                         {/* Store Info */}
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="font-bold text-white text-sm flex items-center gap-1.5">
+                          <div className="font-bold text-stone-900 text-sm flex items-center gap-1.5">
                             {client.storeName}
-                            {client.storeType === 'clothing' ? (
-                              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                                👗 Roupas
-                              </span>
-                            ) : (
-                              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                                🌿 Naturais
-                              </span>
-                            )}
+                            
                           </div>
-                          <div className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2">
-                            <span>Link: <code className="text-amber-300/80">/?loja={client.storeSlug || client.username}</code></span>
+                          <div className="text-[11px] text-stone-500 mt-0.5 flex items-center gap-2">
+                            <span>Link: <code className="text-stone-900/80">/?loja={client.storeSlug || client.username}</code></span>
                           </div>
                         </td>
 
@@ -771,20 +763,20 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="space-y-1">
                             <div className="flex items-center space-x-1.5 font-mono text-xs">
-                              <span className="text-slate-400">Usuário:</span>
-                              <span className="text-amber-300 font-bold bg-[#0B0F19] px-2 py-0.5 rounded border border-slate-700">
+                              <span className="text-stone-500">Usuário:</span>
+                              <span className="text-stone-900 font-bold bg-white px-2 py-0.5 rounded border border-stone-200">
                                 {client.username}
                               </span>
                             </div>
                             <div className="flex items-center space-x-1.5 font-mono text-xs">
-                              <span className="text-slate-400">Senha:</span>
-                              <span className="text-emerald-300 font-bold bg-[#0B0F19] px-2 py-0.5 rounded border border-slate-700">
+                              <span className="text-stone-500">Senha:</span>
+                              <span className="text-emerald-700 font-bold bg-white px-2 py-0.5 rounded border border-stone-200">
                                 {isPassVisible ? client.password : '••••••••'}
                               </span>
                               <button
                                 type="button"
                                 onClick={() => togglePasswordVisibility(client.id)}
-                                className="p-1 text-slate-400 hover:text-white transition-colors"
+                                className="p-1 text-stone-500 hover:text-stone-900 transition-colors"
                                 title={isPassVisible ? 'Ocultar Senha' : 'Ver Senha'}
                               >
                                 {isPassVisible ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -795,16 +787,16 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
 
                         {/* Plan Price */}
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="font-extrabold text-white text-sm">
+                          <div className="font-extrabold text-stone-900 text-sm">
                             {priceFormatted}
                           </div>
-                          <span className="text-[10px] text-slate-400 uppercase tracking-wider">mensal</span>
+                          <span className="text-[10px] text-stone-500 uppercase tracking-wider">mensal</span>
                         </td>
 
                         {/* Due Date & Remaining Days Badge */}
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="font-semibold text-slate-200 text-xs flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                          <div className="font-semibold text-stone-900 text-xs flex items-center gap-1.5">
+                            <Calendar className="w-3.5 h-3.5 text-stone-500" />
                             <span>{formatDateBr(client.dueDate)}</span>
                           </div>
                           <div className="mt-1">
@@ -819,7 +811,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                         {/* Status */}
                         <td className="px-6 py-4 whitespace-nowrap">
                           {client.status === 'inactive' ? (
-                            <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700">
+                            <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white text-stone-500 border border-stone-200">
                               Suspensa
                             </span>
                           ) : dueInfo.status === 'overdue' ? (
@@ -827,7 +819,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                               Pendente Renovação
                             </span>
                           ) : (
-                            <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                            <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-100 text-emerald-600 border border-emerald-200">
                               Ativa
                             </span>
                           )}
@@ -842,7 +834,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                               whileTap={{ scale: 0.95 }}
                               onClick={() => handleQuickRenew(client)}
                               disabled={renewingId === client.id}
-                              className="px-2.5 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 rounded-xl text-xs font-bold transition-all flex items-center space-x-1 cursor-pointer"
+                              className="px-2.5 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-700 border border-emerald-500/40 rounded-xl text-xs font-bold transition-all flex items-center space-x-1 cursor-pointer"
                               title="Renovar Plano (+30 Dias)"
                             >
                               <RefreshCw className={`w-3.5 h-3.5 ${renewingId === client.id ? 'animate-spin' : ''}`} />
@@ -852,11 +844,11 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                             {/* Copy Full Credentials Message */}
                             <button
                               onClick={() => handleCopyFullAccessMessage(client)}
-                              className="p-2 bg-[#182030] hover:bg-[#20293D] text-slate-300 hover:text-amber-300 rounded-xl border border-slate-700 transition-colors cursor-pointer"
+                              className="p-2 bg-[#182030] hover:bg-[#20293D] text-stone-600 hover:text-stone-900 rounded-xl border border-stone-200 transition-colors cursor-pointer"
                               title="Copiar Convite / Acesso Completo"
                             >
                               {copiedId === `msg-${client.id}` ? (
-                                <Check className="w-4 h-4 text-emerald-400" />
+                                <Check className="w-4 h-4 text-emerald-600" />
                               ) : (
                                 <Copy className="w-4 h-4" />
                               )}
@@ -865,7 +857,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                             {/* Send Whatsapp Reminder / Acesso */}
                             <button
                               onClick={() => handleSendWhatsappReminder(client)}
-                              className="p-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-xl border border-emerald-500/30 transition-colors cursor-pointer"
+                              className="p-2 bg-emerald-500/10 hover:bg-emerald-100 text-emerald-600 rounded-xl border border-emerald-200 transition-colors cursor-pointer"
                               title="Enviar Acesso ou Lembrete pelo WhatsApp"
                             >
                               <MessageCircle className="w-4 h-4" />
@@ -876,7 +868,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                               href={`/?loja=${client.storeSlug || client.username}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="p-2 bg-[#182030] hover:bg-emerald-500/20 text-slate-300 hover:text-emerald-400 rounded-xl border border-slate-700 hover:border-emerald-500/40 transition-colors inline-flex items-center"
+                              className="p-2 bg-[#182030] hover:bg-emerald-100 text-stone-600 hover:text-emerald-600 rounded-xl border border-stone-200 hover:border-emerald-500/40 transition-colors inline-flex items-center"
                               title="Abrir Vitrine em Nova Aba"
                             >
                               <ExternalLink className="w-4 h-4" />
@@ -885,7 +877,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                             {/* Edit Client */}
                             <button
                               onClick={() => handleOpenEditModal(client)}
-                              className="p-2 bg-[#182030] hover:bg-[#20293D] text-slate-300 hover:text-white rounded-xl border border-slate-700 transition-colors cursor-pointer"
+                              className="p-2 bg-[#182030] hover:bg-[#20293D] text-stone-600 hover:text-stone-900 rounded-xl border border-stone-200 transition-colors cursor-pointer"
                               title="Editar Loja e Valores"
                             >
                               <Edit3 className="w-4 h-4" />
@@ -922,27 +914,27 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="relative w-full max-w-2xl bg-[#121724] border border-amber-500/30 rounded-3xl shadow-2xl overflow-hidden my-8"
+              className="relative w-full max-w-2xl bg-[#121724] border border-stone-300 rounded-3xl shadow-2xl overflow-hidden my-8"
               id="modal-gestor-client-form"
             >
               {/* Modal Header */}
-              <div className="bg-gradient-to-r from-[#171E2E] to-[#121724] p-6 border-b border-slate-800 relative">
+              <div className="bg-gradient-to-r from-[#171E2E] to-[#121724] p-6 border-b border-stone-200 relative">
                 <button
                   onClick={() => setIsAddingOrEditing(false)}
-                  className="absolute top-5 right-5 p-2 text-slate-400 hover:text-white rounded-full bg-slate-800/50 hover:bg-slate-800 transition-colors"
+                  className="absolute top-5 right-5 p-2 text-stone-500 hover:text-stone-900 rounded-full bg-white/50 hover:bg-white transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
 
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30">
+                  <div className="w-10 h-10 rounded-2xl bg-stone-100 text-stone-900 flex items-center justify-center border border-stone-300">
                     <Store className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-white">
+                    <h3 className="text-lg font-bold text-stone-900">
                       {editingClient ? 'Editar Loja & Plano Financeiro' : 'Cadastrar Nova Loja na Gestão'}
                     </h3>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-stone-500">
                       Preencha os dados de acesso e o valor acordado da assinatura.
                     </p>
                   </div>
@@ -954,7 +946,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   {/* Nome da Loja */}
                   <div className="sm:col-span-2">
-                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                    <label className="block text-xs font-bold text-stone-600 uppercase tracking-wider mb-1.5">
                       Nome da Loja *
                     </label>
                     <input
@@ -963,47 +955,47 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                       value={formData.storeName}
                       onChange={(e) => setFormData({ ...formData, storeName: e.target.value })}
                       placeholder="Ex: Boutique Elegance, Empório Natural..."
-                      className="w-full px-4 py-2.5 bg-[#0B0F19] border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-amber-500 transition-colors"
+                      className="w-full px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-stone-900 focus:outline-none focus:border-stone-900 transition-colors"
                       id="input-form-storename"
                     />
                   </div>
 
                   {/* Nome de Usuário */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                    <label className="block text-xs font-bold text-stone-600 uppercase tracking-wider mb-1.5">
                       Nome de Usuário (Login) *
                     </label>
                     <div className="relative">
-                      <User className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+                      <User className="w-4 h-4 text-stone-400 absolute left-3.5 top-3" />
                       <input
                         type="text"
                         required
                         value={formData.username}
                         onChange={(e) => setFormData({ ...formData, username: e.target.value.toLowerCase().replace(/[^a-z0-9_.-]/g, '') })}
                         placeholder="Ex: boutique_elegance"
-                        className="w-full pl-10 pr-4 py-2.5 bg-[#0B0F19] border border-slate-700 rounded-xl text-sm text-white font-mono focus:outline-none focus:border-amber-500 transition-colors"
+                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-stone-900 font-mono focus:outline-none focus:border-stone-900 transition-colors"
                         id="input-form-username"
                       />
                     </div>
-                    <p className="text-[11px] text-slate-500 mt-1">Será usado no link da loja: <code>/?loja={formData.username || 'nome'}</code></p>
+                    <p className="text-[11px] text-stone-400 mt-1">Será usado no link da loja: <code>/?loja={formData.username || 'nome'}</code></p>
                   </div>
 
                   {/* Senha */}
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
+                      <label className="block text-xs font-bold text-stone-600 uppercase tracking-wider">
                         Senha de Acesso (Máx 8 dígitos) *
                       </label>
                       <button
                         type="button"
                         onClick={() => setFormData({ ...formData, password: generateRandomPassword() })}
-                        className="text-[11px] text-amber-400 hover:text-amber-300 font-semibold cursor-pointer"
+                        className="text-[11px] text-stone-900 hover:text-stone-900 font-semibold cursor-pointer"
                       >
                         Gerar Senha
                       </button>
                     </div>
                     <div className="relative">
-                      <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+                      <Lock className="w-4 h-4 text-stone-400 absolute left-3.5 top-3" />
                       <input
                         type="text"
                         required
@@ -1011,7 +1003,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         placeholder="Ex: 12345678"
-                        className="w-full pl-10 pr-4 py-2.5 bg-[#0B0F19] border border-slate-700 rounded-xl text-sm text-white font-mono focus:outline-none focus:border-amber-500 transition-colors"
+                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-stone-900 font-mono focus:outline-none focus:border-stone-900 transition-colors"
                         id="input-form-password"
                       />
                     </div>
@@ -1020,11 +1012,11 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                   {/* Plano Contratado (Com Animação Interativa de Alto Padrão) */}
                   <div className="sm:col-span-2 space-y-2">
                     <div className="flex items-center justify-between">
-                      <label className="block text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
-                        <Crown className="w-3.5 h-3.5 text-amber-400" />
+                      <label className="block text-xs font-bold text-stone-900 uppercase tracking-wider flex items-center gap-1.5">
+                        <Crown className="w-3.5 h-3.5 text-stone-900" />
                         Plano Contratado & Duração *
                       </label>
-                      <span className="text-[11px] text-slate-400 font-medium">
+                      <span className="text-[11px] text-stone-500 font-medium">
                         Toque para selecionar o ciclo
                       </span>
                     </div>
@@ -1070,8 +1062,8 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                             }}
                             className={`relative p-3 rounded-2xl border text-left flex flex-col justify-between transition-all cursor-pointer overflow-hidden select-none min-h-[96px] ${
                               isSelected
-                                ? 'bg-gradient-to-b from-amber-500/20 via-amber-500/10 to-transparent border-amber-500 shadow-lg shadow-amber-950/40 ring-1 ring-amber-500/60'
-                                : 'bg-[#0B0F19] hover:bg-[#101624] border-slate-700/80 hover:border-slate-600'
+                                ? 'bg-gradient-to-b /20 /10 to-transparent border-stone-900 shadow-lg shadow-stone-200 ring-1 ring-stone-400'
+                                : 'bg-white hover:bg-[#101624] border-stone-200/80 hover:border-slate-600'
                             }`}
                             id={`btn-plan-select-${plan.price}`}
                           >
@@ -1079,26 +1071,26 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                             {isSelected && (
                               <motion.div
                                 layoutId="activeAdminPlanGlow"
-                                className="absolute inset-0 bg-amber-500/10 pointer-events-none rounded-2xl"
+                                className="absolute inset-0 bg-stone-100 pointer-events-none rounded-2xl"
                                 transition={{ type: 'spring', stiffness: 350, damping: 25 }}
                               />
                             )}
 
                             {/* Top Badge */}
                             {plan.badge && (
-                              <span className="self-start px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider bg-amber-400 text-stone-950 mb-1 shadow-2xs">
+                              <span className="self-start px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider bg-stone-900 text-white text-white mb-1 shadow-2xs">
                                 {plan.badge}
                               </span>
                             )}
 
                             <div className="flex items-center justify-between w-full mb-1">
-                              <span className={`text-xs font-bold ${isSelected ? 'text-amber-300' : 'text-slate-200'}`}>
+                              <span className={`text-xs font-bold ${isSelected ? 'text-stone-900' : 'text-stone-900'}`}>
                                 {plan.title}
                               </span>
                               <div
                                 className={`w-4 h-4 rounded-full flex items-center justify-center border transition-all ${
                                   isSelected
-                                    ? 'bg-amber-400 border-amber-400 text-stone-950 scale-110'
+                                    ? 'bg-stone-900 text-white border-stone-900 text-white scale-110'
                                     : 'border-slate-600 bg-transparent'
                                 }`}
                               >
@@ -1115,12 +1107,12 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                             </div>
 
                             <div className="my-0.5">
-                              <span className={`text-sm sm:text-base font-black tracking-tight ${isSelected ? 'text-white' : 'text-slate-100'}`}>
+                              <span className={`text-sm sm:text-base font-black tracking-tight ${isSelected ? 'text-stone-900' : 'text-stone-900'}`}>
                                 R$ {plan.price.toFixed(2).replace('.', ',')}
                               </span>
                             </div>
 
-                            <span className="text-[10px] text-slate-400 font-medium">
+                            <span className="text-[10px] text-stone-500 font-medium">
                               {plan.period}
                             </span>
                           </motion.button>
@@ -1132,14 +1124,14 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                   {/* Data de Vencimento */}
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="block text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5 text-amber-400" />
+                      <label className="block text-xs font-bold text-stone-900 uppercase tracking-wider flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5 text-stone-900" />
                         Data de Vencimento *
                       </label>
                       <button
                         type="button"
                         onClick={() => setFormData({ ...formData, dueDate: getDefaultDueDate(30) })}
-                        className="text-[11px] text-amber-400 hover:text-amber-300 font-semibold cursor-pointer"
+                        className="text-[11px] text-stone-900 hover:text-stone-900 font-semibold cursor-pointer"
                       >
                         +30 Dias
                       </button>
@@ -1149,77 +1141,14 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                       required
                       value={formData.dueDate}
                       onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                      className="w-full px-4 py-2.5 bg-[#0B0F19] border border-amber-500/40 rounded-xl text-sm text-white focus:outline-none focus:border-amber-400 transition-colors"
+                      className="w-full px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-stone-900 focus:outline-none focus:border-stone-400 transition-colors"
                       id="input-form-duedate"
                     />
                   </div>
 
-                  {/* Tipo de Vitrine */}
-                  <div className="relative">
-                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-                      Segmento / Modelo da Vitrine
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setIsStoreTypeOpen(!isStoreTypeOpen)}
-                      className="w-full px-4 py-2.5 bg-[#0B0F19] border border-slate-700 rounded-xl text-sm text-white focus:outline-none flex items-center justify-between shadow-2xs cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all text-left"
-                      id="select-form-storetype-btn"
-                    >
-                      <span>
-                        {formData.storeType === 'clothing' ? '👗 Vitrine de Moda & Roupas' : '🌿 Loja Verde - Produtos Naturais'}
-                      </span>
-                      <ChevronDown className="w-4 h-4 opacity-70 shrink-0" />
-                    </button>
-
-                    <AnimatePresence>
-                      {isStoreTypeOpen && (
-                        <>
-                          <div
-                            className="fixed inset-0 z-40"
-                            onClick={() => setIsStoreTypeOpen(false)}
-                          />
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 5 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 5 }}
-                            transition={{ duration: 0.12, ease: "easeOut" }}
-                            className="absolute left-0 right-0 top-full mt-2 bg-slate-900 border border-slate-700 shadow-xl rounded-2xl p-2 z-50 space-y-1 text-left"
-                          >
-                            {[
-                              { value: 'clothing', label: '👗 Vitrine de Moda & Roupas' },
-                              { value: 'natural', label: '🌿 Loja Verde - Produtos Naturais' }
-                            ].map((item) => {
-                              const isSelected = formData.storeType === item.value;
-                              return (
-                                <button
-                                  key={item.value}
-                                  type="button"
-                                  onClick={() => {
-                                    setFormData({ ...formData, storeType: item.value as any });
-                                    setIsStoreTypeOpen(false);
-                                  }}
-                                  className={`w-full text-left px-3 py-2 text-sm rounded-xl transition-all flex items-center justify-between cursor-pointer ${
-                                    isSelected
-                                      ? 'bg-slate-800 text-amber-500 font-bold shadow-xs'
-                                      : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
-                                  }`}
-                                >
-                                  <span>{item.label}</span>
-                                  {isSelected && (
-                                    <Check className="w-4 h-4 text-amber-500" />
-                                  )}
-                                </button>
-                              );
-                            })}
-                          </motion.div>
-                        </>
-                      )}
-                    </AnimatePresence>
-                  </div>
-
                   {/* WhatsApp do Cliente */}
                   <div>
-                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                    <label className="block text-xs font-bold text-stone-600 uppercase tracking-wider mb-1.5">
                       WhatsApp do Cliente (Opcional)
                     </label>
                     <input
@@ -1227,14 +1156,14 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                       value={formData.phoneWhatsapp}
                       onChange={(e) => setFormData({ ...formData, phoneWhatsapp: e.target.value })}
                       placeholder="Ex: 11999998888 (com DDD)"
-                      className="w-full px-4 py-2.5 bg-[#0B0F19] border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-amber-500 transition-colors"
+                      className="w-full px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-stone-900 focus:outline-none focus:border-stone-900 transition-colors"
                       id="input-form-phone"
                     />
                   </div>
 
                   {/* Status da Loja */}
                   <div className="sm:col-span-2">
-                    <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                    <label className="block text-xs font-bold text-stone-600 uppercase tracking-wider mb-1.5">
                       Status da Conta
                     </label>
                     <div className="flex items-center space-x-3">
@@ -1243,8 +1172,8 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                         onClick={() => setFormData({ ...formData, status: 'active' })}
                         className={`flex-1 py-2 px-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                           formData.status === 'active'
-                            ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
-                            : 'bg-[#0B0F19] border-slate-700 text-slate-400'
+                            ? 'bg-emerald-100 border-emerald-500 text-emerald-700'
+                            : 'bg-white border-stone-200 text-stone-500'
                         }`}
                       >
                         Ativa (Liberada)
@@ -1255,7 +1184,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                         className={`flex-1 py-2 px-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                           formData.status === 'inactive'
                             ? 'bg-rose-500/20 border-rose-500 text-rose-300'
-                            : 'bg-[#0B0F19] border-slate-700 text-slate-400'
+                            : 'bg-white border-stone-200 text-stone-500'
                         }`}
                       >
                         Suspensa / Inativa
@@ -1265,11 +1194,11 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                 </div>
 
                 {/* Modal Footer */}
-                <div className="flex items-center justify-end space-x-3 pt-6 border-t border-slate-800">
+                <div className="flex items-center justify-end space-x-3 pt-6 border-t border-stone-200">
                   <button
                     type="button"
                     onClick={() => setIsAddingOrEditing(false)}
-                    className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
+                    className="px-5 py-2.5 bg-white hover:bg-slate-700 text-stone-600 rounded-xl text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
                   >
                     Cancelar
                   </button>
@@ -1277,7 +1206,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     type="submit"
-                    className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-amber-950/40 flex items-center space-x-2 transition-all cursor-pointer"
+                    className="px-6 py-2.5 bg-gradient-to-r   hover: hover: text-white rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-stone-200 flex items-center space-x-2 transition-all cursor-pointer"
                     id="btn-form-save-client"
                   >
                     <CheckCircle2 className="w-4 h-4" />
@@ -1299,34 +1228,34 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.92, y: -20 }}
               transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-              className="w-full max-w-md bg-[#0F1523] border border-emerald-500/30 rounded-3xl overflow-hidden shadow-2xl shadow-emerald-500/10"
+              className="w-full max-w-md bg-[#0F1523] border border-emerald-200 rounded-3xl overflow-hidden shadow-2xl shadow-emerald-500/10"
               id="modal-luxury-renew-login"
             >
               <div className="p-6">
                 <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="w-16 h-16 rounded-2xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center border border-emerald-500/30 shadow-inner">
+                  <div className="w-16 h-16 rounded-2xl bg-emerald-500/15 text-emerald-600 flex items-center justify-center border border-emerald-200 shadow-inner">
                     <RefreshCw className="w-8 h-8" />
                   </div>
                   
                   <div>
-                    <h3 className="text-xl font-bold text-white mb-1.5 font-serif-luxury">
+                    <h3 className="text-xl font-bold text-stone-900 mb-1.5 font-serif-luxury">
                       Confirmar Renovação
                     </h3>
-                    <p className="text-sm text-slate-400 leading-relaxed max-w-sm mx-auto">
-                      Deseja renovar manualmente a loja <strong className="text-emerald-300">{renewTargetClient.storeName}</strong> por mais <strong className="text-white">30 dias</strong>?
+                    <p className="text-sm text-stone-500 leading-relaxed max-w-sm mx-auto">
+                      Deseja renovar manualmente a loja <strong className="text-emerald-700">{renewTargetClient.storeName}</strong> por mais <strong className="text-stone-900">30 dias</strong>?
                     </p>
                   </div>
                   
                   <div className="w-full mt-4 flex gap-3">
                     <button
                       onClick={() => setRenewTargetClient(null)}
-                      className="flex-1 py-3 px-4 rounded-xl bg-[#182030] hover:bg-[#20293D] text-slate-300 text-sm font-bold border border-slate-700 transition-colors"
+                      className="flex-1 py-3 px-4 rounded-xl bg-[#182030] hover:bg-[#20293D] text-stone-600 text-sm font-bold border border-stone-200 transition-colors"
                     >
                       Cancelar
                     </button>
                     <button
                       onClick={confirmRenewClient}
-                      className="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold shadow-lg shadow-emerald-600/20 transition-colors flex items-center justify-center space-x-2"
+                      className="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-stone-900 text-sm font-bold shadow-lg shadow-emerald-600/20 transition-colors flex items-center justify-center space-x-2"
                     >
                       <Check className="w-4 h-4" />
                       <span>Confirmar (+30d)</span>
@@ -1352,13 +1281,13 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
               id="modal-luxury-delete-login"
             >
               {/* Glowing Top Accent Bar */}
-              <div className="h-1.5 w-full bg-gradient-to-r from-rose-600 via-amber-500 to-rose-600" />
+              <div className="h-1.5 w-full bg-stone-900 text-white" />
 
               {/* Close Button */}
               <button
                 onClick={() => setDeleteTargetClient(null)}
                 disabled={isDeleting}
-                className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white rounded-full bg-slate-800/40 hover:bg-slate-800 transition-colors cursor-pointer"
+                className="absolute top-4 right-4 p-2 text-stone-500 hover:text-stone-900 rounded-full bg-white hover:bg-white transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1367,7 +1296,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                 {/* Header with Luxury Animated Shield */}
                 <div className="flex items-start space-x-4">
                   <div className="relative flex-shrink-0">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-rose-500/20 to-amber-500/10 border border-rose-500/40 flex items-center justify-center shadow-lg shadow-rose-950/50">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-rose-500/20 /10 border border-rose-500/40 flex items-center justify-center shadow-lg shadow-rose-950/50">
                       <ShieldAlert className="w-7 h-7 text-rose-400" />
                     </div>
                     {/* Animated Pulse Ring */}
@@ -1383,10 +1312,10 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                         {deleteStep === 1 ? 'Etapa 1 de 2: Segurança' : 'Etapa 2 de 2: Confirmação Final'}
                       </span>
                     </div>
-                    <h3 className="text-lg sm:text-xl font-extrabold text-white mt-1">
+                    <h3 className="text-lg sm:text-xl font-extrabold text-stone-900 mt-1">
                       {deleteStep === 1 ? 'Excluir Login & Acesso da Loja' : 'Autorizar Revogação Definitiva'}
                     </h3>
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <p className="text-xs text-stone-500 mt-0.5">
                       {deleteStep === 1
                         ? 'Você está prestes a remover as credenciais desta loja.'
                         : 'Esta ação não poderá ser desfeita.'}
@@ -1403,20 +1332,20 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                     className="space-y-4"
                   >
                     {/* Target Store Summary Box */}
-                    <div className="p-4 rounded-2xl bg-[#0B0F19]/80 border border-slate-700/80 space-y-2.5">
+                    <div className="p-4 rounded-2xl bg-white/80 border border-stone-200/80 space-y-2.5">
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-slate-400 font-medium">🏬 Loja:</span>
-                        <span className="text-white font-bold text-sm">{deleteTargetClient.storeName}</span>
+                        <span className="text-stone-500 font-medium">🏬 Loja:</span>
+                        <span className="text-stone-900 font-bold text-sm">{deleteTargetClient.storeName}</span>
                       </div>
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-slate-400 font-medium">👤 Usuário de Acesso:</span>
-                        <span className="font-mono text-amber-300 font-bold bg-[#141B2D] px-2 py-0.5 rounded border border-slate-700">
+                        <span className="text-stone-500 font-medium">👤 Usuário de Acesso:</span>
+                        <span className="font-mono text-stone-900 font-bold bg-[#141B2D] px-2 py-0.5 rounded border border-stone-200">
                           {deleteTargetClient.username}
                         </span>
                       </div>
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-slate-400 font-medium">💵 Valor Mensal:</span>
-                        <span className="text-slate-200 font-bold">
+                        <span className="text-stone-500 font-medium">💵 Valor Mensal:</span>
+                        <span className="text-stone-900 font-bold">
                           R$ {(Number(deleteTargetClient.planPrice) || 0).toFixed(2).replace('.', ',')}/mês
                         </span>
                       </div>
@@ -1433,7 +1362,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                       <button
                         type="button"
                         onClick={() => setDeleteTargetClient(null)}
-                        className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                        className="px-4 py-2.5 bg-white hover:bg-slate-700 text-stone-600 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
                       >
                         Cancelar
                       </button>
@@ -1461,10 +1390,10 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                     className="space-y-4"
                   >
                     <div className="p-4 rounded-2xl bg-rose-950/20 border border-rose-500/30 space-y-2">
-                      <p className="text-xs text-slate-300">
+                      <p className="text-xs text-stone-600">
                         Para confirmar a exclusão permanente de{' '}
-                        <strong className="text-white font-bold">{deleteTargetClient.storeName}</strong>, digite{' '}
-                        <span className="font-mono text-amber-300 font-bold bg-[#0B0F19] px-1.5 py-0.5 rounded border border-amber-500/30">
+                        <strong className="text-stone-900 font-bold">{deleteTargetClient.storeName}</strong>, digite{' '}
+                        <span className="font-mono text-stone-900 font-bold bg-white px-1.5 py-0.5 rounded border border-stone-300">
                           {deleteTargetClient.username}
                         </span>{' '}
                         ou clique no botão de autorização abaixo:
@@ -1472,7 +1401,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                      <label className="block text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-1.5">
                         Confirmação de Segurança (digite o usuário ou "EXCLUIR"):
                       </label>
                       <input
@@ -1481,7 +1410,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                         value={deleteConfirmationInput}
                         onChange={(e) => setDeleteConfirmationInput(e.target.value)}
                         placeholder={`Digite "${deleteTargetClient.username}" ou "EXCLUIR"`}
-                        className="w-full px-4 py-2.5 bg-[#0B0F19] border border-rose-500/40 rounded-xl text-sm font-mono text-white focus:outline-none focus:border-rose-400 transition-colors"
+                        className="w-full px-4 py-2.5 bg-white border border-rose-500/40 rounded-xl text-sm font-mono text-stone-900 focus:outline-none focus:border-rose-400 transition-colors"
                         id="input-delete-confirmation"
                       />
                     </div>
@@ -1491,7 +1420,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                         type="button"
                         onClick={() => setDeleteStep(1)}
                         disabled={isDeleting}
-                        className="px-3.5 py-2 text-slate-400 hover:text-white text-xs font-semibold transition-colors cursor-pointer"
+                        className="px-3.5 py-2 text-stone-500 hover:text-stone-900 text-xs font-semibold transition-colors cursor-pointer"
                       >
                         ← Voltar
                       </button>
@@ -1501,7 +1430,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                           type="button"
                           onClick={() => setDeleteTargetClient(null)}
                           disabled={isDeleting}
-                          className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                          className="px-4 py-2.5 bg-white hover:bg-slate-700 text-stone-600 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
                         >
                           Cancelar
                         </button>
@@ -1519,19 +1448,19 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                           className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-lg flex items-center space-x-2 transition-all cursor-pointer ${
                             deleteConfirmationInput.trim().toLowerCase() === deleteTargetClient.username.toLowerCase() ||
                             deleteConfirmationInput.trim().toUpperCase() === 'EXCLUIR'
-                              ? 'bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white shadow-rose-950/60'
-                              : 'bg-slate-800/80 text-slate-500 cursor-not-allowed border border-slate-700'
+                              ? 'bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-stone-900 shadow-rose-950/60'
+                              : 'bg-white/80 text-stone-400 cursor-not-allowed border border-stone-200'
                           }`}
                           id="btn-confirm-final-delete"
                         >
                           {isDeleting ? (
                             <>
-                              <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                              <RefreshCw className="w-4 h-4 animate-spin text-stone-900" />
                               <span>Excluindo...</span>
                             </>
                           ) : (
                             <>
-                              <Trash2 className="w-4 h-4 text-white" />
+                              <Trash2 className="w-4 h-4 text-stone-900" />
                               <span>Excluir Login Definitivamente</span>
                             </>
                           )}

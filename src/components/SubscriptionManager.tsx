@@ -53,6 +53,18 @@ const SHARED_SYSTEM_FEATURES = [
 
 const COMMERCIAL_PLANS: PlanOption[] = [
   {
+    id: 'lifetime',
+    title: 'Plano Vitalício',
+    period: 'Permanente',
+    monthsCount: 1200, // virtually lifetime (100 years)
+    price: 250.00,
+    monthlyEquivalent: 'Pagamento Único',
+    badge: 'Acesso Permanente',
+    description: 'Acesso definitivo à plataforma sem nunca mais pagar mensalidade.',
+    features: SHARED_SYSTEM_FEATURES,
+  },
+
+  {
     id: 'monthly',
     title: 'Plano Mensal',
     period: '1 mês',
@@ -117,6 +129,7 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settin
     if (planId === 'monthly') return true;
     if (planId === 'quarterly' && daysRemaining > 35) return true;
     if (planId === 'semiannual' && daysRemaining > 95) return true;
+    if (planId === 'lifetime') return false;
     return false;
   };
 

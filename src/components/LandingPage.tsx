@@ -1,35 +1,16 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import {
-  Gem,
-  ShieldCheck,
+import { motion } from 'motion/react';
+import { 
+  Lock, 
+  MessageCircle, 
   CheckCircle2,
-  MessageCircle,
-  ArrowRight,
   Store,
-  Clock,
-  Palette,
-  ShoppingBag,
-  Zap,
-  TrendingUp,
-  Smartphone,
-  ChevronDown,
-  Check,
-  Lock,
-  Layers,
-  Sparkles,
-  Award,
-  DollarSign,
-  Headphones,
-  CheckCircle,
-  XCircle,
+  ArrowRight,
+  ShieldCheck,
   Star,
-  RefreshCw,
-  Eye,
-  SlidersHorizontal,
+  ChevronDown
 } from 'lucide-react';
 import { StoreSettings } from '../types';
-import { cleanPhoneForWhatsapp } from '../lib/formatters';
 
 interface LandingPageProps {
   settings?: StoreSettings;
@@ -38,995 +19,223 @@ interface LandingPageProps {
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
-  settings,
-  onEnterStore,
   onAdminLogin,
 }) => {
-  const [simulatedStock, setSimulatedStock] = useState(3);
-  // Support official WhatsApp
   const officialPhone = '5584986113980';
+  
   const whatsappBuyMessage = encodeURIComponent(
-    'Olá! Quero ativar minha vitrine de luxo agora mesmo pelo plano especial de R$ 29,99/mês para turbinar minhas vendas. Como faço para liberar meu acesso imediato?'
+    'Olá! Quero ativar minha vitrine de luxo agora mesmo. Como faço para liberar meu acesso imediato?'
   );
-  const whatsappConsultMessage = encodeURIComponent(
-    'Olá! Gostaria de falar com o suporte oficial para ativar a minha vitrine de moda no WhatsApp.'
-  );
-
+  
   const buyLink = `https://wa.me/${officialPhone}?text=${whatsappBuyMessage}`;
-  const consultLink = `https://wa.me/${officialPhone}?text=${whatsappConsultMessage}`;
 
-  // Interactive Demo Simulator in Hero
-  const [selectedDemoColor, setSelectedDemoColor] = useState<'rosa' | 'preto' | 'offwhite'>('rosa');
-  const demoImages = {
-    rosa: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=800&auto=format&fit=crop&q=80',
-    preto: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=800&auto=format&fit=crop&q=80',
-    offwhite: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&auto=format&fit=crop&q=80',
-  };
-
-  // FAQ Accordion State
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   const faqs = [
     {
-      q: 'O que é a Web Vitrine e como ela ajuda a minha loja?',
-      a: 'A Web Vitrine é uma plataforma digital exclusiva e de alto padrão onde você organiza todo o seu catálogo de produtos com fotos em alta definição, variação de cores que trocam a imagem instantaneamente, tamanhos e valores. O cliente escolhe as peças, monta a sacola e envia o pedido 100% pronto e detalhado diretamente no seu WhatsApp oficial, facilitando o fechamento das vendas.',
+      q: 'O que é a Web Vitrine?',
+      a: 'Uma plataforma digital onde você organiza seu catálogo de produtos com fotos, cores, tamanhos e valores. O cliente escolhe as peças, monta a sacola e envia o pedido pronto diretamente no seu WhatsApp.',
     },
     {
-      q: 'A Web Vitrine faz tráfego pago ou anúncios automáticos?',
-      a: 'Não. Prezamos pela total transparência e honestidade: não realizamos tráfego pago nem prometemos fórmulas milagrosas. A Web Vitrine é a tecnologia de software que organiza sua loja, passa profissionalismo de grande marca e converte os visitantes que você já tem no Instagram, WhatsApp e redes sociais em vendas reais.',
+      q: 'Preciso pagar comissão sobre as vendas?',
+      a: 'Nenhuma comissão. Você paga apenas a assinatura da plataforma e todo o lucro das suas vendas é 100% seu.',
     },
     {
-      q: 'Preciso pagar comissão sobre as minhas vendas?',
-      a: 'Absolutamente NADA de comissão! Ao contrário dos marketplaces tradicionais que cobram de 15% a 25% de cada venda, na Web Vitrine você paga apenas a mensalidade fixa e transparente de R$ 29,99/mês. Todo o lucro das suas vendas é 100% seu.',
+      q: 'Como recebo o pagamento dos clientes?',
+      a: 'O cliente envia o pedido para o seu WhatsApp. Você recebe o pagamento diretamente na sua conta bancária via Pix, cartão de crédito ou na entrega.',
     },
     {
-      q: 'Como recebo o pagamento dos meus clientes?',
-      a: 'O cliente envia o pedido formatado com os itens, endereço e frete para o seu WhatsApp. Você recebe o pagamento diretamente na sua conta bancária via Pix, cartão de crédito ou na entrega, sem nenhum intermediário retendo o seu dinheiro.',
+      q: 'Consigo gerenciar tudo pelo celular?',
+      a: 'Sim. O painel administrativo é 100% otimizado para celulares. Você pode cadastrar peças, alterar preços e acompanhar pedidos de qualquer lugar.',
     },
     {
-      q: 'Como coloco a vitrine para meus clientes acessarem?',
-      a: 'Você recebe um link exclusivo e personalizado da sua loja (ex: webvitrine.com.br/sualoja). Basta colocar esse link na bio do seu Instagram, nos stories diários, em mensagens automáticas do WhatsApp ou enviar direto para seus clientes.',
-    },
-    {
-      q: 'Consigo cadastrar fotos, cores e tamanhos pelo celular?',
-      a: 'Sim! O painel administrativo foi desenvolvido com tecnologia responsiva de ponta. Você pode cadastrar novas peças, alterar preços, gerenciar pedidos e acompanhar o faturamento direto do seu smartphone ou computador em qualquer lugar.',
-    },
-    {
-      q: 'Existe contrato de fidelidade ou multa de cancelamento?',
-      a: 'Nenhum contrato de fidelidade. Você pode cancelar sua assinatura a qualquer momento com total liberdade, sem multas ou burocracia.',
-    },
+      q: 'Existe contrato de fidelidade?',
+      a: 'Nenhum contrato. Você pode cancelar sua assinatura a qualquer momento com total liberdade.',
+    }
+  ];
+
+  const plans = [
+    { name: 'Mensal', price: 'R$ 29,99', period: '/mês', highlight: false },
+    { name: 'Trimestral', price: 'R$ 49,99', period: '/trimestre', highlight: false },
+    { name: 'Semestral', price: 'R$ 119,99', period: '/semestre', highlight: false },
+        { name: 'Vitalício', price: 'R$ 250,00', period: ' Pagamento Único', highlight: true },
   ];
 
   return (
-    <div className="min-h-screen bg-[#0E0D0C] text-stone-100 font-sans selection:bg-[#D4AF37] selection:text-black">
-      {/* Top Notification Bar */}
-      <div className="bg-gradient-to-r from-stone-900 via-[#1C1814] to-stone-900 border-b border-[#3D3328] py-2 px-4 text-center text-xs text-stone-300">
-        <div className="max-w-7xl mx-auto flex items-center justify-center space-x-2">
-          <span className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse" />
-          <span>
-            Plataforma Oficial Web Vitrine • Plano Completo por apenas{' '}
-            <strong className="text-[#E5C378]">R$ 29,99/mês</strong> sem comissão por venda!
-          </span>
-        </div>
-      </div>
-
-      {/* Main Navigation */}
-      <header className="sticky top-0 z-40 bg-[#0E0D0C]/95 backdrop-blur-md border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
-          {/* Brand Logo */}
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#8C6508] p-0.5 shadow-lg shadow-[#D4AF37]/10 flex items-center justify-center">
-              <div className="w-full h-full bg-[#121110] rounded-[10px] flex items-center justify-center">
-                <Gem className="w-5 h-5 text-[#E5C378]" />
-              </div>
-            </div>
-            <div>
-              <span className="font-serif-luxury font-bold text-xl sm:text-2xl text-white tracking-wider uppercase block leading-tight">
-                Web Vitrine
-              </span>
-              <span className="text-[10px] text-[#D4AF37] font-semibold tracking-widest uppercase block">
-                Plataforma para Lojistas
-              </span>
-            </div>
+    <div className="min-h-screen bg-stone-50 text-stone-900 font-sans selection:bg-stone-900 selection:text-white">
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-stone-50/90 backdrop-blur-md border-b border-stone-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Store className="w-6 h-6 text-stone-900" />
+            <span className="font-bold text-lg tracking-tight uppercase">Web Vitrine</span>
           </div>
-
-          {/* Navigation Actions */}
-          <div className="flex items-center space-x-2 sm:space-x-4">
+          
+          <div className="flex items-center space-x-3">
             <button
               onClick={onAdminLogin}
-              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-stone-900 hover:bg-stone-800 text-stone-200 hover:text-white rounded-xl text-xs font-semibold border border-white/10 transition-all cursor-pointer"
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 hover:bg-stone-200 text-stone-700 rounded-lg text-xs font-semibold transition-colors"
             >
-              <Lock className="w-3.5 h-3.5 text-[#D4AF37]" />
+              <Lock className="w-3.5 h-3.5" />
               <span>Área do Lojista</span>
             </button>
-
             <a
               href={buyLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center space-x-1.5 px-4 py-2 bg-gradient-to-r from-[#25D366] to-[#1EBE5D] hover:from-[#20bd5a] hover:to-[#19a750] text-white rounded-xl text-xs font-bold shadow-md transition-all cursor-pointer"
+              className="inline-flex items-center space-x-1.5 px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-lg text-xs font-bold transition-colors shadow-sm"
             >
-              <MessageCircle className="w-4 h-4 fill-white" />
-              <span className="hidden sm:inline">Adquirir</span>
-              <span className="sm:hidden">WhatsApp</span>
+              <MessageCircle className="w-4 h-4" />
+              <span className="hidden sm:inline">Assinar Agora</span>
+              <span className="sm:hidden">Assinar</span>
             </a>
           </div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative pt-12 pb-20 sm:pt-20 sm:pb-28 overflow-hidden">
-        {/* Background Gradients */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-[#D4AF37]/8 rounded-full blur-[140px] pointer-events-none -z-10" />
-        <div className="absolute -top-10 right-10 w-96 h-96 bg-[#8C6508]/10 rounded-full blur-[100px] pointer-events-none -z-10" />
+      {/* Hero */}
+      <section className="py-20 sm:py-32 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center space-y-8">
+        <h1 className="text-4xl sm:text-6xl font-black text-stone-900 leading-[1.1] tracking-tight">
+          Sua loja com um catálogo online elegante.
+        </h1>
+        <p className="text-stone-600 text-base sm:text-lg max-w-2xl mx-auto">
+          Organize seus produtos e receba os pedidos diretamente no seu WhatsApp. 
+          Sem comissões, sem intermediários.
+        </p>
+        
+        <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a
+            href={buyLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center space-x-2 px-8 py-4 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-sm font-bold transition-colors w-full sm:w-auto"
+          >
+            <span>Criar Minha Vitrine</span>
+            <ArrowRight className="w-4 h-4" />
+          </a>
+        </div>
+      </section>
 
+      {/* Features - Minimalist */}
+      <section className="py-20 bg-white border-y border-stone-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-            {/* Hero Text */}
-            <motion.div
-              initial={{ opacity: 0, y: 25 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7 }}
-              className="lg:col-span-7 space-y-6 text-center lg:text-left"
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+            <div className="space-y-4">
+              <div className="w-12 h-12 mx-auto bg-stone-100 rounded-full flex items-center justify-center text-stone-900">
+                <Store className="w-6 h-6" />
+              </div>
+              <h3 className="font-bold text-lg">Catálogo Profissional</h3>
+              <p className="text-stone-600 text-sm">Exiba fotos, cores e tamanhos em uma interface premium e intuitiva.</p>
+            </div>
+            <div className="space-y-4">
+              <div className="w-12 h-12 mx-auto bg-stone-100 rounded-full flex items-center justify-center text-stone-900">
+                <MessageCircle className="w-6 h-6" />
+              </div>
+              <h3 className="font-bold text-lg">Pedidos no WhatsApp</h3>
+              <p className="text-stone-600 text-sm">O cliente monta a sacola e envia o pedido formatado direto no seu WhatsApp.</p>
+            </div>
+            <div className="space-y-4">
+              <div className="w-12 h-12 mx-auto bg-stone-100 rounded-full flex items-center justify-center text-stone-900">
+                <ShieldCheck className="w-6 h-6" />
+              </div>
+              <h3 className="font-bold text-lg">Zero Taxas</h3>
+              <p className="text-stone-600 text-sm">Sem comissões por venda. Você paga apenas o plano escolhido e lucra 100%.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center space-y-4 mb-16">
+          <h2 className="text-3xl font-black tracking-tight">Planos Simples e Claros</h2>
+          <p className="text-stone-600">Escolha o melhor plano para o seu negócio.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {plans.map((plan, idx) => (
+            <div 
+              key={idx} 
+              className={`p-6 rounded-2xl flex flex-col justify-between border ${plan.highlight ? 'bg-stone-900 text-white border-stone-900 shadow-xl lg:-translate-y-4' : 'bg-white border-stone-200 text-stone-900'}`}
             >
-              {/* Trust Badge Pill */}
-              <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 bg-[#1E1A16] border border-[#4A3E2D] rounded-full text-xs font-bold text-[#E5C378] shadow-sm">
-                <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
-                <span>A Vitrine Mais Elegante & Prática do Brasil</span>
-              </div>
-
-              {/* Main Headline */}
-              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-serif-luxury font-bold text-white leading-[1.15] tracking-tight">
-                Transforme sua Loja em uma{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F3E5AB] via-[#D4AF37] to-[#AA7C11]">
-                  Vitrine de Grife
-                </span>{' '}
-                com Pedidos no WhatsApp.
-              </h1>
-
-              {/* Subheadline */}
-              <p className="text-stone-300 text-sm sm:text-base lg:text-lg leading-relaxed max-w-2xl mx-auto lg:mx-0 font-normal">
-                Organize todas as suas roupas e produtos em um catálogo interativo de alto padrão. Troca de fotos por cor estilo Shopee, horários de funcionamento, cálculo de frete e fechamento de pedidos instantâneo no seu WhatsApp.
-              </p>
-
-              {/* Transparency Notice Box */}
-              <div className="p-4 bg-[#181614] border border-[#42372A] rounded-2xl text-left space-y-2 max-w-xl mx-auto lg:mx-0">
-                <div className="flex items-center space-x-2 text-[#E5C378]">
-                  <ShieldCheck className="w-4 h-4 text-[#D4AF37] shrink-0" />
-                  <span className="text-xs font-bold uppercase tracking-wider">
-                    Transparência & Confiança Total
-                  </span>
+              <div>
+                <h3 className={`text-sm font-bold uppercase tracking-wider mb-2 ${plan.highlight ? 'text-stone-300' : 'text-stone-500'}`}>{plan.name}</h3>
+                <div className="flex items-end gap-1 mb-6">
+                  <span className="text-3xl font-black">{plan.price}</span>
+                  <span className={`text-xs pb-1 font-medium ${plan.highlight ? 'text-stone-400' : 'text-stone-500'}`}>{plan.period}</span>
                 </div>
-                <p className="text-xs text-stone-300 leading-relaxed">
-                  <strong className="text-white">Não fazemos tráfego pago.</strong> Entregamos a plataforma completa e ultra profissional onde seus clientes compram com prazer e confiança, sem você pagar nenhuma comissão sobre as vendas.
-                </p>
+                
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className={`w-4 h-4 ${plan.highlight ? 'text-stone-300' : 'text-stone-900'}`} />
+                    <span>Catálogo Ilimitado</span>
+                  </li>
+                  <li className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className={`w-4 h-4 ${plan.highlight ? 'text-stone-300' : 'text-stone-900'}`} />
+                    <span>Pedidos via WhatsApp</span>
+                  </li>
+                  <li className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className={`w-4 h-4 ${plan.highlight ? 'text-stone-300' : 'text-stone-900'}`} />
+                    <span>Painel de Gestão</span>
+                  </li>
+                </ul>
               </div>
+              
+              <a
+                href={buyLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`w-full py-3 rounded-xl text-xs font-bold text-center transition-colors ${plan.highlight ? 'bg-white text-stone-900 hover:bg-stone-100' : 'bg-stone-100 text-stone-900 hover:bg-stone-200'}`}
+              >
+                Escolher Plano
+              </a>
+            </div>
+          ))}
+        </div>
+      </section>
 
-              {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 pt-2">
-                <a
-                  href={buyLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-[#25D366] to-[#1EBE5D] hover:from-[#20bd5a] hover:to-[#19a750] text-white rounded-2xl font-bold text-sm shadow-xl shadow-emerald-950/40 flex items-center justify-center space-x-3 transition-all transform hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-                  id="btn-hero-adquirir-whatsapp"
-                >
-                  <MessageCircle className="w-5 h-5 fill-white" />
-                  <span>Adquirir Minha Vitrine • R$ 29,99/mês</span>
-                </a>
-
+      {/* FAQ */}
+      <section className="py-24 bg-white border-t border-stone-200">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-black tracking-tight text-center mb-12">Perguntas Frequentes</h2>
+          <div className="space-y-4">
+            {faqs.map((faq, idx) => (
+              <div key={idx} className="border border-stone-200 rounded-xl overflow-hidden bg-stone-50">
                 <button
-                  type="button"
-                  onClick={() => onEnterStore('Teste@123')}
-                  className="w-full sm:w-auto px-8 py-4 bg-stone-900 hover:bg-stone-800 text-stone-200 rounded-2xl font-bold text-sm shadow-xl flex items-center justify-center space-x-3 border border-stone-800 transition-all cursor-pointer"
+                  onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                  className="w-full text-left px-6 py-4 flex items-center justify-between focus:outline-none"
                 >
-                  <ShoppingBag className="w-5 h-5 text-stone-400" />
-                  <span>Ver Loja de Demonstração</span>
+                  <span className="font-bold text-stone-900">{faq.q}</span>
+                  <ChevronDown className={`w-5 h-5 text-stone-500 transition-transform ${openFaq === idx ? 'rotate-180' : ''}`} />
                 </button>
-              </div>
-
-              {/* Key Trust Points Under CTA */}
-              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2 text-xs text-stone-400">
-                <div className="flex items-center space-x-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span>Sem comissão por venda</span>
-                </div>
-                <div className="flex items-center space-x-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span>Ativação Rápida</span>
-                </div>
-                <div className="flex items-center space-x-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span>Suporte Humano no WhatsApp</span>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Interactive Live Vitrine Simulator (Right Column) */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.15 }}
-              className="lg:col-span-5"
-            >
-              <div className="relative max-w-md mx-auto bg-[#141210] rounded-3xl border border-[#42372A] p-4 shadow-2xl shadow-black/80 space-y-4">
-                {/* Simulator Header */}
-                <div className="flex items-center justify-between pb-3 border-b border-white/10">
-                  <div className="flex items-center space-x-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
-                    <span className="text-[11px] font-mono text-stone-400 ml-2">webvitrine.com.br/sualoja</span>
-                  </div>
-                  <span className="text-[10px] bg-[#D4AF37]/20 text-[#E5C378] px-2 py-0.5 rounded-md font-bold">
-                    SIMULADOR AO VIVO
-                  </span>
-                </div>
-
-                {/* Simulated Product Card with Interactive Color Switcher */}
-                <div className="bg-[#1C1A17] rounded-2xl border border-[#382F24] p-3.5 space-y-3">
-                  <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-stone-900 border border-white/5">
-                    <img
-                      src={demoImages[selectedDemoColor]}
-                      alt="Vestido Demonstração"
-                      className="w-full h-full object-cover transition-all duration-500"
-                    />
-                    <span className="absolute top-2 left-2 bg-stone-950/80 backdrop-blur-md text-[#E5C378] text-[10px] font-bold px-2.5 py-1 rounded-lg border border-[#D4AF37]/30">
-                      Alta Costura
-                    </span>
-                    <span className="absolute top-2 right-2 bg-emerald-950/80 backdrop-blur-md text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-lg border border-emerald-500/30">
-                      Disponível
-                    </span>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-serif-luxury font-bold text-white text-base">
-                          Vestido Longo Alfaiataria
-                        </h4>
-                        <p className="text-xs text-stone-400">Tecido Crepe Premium • Coleção 2026</p>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-xs text-stone-400 line-through block">R$ 249,90</span>
-                        <span className="text-base font-bold text-[#E5C378]">R$ 189,90</span>
-                      </div>
-                    </div>
-
-                    {/* Interactive Color Switcher */}
-                    <div className="mt-3 pt-3 border-t border-white/5 space-y-1.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-stone-300 font-semibold">
-                          Clique para testar a troca de cor:
-                        </span>
-                        <span className="text-[#E5C378] font-bold uppercase text-[11px]">
-                          {selectedDemoColor === 'rosa' ? 'Rosa Quartz' : selectedDemoColor === 'preto' ? 'Preto Nobre' : 'Off White'}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedDemoColor('rosa')}
-                          className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                            selectedDemoColor === 'rosa'
-                              ? 'bg-[#E87A90]/20 text-[#F472B6] border-2 border-[#F472B6]'
-                              : 'bg-stone-900 border border-white/10 text-stone-300'
-                          }`}
-                        >
-                          <span className="w-3 h-3 rounded-full bg-[#E87A90]" />
-                          <span>Rosa</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setSelectedDemoColor('preto')}
-                          className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                            selectedDemoColor === 'preto'
-                              ? 'bg-stone-800 text-white border-2 border-stone-400'
-                              : 'bg-stone-900 border border-white/10 text-stone-300'
-                          }`}
-                        >
-                          <span className="w-3 h-3 rounded-full bg-[#111111] border border-white/30" />
-                          <span>Preto</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setSelectedDemoColor('offwhite')}
-                          className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                            selectedDemoColor === 'offwhite'
-                              ? 'bg-amber-950/30 text-amber-200 border-2 border-amber-200'
-                              : 'bg-stone-900 border border-white/10 text-stone-300'
-                          }`}
-                        >
-                          <span className="w-3 h-3 rounded-full bg-[#FAF8F5] border border-stone-400" />
-                          <span>Off White</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Action Simulator Button */}
-                    <div className="mt-3">
-                      <button
-                        type="button"
-                        onClick={() => onEnterStore('Teste@123')}
-                        className="w-full py-2.5 px-3 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 transition-colors cursor-pointer shadow-md"
-                      >
-                        <ShoppingBag className="w-4 h-4" />
-                        <span>Montar Sacola & Pedir no WhatsApp</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Simulator Feature Pills */}
-                <div className="grid grid-cols-2 gap-2 text-[11px] text-stone-300 pt-1">
-                  <div className="flex items-center space-x-1.5 p-2 bg-stone-900/60 rounded-lg border border-white/5">
-                    <Clock className="w-3.5 h-3.5 text-[#D4AF37]" />
-                    <span>Horários & Almoço</span>
-                  </div>
-                  <div className="flex items-center space-x-1.5 p-2 bg-stone-900/60 rounded-lg border border-white/5">
-                    <Palette className="w-3.5 h-3.5 text-[#D4AF37]" />
-                    <span>10 Cores & Fontes</span>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Trust & Transparency Section */}
-      <section className="py-16 bg-[#12110F] border-y border-[#332A20]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-          <div className="text-center max-w-3xl mx-auto space-y-3">
-            <span className="text-xs font-bold tracking-widest text-[#D4AF37] uppercase">
-              Compromisso com a Verdade
-            </span>
-            <h2 className="text-2xl sm:text-4xl font-serif-luxury font-bold text-white">
-              Por que a Web Vitrine é Confiável?
-            </h2>
-            <p className="text-stone-300 text-xs sm:text-sm leading-relaxed">
-              Sabemos que muitos prometem milagres na internet. Nós acreditamos em ferramentas sólidas, transparentes e funcionais que resolvem a dor real do lojista no dia a dia.
-            </p>
-          </div>
-
-          {/* Direct Comparison Matrix */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Column 1: Vender no Direct do Instagram */}
-            <div className="p-6 bg-[#181614] rounded-3xl border border-red-900/20 space-y-4">
-              <div className="flex items-center space-x-2 text-red-400">
-                <XCircle className="w-5 h-5" />
-                <h3 className="font-bold text-sm">Vender Solto no Direct</h3>
-              </div>
-              <ul className="space-y-2.5 text-xs text-stone-400">
-                <li className="flex items-start space-x-2">
-                  <span className="text-red-400 font-bold">✕</span>
-                  <span>Mensagens perdidas e demora para responder preços.</span>
-                </li>
-                <li className="flex items-start space-x-2">
-                  <span className="text-red-400 font-bold">✕</span>
-                  <span>Cliente desiste por falta de catálogo organizado.</span>
-                </li>
-                <li className="flex items-start space-x-2">
-                  <span className="text-red-400 font-bold">✕</span>
-                  <span>Você gasta horas digitando tamanho, cor e dados bancários.</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Column 2: Grandes Marketplaces */}
-            <div className="p-6 bg-[#181614] rounded-3xl border border-amber-900/20 space-y-4">
-              <div className="flex items-center space-x-2 text-amber-400">
-                <XCircle className="w-5 h-5" />
-                <h3 className="font-bold text-sm">Grandes Marketplaces</h3>
-              </div>
-              <ul className="space-y-2.5 text-xs text-stone-400">
-                <li className="flex items-start space-x-2">
-                  <span className="text-amber-400 font-bold">✕</span>
-                  <span>Cobram taxas pesadas de 18% a 25% sobre cada venda.</span>
-                </li>
-                <li className="flex items-start space-x-2">
-                  <span className="text-amber-400 font-bold">✕</span>
-                  <span>Seu cliente vê anúncios de concorrentes mais baratos.</span>
-                </li>
-                <li className="flex items-start space-x-2">
-                  <span className="text-amber-400 font-bold">✕</span>
-                  <span>O dinheiro fica retido por até 30 dias na plataforma.</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Column 3: Web Vitrine (The Winner) */}
-            <div className="p-6 bg-gradient-to-b from-[#221D17] to-[#181512] rounded-3xl border-2 border-[#D4AF37]/50 space-y-4 shadow-xl relative">
-              <div className="absolute -top-3 right-6 bg-[#D4AF37] text-black font-bold text-[10px] px-3 py-0.5 rounded-full uppercase tracking-wider">
-                Recomendado
-              </div>
-              <div className="flex items-center space-x-2 text-[#E5C378]">
-                <CheckCircle className="w-5 h-5 text-[#D4AF37]" />
-                <h3 className="font-bold text-sm text-white">Com a Web Vitrine</h3>
-              </div>
-              <ul className="space-y-2.5 text-xs text-stone-200">
-                <li className="flex items-start space-x-2">
-                  <span className="text-[#D4AF37] font-bold">✓</span>
-                  <span><strong>Zero comissões:</strong> 100% do valor da venda vai para seu bolso.</span>
-                </li>
-                <li className="flex items-start space-x-2">
-                  <span className="text-[#D4AF37] font-bold">✓</span>
-                  <span><strong>Pedido estruturado no WhatsApp:</strong> itens, cor, tamanho, frete e Pix.</span>
-                </li>
-                <li className="flex items-start space-x-2">
-                  <span className="text-[#D4AF37] font-bold">✓</span>
-                  <span><strong>Apenas R$ 29,99/mês:</strong> custo mínimo com retorno imediato.</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Complete Feature Pillars */}
-      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
-        <div className="text-center max-w-2xl mx-auto space-y-3">
-          <span className="text-xs font-bold tracking-widest text-[#D4AF37] uppercase">
-            Recursos Exclusivos
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-serif-luxury font-bold text-white">
-            Tudo o que Você Precisa para Vender Mais
-          </h2>
-          <p className="text-stone-300 text-xs sm:text-sm">
-            Ferramentas desenhadas sob medida para o lojista moderno aumentar o ticket médio e a velocidade no fechamento de vendas.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Feature 1: Shopee Style Colors */}
-          <div className="p-6 bg-[#161412] border border-[#3A3024] rounded-3xl space-y-3 hover:border-[#D4AF37]/50 transition-all">
-            <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/10 text-[#E5C378] flex items-center justify-center">
-              <Palette className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-serif-luxury font-bold text-white">
-              Variação de Cores com Troca de Foto
-            </h3>
-            <p className="text-xs text-stone-300 leading-relaxed">
-              O cliente clica na cor (ex: Rosa, Preto, Terracota) e a foto da peça muda no mesmo instante. Experiência de compra idêntica às maiores lojas do mundo.
-            </p>
-          </div>
-
-          {/* Feature 2: WhatsApp Automated Order */}
-          <div className="p-6 bg-[#161412] border border-[#3A3024] rounded-3xl space-y-3 hover:border-[#D4AF37]/50 transition-all">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
-              <MessageCircle className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-serif-luxury font-bold text-white">
-              Fechamento Completo no WhatsApp
-            </h3>
-            <p className="text-xs text-stone-300 leading-relaxed">
-              Chega de pedir dados picados. O pedido chega formatado com lista de produtos, foto, nome do cliente, endereço com CEP, frete e método de pagamento.
-            </p>
-          </div>
-
-          {/* Feature 3: Store Hours & Lunch Break */}
-          <div className="p-6 bg-[#161412] border border-[#3A3024] rounded-3xl space-y-3 hover:border-[#D4AF37]/50 transition-all">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
-              <Clock className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-serif-luxury font-bold text-white">
-              Horários de Atendimento & Intervalo
-            </h3>
-            <p className="text-xs text-stone-300 leading-relaxed">
-              Configure horário de abertura, fechamento e pausa para almoço. Um relógio em tempo real informa o cliente sobre o status da loja com clareza.
-            </p>
-          </div>
-
-          {/* Feature 4: Visual Identity Themes */}
-          <div className="p-6 bg-[#161412] border border-[#3A3024] rounded-3xl space-y-3 hover:border-[#D4AF37]/50 transition-all">
-            <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/10 text-[#E5C378] flex items-center justify-center">
-              <Layers className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-serif-luxury font-bold text-white">
-              10 Paletas Nobres & Fontes de Luxo
-            </h3>
-            <p className="text-xs text-stone-300 leading-relaxed">
-              Deixe a vitrine com a cara da sua marca. Escolha entre tipografias clássicas (Playfair, Cormorant) e cores imperiais (Dourado, Carmesim, Esmeralda).
-            </p>
-          </div>
-
-          {/* Feature 5: Smart Financial Control */}
-          <div className="p-6 bg-[#161412] border border-[#3A3024] rounded-3xl space-y-3 hover:border-[#D4AF37]/50 transition-all">
-            <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center">
-              <TrendingUp className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-serif-luxury font-bold text-white">
-              Gestão de Pedidos & Faturamento
-            </h3>
-            <p className="text-xs text-stone-300 leading-relaxed">
-              Acompanhe pedidos pendentes, confirmados, enviados e faturamento total do mês em gráficos claros no seu painel administrativo.
-            </p>
-          </div>
-
-          {/* Feature 6: Coupons & Delivery Rules */}
-          <div className="p-6 bg-[#161412] border border-[#3A3024] rounded-3xl space-y-3 hover:border-[#D4AF37]/50 transition-all">
-            <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
-              <Zap className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-serif-luxury font-bold text-white">
-              Cupons de Desconto & Frete por Bairro
-            </h3>
-            <p className="text-xs text-stone-300 leading-relaxed">
-              Crie cupons promocionais com limites de uso e defina taxas de entrega automáticas por bairro ou valor mínimo para frete grátis.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Sincronização de Estoque Inteligente Section */}
-      <section className="py-20 bg-stone-900 border-t border-b border-white/5 relative overflow-hidden text-left">
-        {/* Subtle geometric mesh background styling */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(212,175,55,0.04),transparent)] pointer-events-none"></div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            {/* Explanatory Content */}
-            <div className="lg:col-span-6 space-y-6">
-              <div className="inline-flex items-center space-x-2 px-3 py-1 bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-full text-[10px] font-bold text-[#E5C378] uppercase tracking-wider">
-                <SlidersHorizontal className="w-3.5 h-3.5 text-[#D4AF37]" />
-                <span>Novidade Tecnológica</span>
-              </div>
-              <h2 className="text-3xl sm:text-4xl font-serif-luxury font-bold text-white leading-tight">
-                Estoque Sincronizado & <br />
-                <span className="text-[#E5C378]">Gatilho de Escassez Real</span>
-              </h2>
-              <p className="text-stone-300 text-xs sm:text-sm leading-relaxed">
-                Esqueça o constrangimento de vender uma peça que já acabou ou ter que atualizar planilhas o tempo todo. A Web Vitrine conta com um motor inteligente de reserva que sincroniza seu estoque na hora!
-              </p>
-
-              <div className="space-y-4 pt-2">
-                <div className="flex items-start space-x-3">
-                  <div className="p-1 bg-amber-500/10 text-amber-400 rounded-lg mt-0.5">
-                    <Check className="w-4 h-4 text-amber-400" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-white uppercase tracking-wider">Baixa Automática no Checkout</h4>
-                    <p className="text-xs text-stone-400 mt-0.5">
-                      No exato instante em que o cliente clica para concluir o pedido no WhatsApp, o estoque diminui automaticamente.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-3">
-                  <div className="p-1 bg-amber-500/10 text-amber-400 rounded-lg mt-0.5">
-                    <Check className="w-4 h-4 text-amber-400" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-white uppercase tracking-wider">Bloqueio Inteligente de Overselling</h4>
-                    <p className="text-xs text-stone-400 mt-0.5">
-                      Quando o estoque atinge zero, a vitrine ativa o selo <strong>"Sem Estoque"</strong> e impede novas compras, preservando sua reputação.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-3">
-                  <div className="p-1 bg-amber-500/10 text-amber-400 rounded-lg mt-0.5">
-                    <Check className="w-4 h-4 text-amber-400" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-white uppercase tracking-wider">Reposição Automatizada de Cancelados</h4>
-                    <p className="text-xs text-stone-400 mt-0.5">
-                      Ao cancelar ou reabrir um pedido no painel de controle do CEO, o sistema devolve as peças ao estoque na hora.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Interactive Simulator Widget */}
-            <div className="lg:col-span-6 bg-[#161412] p-6 sm:p-8 rounded-3xl border border-[#3A3024] shadow-2xl relative space-y-6">
-              <div className="absolute top-4 right-4 flex items-center space-x-1.5 bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-1 rounded-full text-[9px] font-bold text-emerald-400 uppercase tracking-widest animate-pulse">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                <span>Simulador Ativo</span>
-              </div>
-
-              <div className="space-y-1">
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-[#D4AF37]" />
-                  Teste a Experiência do Cliente
-                </h3>
-                <p className="text-[11px] text-stone-400 leading-relaxed">
-                  Clique no botão de simulação para ver como a escassez de estoque gera urgência e como o sistema se comporta quando a peça esgota!
-                </p>
-              </div>
-
-              {/* Simulated Product Card */}
-              <div className="p-4 bg-[#1E1C1A] rounded-2xl border border-[#2E2822] flex items-center gap-4 relative overflow-hidden">
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-tr from-[#3A3024] to-[#1E1C1A] flex items-center justify-center relative flex-shrink-0">
-                  <ShoppingBag className="w-7 h-7 text-[#E5C378]" />
-                  {simulatedStock === 0 && (
-                    <div className="absolute inset-0 bg-red-600/90 flex items-center justify-center rounded-xl text-[9px] font-black text-white uppercase tracking-wider animate-fade-in">
-                      Esgotado
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-extrabold text-white uppercase tracking-wider">Vestido Imperial Crepe</span>
-                    <span className="text-xs font-bold text-[#E5C378]">R$ 189,90</span>
-                  </div>
-                  <p className="text-[10px] text-stone-400">Coleção Verão • Exclusivo</p>
-                  
-                  {/* Stock count badge */}
-                  <div className="pt-1 flex items-center justify-between">
-                    <div className="flex items-center space-x-1.5">
-                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
-                        simulatedStock === 0
-                          ? 'bg-red-500/20 text-red-400 border border-red-500/35'
-                          : simulatedStock <= 1
-                          ? 'bg-amber-500/20 text-amber-400 border border-amber-500/35 animate-bounce'
-                          : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/35'
-                      }`}>
-                        Estoque: {simulatedStock} {simulatedStock === 1 ? 'última unidade!' : simulatedStock === 0 ? 'esgotado' : 'unidades'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Interactive Controls Panel */}
-              <div className="p-4 bg-stone-900/50 rounded-2xl border border-white/5 space-y-3.5 text-center">
-                <div className="flex items-center justify-between gap-3 flex-wrap">
-                  {simulatedStock > 0 ? (
-                    <motion.button
-                      type="button"
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => setSimulatedStock(prev => Math.max(0, prev - 1))}
-                      className="flex-1 py-2.5 px-4 bg-stone-100 hover:bg-white text-stone-950 font-bold text-xs rounded-xl transition-all cursor-pointer shadow-md flex items-center justify-center space-x-1.5"
-                    >
-                      <ShoppingBag className="w-3.5 h-3.5" />
-                      <span>Simular Compra do Cliente (-1)</span>
-                    </motion.button>
-                  ) : (
-                    <motion.button
-                      type="button"
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => setSimulatedStock(3)}
-                      className="flex-1 py-2.5 px-4 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-md flex items-center justify-center space-x-1.5 shadow-amber-600/10"
-                    >
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      <span>Repor Estoque (Reabastecer)</span>
-                    </motion.button>
-                  )}
-                </div>
-
-                {/* Simulated Outcome Warning Alert */}
-                <AnimatePresence mode="wait">
-                  {simulatedStock === 0 ? (
+                <AnimatePresence>
+                  {openFaq === idx && (
                     <motion.div
-                      key="esgotado"
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-[10px] text-red-300 font-medium leading-relaxed"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
                     >
-                      🔥 <strong>Bloqueio de Venda Ativado!</strong> O cliente não consegue mais prosseguir para o checkout com esse produto e vê o selo "Sem Estoque" em destaque, garantindo que você nunca venda o que não possui!
-                    </motion.div>
-                  ) : simulatedStock === 1 ? (
-                    <motion.div
-                      key="urgencia"
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-[10px] text-amber-300 font-medium leading-relaxed"
-                    >
-                      ⚡ <strong>Gatilho de Urgência Ativado!</strong> Quando resta apenas 1 peça, o cliente vê em destaque um alerta pulsante gerando escassez genuína para acelerar a decisão de compra.
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="normal"
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="p-3 bg-[#1A1816] rounded-xl text-[10px] text-stone-400 font-medium leading-relaxed border border-white/5"
-                    >
-                      ℹ️ Clique para reduzir o estoque até 0 e veja como o sistema reage na tela do cliente.
+                      <div className="px-6 pb-4 pt-0 text-stone-600 text-sm">
+                        {faq.a}
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Real Testimonials Section */}
-      <section className="py-20 bg-[#12110F] border-t border-[#332A20]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-          <div className="text-center max-w-2xl mx-auto space-y-3">
-            <span className="text-xs font-bold tracking-widest text-[#D4AF37] uppercase">
-              Quem Já Usa
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-serif-luxury font-bold text-white">
-              O Que Nossos Lojistas Dizem
-            </h2>
-            <p className="text-stone-300 text-xs sm:text-sm">
-              Lojas de moda, boutiques e cosméticos que transformaram o atendimento pelo WhatsApp.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Testimonial 1 */}
-            <div className="p-6 bg-[#181614] border border-[#3A3024] rounded-3xl space-y-4">
-              <div className="flex text-[#D4AF37] space-x-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-[#D4AF37]" />
-                ))}
-              </div>
-              <p className="text-xs text-stone-300 leading-relaxed italic">
-                "Antes eu passava o dia mandando foto de peça por foto no direct. Agora coloco o link da Web Vitrine nos stories e o cliente já manda o pedido prontinho no WhatsApp com tamanho e cor escolhidos."
-              </p>
-              <div className="flex items-center space-x-3 pt-2 border-t border-white/5">
-                <div className="w-9 h-9 rounded-full bg-[#D4AF37]/20 text-[#E5C378] font-bold text-xs flex items-center justify-center">
-                  ML
-                </div>
-                <div>
-                  <span className="font-bold text-xs text-white block">Mariana Lima</span>
-                  <span className="text-[10px] text-stone-400">Boutique Glamour (Moda Feminina)</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Testimonial 2 */}
-            <div className="p-6 bg-[#181614] border border-[#3A3024] rounded-3xl space-y-4">
-              <div className="flex text-[#D4AF37] space-x-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-[#D4AF37]" />
-                ))}
-              </div>
-              <p className="text-xs text-stone-300 leading-relaxed italic">
-                "A função de trocar a foto da roupa quando o cliente clica na cor (tipo Rosa ou Preto) aumentou muito a confiança das clientes. Por R$ 29,99/mês se paga no primeiro pedido!"
-              </p>
-              <div className="flex items-center space-x-3 pt-2 border-t border-white/5">
-                <div className="w-9 h-9 rounded-full bg-[#D4AF37]/20 text-[#E5C378] font-bold text-xs flex items-center justify-center">
-                  RS
-                </div>
-                <div>
-                  <span className="font-bold text-xs text-white block">Renata Silva</span>
-                  <span className="text-[10px] text-stone-400">Ateliê Elegance</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Testimonial 3 */}
-            <div className="p-6 bg-[#181614] border border-[#3A3024] rounded-3xl space-y-4">
-              <div className="flex text-[#D4AF37] space-x-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-[#D4AF37]" />
-                ))}
-              </div>
-              <p className="text-xs text-stone-300 leading-relaxed italic">
-                "O suporte no WhatsApp é impecável. O sistema é muito simples de mexer pelo celular e não tem pegadinha de comissão escondida. Super recomendo a todos os lojistas."
-              </p>
-              <div className="flex items-center space-x-3 pt-2 border-t border-white/5">
-                <div className="w-9 h-9 rounded-full bg-[#D4AF37]/20 text-[#E5C378] font-bold text-xs flex items-center justify-center">
-                  CF
-                </div>
-                <div>
-                  <span className="font-bold text-xs text-white block">Carlos Fernandes</span>
-                  <span className="text-[10px] text-stone-400">Empório Natural & Bem Estar</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Transparent Pricing Card */}
-      <section className="py-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative p-8 sm:p-12 bg-gradient-to-b from-[#1C1814] to-[#12100E] rounded-3xl border-2 border-[#D4AF37]/60 shadow-2xl shadow-black space-y-8 text-center">
-          {/* Top Tag */}
-          <div className="inline-flex items-center space-x-2 px-4 py-1.5 bg-[#D4AF37]/20 border border-[#D4AF37]/40 rounded-full text-xs font-bold text-[#E5C378] uppercase tracking-wider">
-            <Gem className="w-4 h-4 text-[#D4AF37]" />
-            <span>Plano Oficial Lojista VIP</span>
-          </div>
-
-          <div>
-            <h2 className="text-3xl sm:text-5xl font-serif-luxury font-bold text-white">
-              Investimento Transparente
-            </h2>
-            <p className="text-stone-300 text-xs sm:text-sm mt-2 max-w-md mx-auto">
-              Sem taxa de adesão, sem surpresas e sem comissão sobre suas vendas.
-            </p>
-          </div>
-
-          {/* Pricing Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto py-8">
-            {/* Mensal */}
-            <div className="bg-[#181614] border border-[#3A3024] rounded-3xl p-6 text-center space-y-4 flex flex-col justify-center">
-              <h3 className="text-sm font-bold text-stone-400 uppercase tracking-widest">Plano Mensal</h3>
-              <div className="flex items-baseline justify-center space-x-1">
-                <span className="text-stone-500">R$</span>
-                <span className="text-4xl font-bold text-white">29,99</span>
-                <span className="text-stone-500">/mês</span>
-              </div>
-              <p className="text-xs text-stone-500">Renovação a cada 30 dias</p>
-              <div className="inline-block mt-2 text-[10px] text-emerald-400 font-semibold bg-emerald-950/30 py-1.5 px-3 rounded-lg border border-emerald-900/50">
-                Apenas R$ 1,00 por dia
-              </div>
-            </div>
-
-            {/* Trimestral */}
-            <div className="bg-gradient-to-b from-[#2A2318] to-[#181614] border-2 border-[#D4AF37] rounded-3xl p-8 text-center space-y-4 relative md:transform md:scale-110 shadow-2xl z-10 flex flex-col justify-center">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#D4AF37] to-[#E5C378] text-stone-900 text-[10px] font-black uppercase tracking-wider px-4 py-1 rounded-full shadow-lg">
-                Mais Inteligente
-              </div>
-              <h3 className="text-sm font-bold text-[#E5C378] uppercase tracking-widest">Plano Trimestral</h3>
-              <div className="flex items-baseline justify-center space-x-1">
-                <span className="text-[#D4AF37]/70">R$</span>
-                <span className="text-5xl font-bold text-white">49,99</span>
-              </div>
-              <p className="text-xs text-stone-300">Equivale a apenas <strong className="text-white">R$ 16,66/mês</strong></p>
-              <div className="inline-block mt-2 text-xs text-emerald-300 font-bold bg-emerald-900/40 py-2 px-3 rounded-xl border border-emerald-800/50 shadow-inner">
-                Economia de R$ 39,98 • Só R$ 0,55/dia!
-              </div>
-            </div>
-
-            {/* Semestral */}
-            <div className="bg-[#181614] border border-[#3A3024] rounded-3xl p-6 text-center space-y-4 flex flex-col justify-center">
-              <h3 className="text-sm font-bold text-stone-400 uppercase tracking-widest">Plano Semestral</h3>
-              <div className="flex items-baseline justify-center space-x-1">
-                <span className="text-stone-500">R$</span>
-                <span className="text-4xl font-bold text-white">119,99</span>
-              </div>
-              <p className="text-xs text-stone-500">Equivale a <strong className="text-stone-300">R$ 19,99/mês</strong></p>
-              <div className="inline-block mt-2 text-[10px] text-emerald-400 font-semibold bg-emerald-950/30 py-1.5 px-3 rounded-lg border border-emerald-900/50">
-                Economia de R$ 59,95 • Só R$ 0,66/dia!
-              </div>
-            </div>
-          </div>
-          
-          <p className="text-[11px] text-stone-500 max-w-lg mx-auto italic mb-10">
-            * A única diferença entre os planos é a economia brutal gerada pelos prazos maiores. Todos liberam 100% dos recursos premium da plataforma.
-          </p>
-
-          {/* Included Features Checklist */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs text-left max-w-xl mx-auto">
-            <div className="flex items-center space-x-2 text-stone-200">
-              <Check className="w-4 h-4 text-[#D4AF37] shrink-0" />
-              <span>Produtos e fotos ilimitadas em alta resolução</span>
-            </div>
-            <div className="flex items-center space-x-2 text-stone-200">
-              <Check className="w-4 h-4 text-[#D4AF37] shrink-0" />
-              <span>Troca de fotos por variação de cores</span>
-            </div>
-            <div className="flex items-center space-x-2 text-stone-200">
-              <Check className="w-4 h-4 text-[#D4AF37] shrink-0" />
-              <span>Checkout com envio direto no WhatsApp</span>
-            </div>
-            <div className="flex items-center space-x-2 text-stone-200">
-              <Check className="w-4 h-4 text-[#D4AF37] shrink-0" />
-              <span>Painel financeiro & relatórios de vendas</span>
-            </div>
-            <div className="flex items-center space-x-2 text-stone-200">
-              <Check className="w-4 h-4 text-[#D4AF37] shrink-0" />
-              <span>Personalização de cores e tipografia de luxo</span>
-            </div>
-            <div className="flex items-center space-x-2 text-stone-200">
-              <Check className="w-4 h-4 text-[#D4AF37] shrink-0" />
-              <span>Suporte direto via WhatsApp oficial</span>
-            </div>
-          </div>
-
-          {/* CTA Action */}
-          <div className="space-y-3 pt-4">
-            <a
-              href={buyLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full sm:w-auto inline-flex items-center justify-center space-x-3 px-10 py-5 bg-gradient-to-r from-[#25D366] to-[#1EBE5D] hover:from-[#20bd5a] hover:to-[#19a750] text-white rounded-2xl font-bold text-base shadow-2xl shadow-emerald-950/60 transition-all transform hover:scale-[1.02] cursor-pointer"
-            >
-              <MessageCircle className="w-6 h-6 fill-white" />
-              <span>Quero Minha Vitrine Agora • R$ 29,99/mês</span>
-            </a>
-            <p className="text-[11px] text-stone-400">
-              Ativação rápida e suporte 100% humano diretamente no seu WhatsApp.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ Section */}
-      <section className="py-20 bg-[#12110F] border-t border-[#332A20]">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          <div className="text-center space-y-3">
-            <span className="text-xs font-bold tracking-widest text-[#D4AF37] uppercase">
-              Perguntas Frequentes
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-serif-luxury font-bold text-white">
-              Dúvidas Comuns
-            </h2>
-            <p className="text-stone-300 text-xs sm:text-sm">
-              Tudo o que você precisa saber com total clareza antes de começar.
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            {faqs.map((faq, index) => {
-              const isOpen = openFaq === index;
-              return (
-                <div
-                  key={index}
-                  className="bg-[#181614] border border-[#382F24] rounded-2xl overflow-hidden transition-all"
-                >
-                  <button
-                    type="button"
-                    onClick={() => setOpenFaq(isOpen ? null : index)}
-                    className="w-full p-4 sm:p-5 text-left flex items-center justify-between text-stone-100 hover:text-white transition-colors cursor-pointer"
-                  >
-                    <span className="font-semibold text-xs sm:text-sm">{faq.q}</span>
-                    <ChevronDown
-                      className={`w-4 h-4 text-[#D4AF37] transition-transform duration-300 ${
-                        isOpen ? 'rotate-180' : ''
-                      }`}
-                    />
-                  </button>
-                  {isOpen && (
-                    <div className="px-4 pb-5 sm:px-5 text-xs text-stone-300 leading-relaxed border-t border-white/5 pt-3">
-                      {faq.a}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Final High-Converting Bottom Banner */}
-      <section className="py-16 bg-gradient-to-r from-stone-950 via-[#1C1814] to-stone-950 border-t border-[#42372A] text-center">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 space-y-6">
-          <Gem className="w-8 h-8 text-[#D4AF37] mx-auto animate-pulse" />
-          <h2 className="text-2xl sm:text-4xl font-serif-luxury font-bold text-white">
-            Pronto para profissionalizar as vendas da sua loja?
-          </h2>
-          <p className="text-stone-300 text-xs sm:text-sm max-w-xl mx-auto leading-relaxed">
-            Tenha seu catálogo no ar ainda hoje. Fale diretamente com nossa equipe no WhatsApp e receba seu acesso com suporte completo.
-          </p>
-
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <a
-              href={buyLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full sm:w-auto px-8 py-4 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-2xl font-bold text-sm shadow-xl flex items-center justify-center space-x-2 transition-all cursor-pointer"
-            >
-              <MessageCircle className="w-5 h-5 fill-white" />
-              <span>Chamar no WhatsApp Oficial</span>
-            </a>
-
-            <button
-              type="button"
-              onClick={() => onEnterStore("Teste@123")}
-              className="w-full sm:w-auto px-6 py-4 bg-stone-900 hover:bg-stone-800 text-stone-200 rounded-2xl font-semibold text-xs border border-white/10 transition-colors cursor-pointer"
-            >
-              Ver Vitrine de Demonstração
-            </button>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-8 bg-stone-950 border-t border-white/10 text-center text-xs text-stone-500">
-        <div className="max-w-7xl mx-auto px-4 space-y-2">
-          <div className="flex items-center justify-center space-x-2 text-stone-400 font-serif-luxury uppercase tracking-widest text-xs">
-            <Gem className="w-4 h-4 text-[#D4AF37]" />
-            <span>Web Vitrine • Plataforma para Lojistas</span>
+      <footer className="bg-stone-950 py-12 text-center text-stone-400">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-center space-x-2 mb-4">
+            <Store className="w-5 h-5 text-stone-500" />
+            <span className="font-bold text-lg tracking-tight uppercase text-stone-300">Web Vitrine</span>
           </div>
-          <p className="text-[11px] text-stone-500">
-            Atendimento e Suporte Oficial 100% Humano via WhatsApp • Todos os direitos reservados.
-          </p>
+          <p className="text-xs">&copy; {new Date().getFullYear()} Web Vitrine. Todos os direitos reservados.</p>
         </div>
       </footer>
     </div>
