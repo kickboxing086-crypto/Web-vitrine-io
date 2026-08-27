@@ -480,7 +480,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
 
               <button
                 onClick={onLogout}
-                className="flex items-center space-x-2 px-3.5 py-2.5 bg-[#171E2D] hover:bg-stone-200 text-stone-600 hover:text-stone-900 rounded-xl text-xs font-semibold border border-stone-200 transition-colors cursor-pointer"
+                className="flex items-center space-x-2 px-3.5 py-2.5 bg-stone-150 hover:bg-stone-200 text-stone-700 hover:text-stone-900 rounded-xl text-xs font-semibold border border-stone-200 transition-colors cursor-pointer"
                 id="btn-gestor-logout"
               >
                 <LogOut className="w-4 h-4 text-stone-500" />
@@ -498,20 +498,20 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r /40 via-[#161C2A] to-rose-950/30 border border-stone-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl"
+            className="p-4 sm:p-5 rounded-2xl bg-amber-50 border border-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm"
           >
             <div className="flex items-center space-x-3.5">
-              <div className="w-10 h-10 rounded-xl bg-stone-100 text-stone-900 flex items-center justify-center flex-shrink-0 border border-stone-200">
-                <AlertTriangle className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-900 flex items-center justify-center flex-shrink-0 border border-amber-200">
+                <AlertTriangle className="w-5 h-5 text-amber-850" />
               </div>
               <div>
                 <h4 className="text-sm font-bold text-stone-900">
                   Atenção de Renovação Inteligente
                 </h4>
-                <p className="text-xs text-stone-600">
+                <p className="text-xs text-stone-650">
                   Você tem{' '}
                   {metrics.overdueCount > 0 && (
-                    <span className="text-rose-400 font-bold">
+                    <span className="text-rose-600 font-bold">
                       {metrics.overdueCount} {metrics.overdueCount === 1 ? 'loja vencida' : 'lojas vencidas'} (R$ {metrics.overdueValue.toFixed(2).replace('.', ',')})
                     </span>
                   )}
@@ -527,7 +527,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
 
             <button
               onClick={() => setStatusFilter(metrics.overdueCount > 0 ? 'overdue' : 'expiring_soon')}
-              className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-900 border border-stone-200 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer whitespace-nowrap"
+              className="px-4 py-2 bg-white hover:bg-stone-50 text-stone-900 border border-stone-200 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer whitespace-nowrap"
             >
               <span>Ver Lojas Pendentes</span>
               <ChevronRight className="w-3.5 h-3.5" />
@@ -919,16 +919,16 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
               id="modal-gestor-client-form"
             >
               {/* Modal Header */}
-              <div className="bg-gradient-to-r from-[#171E2E] to-[#121724] p-6 border-b border-stone-200 relative">
+              <div className="bg-stone-50 p-6 border-b border-stone-200 relative">
                 <button
                   onClick={() => setIsAddingOrEditing(false)}
-                  className="absolute top-5 right-5 p-2 text-stone-500 hover:text-stone-900 rounded-full bg-white/50 hover:bg-white transition-colors"
+                  className="absolute top-5 right-5 p-2 text-stone-400 hover:text-stone-900 rounded-full bg-stone-100 hover:bg-stone-200 transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
 
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-2xl bg-stone-100 text-stone-900 flex items-center justify-center border border-stone-300">
+                  <div className="w-10 h-10 rounded-2xl bg-white text-stone-900 flex items-center justify-center border border-stone-200 shadow-xs">
                     <Store className="w-5 h-5" />
                   </div>
                   <div>
@@ -1045,6 +1045,13 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                           days: 180,
                           badge: 'Alta Economia',
                         },
+                        {
+                          price: 250.00,
+                          title: 'Vitalício',
+                          period: 'Acesso Vitalício',
+                          days: 36500,
+                          badge: 'Único / Vitalício',
+                        },
                       ].map((plan) => {
                         const isSelected = Number(formData.planPrice) === plan.price;
                         return (
@@ -1063,28 +1070,19 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                             }}
                             className={`relative p-3 rounded-2xl border text-left flex flex-col justify-between transition-all cursor-pointer overflow-hidden select-none min-h-[96px] ${
                               isSelected
-                                ? 'bg-stone-900 border-stone-900 shadow-xl'
-                                : 'bg-white hover:bg-stone-100 border-stone-200/80 hover:border-stone-300'
+                                ? 'bg-stone-900 border-stone-900 shadow-xl text-white'
+                                : 'bg-white hover:bg-stone-100 border-stone-200/80 hover:border-stone-300 text-stone-900'
                             }`}
                             id={`btn-plan-select-${plan.price}`}
                           >
-                            {/* Animated Background Indicator */}
-                            {isSelected && (
-                              <motion.div
-                                layoutId="activeAdminPlanGlow"
-                                className="absolute inset-0 bg-stone-900 pointer-events-none rounded-2xl"
-                                transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-                              />
-                            )}
-
                             {/* Top Badge */}
                             {plan.badge && (
-                              <span className={`self-start px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider mb-1 shadow-2xs ${isSelected ? 'bg-white text-stone-900' : 'bg-stone-900 text-white'}`}>
+                              <span className={`self-start px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider mb-1 shadow-2xs relative z-10 ${isSelected ? 'bg-white text-stone-900' : 'bg-stone-900 text-white'}`}>
                                 {plan.badge}
                               </span>
                             )}
 
-                            <div className="flex items-center justify-between w-full mb-1">
+                            <div className="flex items-center justify-between w-full mb-1 relative z-10">
                               <span className={`text-xs font-bold ${isSelected ? 'text-white' : 'text-stone-900'}`}>
                                 {plan.title}
                               </span>
@@ -1107,13 +1105,13 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                               </div>
                             </div>
 
-                            <div className="my-0.5">
+                            <div className="my-0.5 relative z-10">
                               <span className={`text-sm sm:text-base font-black tracking-tight ${isSelected ? 'text-white' : 'text-stone-900'}`}>
                                 R$ {plan.price.toFixed(2).replace('.', ',')}
                               </span>
                             </div>
 
-                            <span className={`text-[10px] font-medium ${isSelected ? 'text-stone-300' : 'text-stone-500'}`}>
+                            <span className={`text-[10px] font-medium relative z-10 ${isSelected ? 'text-stone-300' : 'text-stone-500'}`}>
                               {plan.period}
                             </span>
                           </motion.button>
@@ -1171,10 +1169,10 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                       <button
                         type="button"
                         onClick={() => setFormData({ ...formData, status: 'active' })}
-                        className={`flex-1 py-2 px-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                        className={`flex-1 py-2.5 px-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                           formData.status === 'active'
-                            ? 'bg-emerald-100 border-emerald-500 text-emerald-700'
-                            : 'bg-white border-stone-200 text-stone-500'
+                            ? 'bg-stone-900 border-stone-900 text-white shadow-md'
+                            : 'bg-white border-stone-200 text-stone-500 hover:bg-stone-50'
                         }`}
                       >
                         Ativa (Liberada)
@@ -1182,10 +1180,10 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                       <button
                         type="button"
                         onClick={() => setFormData({ ...formData, status: 'inactive' })}
-                        className={`flex-1 py-2 px-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                        className={`flex-1 py-2.5 px-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                           formData.status === 'inactive'
-                            ? 'bg-rose-500/20 border-rose-500 text-rose-300'
-                            : 'bg-white border-stone-200 text-stone-500'
+                            ? 'bg-rose-50 border-rose-200 text-rose-700 shadow-sm font-extrabold'
+                            : 'bg-white border-stone-200 text-stone-500 hover:bg-stone-50'
                         }`}
                       >
                         Suspensa / Inativa
@@ -1199,7 +1197,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                   <button
                     type="button"
                     onClick={() => setIsAddingOrEditing(false)}
-                    className="px-5 py-2.5 bg-white hover:bg-slate-700 text-stone-600 rounded-xl text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
+                    className="px-5 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
                   >
                     Cancelar
                   </button>
@@ -1207,7 +1205,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     type="submit"
-                    className="px-6 py-2.5 bg-gradient-to-r   hover: hover: text-white rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-stone-200 flex items-center space-x-2 transition-all cursor-pointer"
+                    className="px-6 py-2.5 bg-stone-900 hover:bg-stone-850 text-white rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-stone-200 flex items-center space-x-2 transition-all cursor-pointer"
                     id="btn-form-save-client"
                   >
                     <CheckCircle2 className="w-4 h-4" />
@@ -1223,18 +1221,18 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
       {/* LUXURY 2-STEP RENEWAL MODAL */}
       <AnimatePresence>
         {renewTargetClient && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#05070B]/85 backdrop-blur-md">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.92, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.92, y: -20 }}
               transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-              className="w-full max-w-md bg-[#0F1523] border border-emerald-200 rounded-3xl overflow-hidden shadow-2xl shadow-emerald-500/10"
+              className="w-full max-w-md bg-white border border-stone-200 rounded-3xl overflow-hidden shadow-2xl"
               id="modal-luxury-renew-login"
             >
               <div className="p-6">
                 <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="w-16 h-16 rounded-2xl bg-emerald-500/15 text-emerald-600 flex items-center justify-center border border-emerald-200 shadow-inner">
+                  <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 shadow-inner">
                     <RefreshCw className="w-8 h-8" />
                   </div>
                   
@@ -1242,23 +1240,23 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                     <h3 className="text-xl font-bold text-stone-900 mb-1.5 font-serif-luxury">
                       Confirmar Renovação
                     </h3>
-                    <p className="text-sm text-stone-500 leading-relaxed max-w-sm mx-auto">
-                      Deseja renovar manualmente a loja <strong className="text-emerald-700">{renewTargetClient.storeName}</strong> por mais <strong className="text-stone-900">30 dias</strong>?
+                    <p className="text-sm text-stone-600 leading-relaxed max-w-sm mx-auto">
+                      Deseja renovar manualmente a loja <strong className="text-emerald-600">{renewTargetClient.storeName}</strong> por mais <strong className="text-stone-900 font-bold">30 dias</strong>?
                     </p>
                   </div>
                   
                   <div className="w-full mt-4 flex gap-3">
                     <button
                       onClick={() => setRenewTargetClient(null)}
-                      className="flex-1 py-3 px-4 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-600 text-sm font-bold border border-stone-200 transition-colors"
+                      className="flex-1 py-3 px-4 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-sm font-bold border border-stone-200 transition-colors cursor-pointer"
                     >
                       Cancelar
                     </button>
                     <button
                       onClick={confirmRenewClient}
-                      className="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-stone-900 text-sm font-bold shadow-lg shadow-emerald-600/20 transition-colors flex items-center justify-center space-x-2"
+                      className="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-lg shadow-emerald-650/15 transition-colors flex items-center justify-center space-x-2 cursor-pointer"
                     >
-                      <Check className="w-4 h-4" />
+                      <Check className="w-4 h-4 text-white" />
                       <span>Confirmar (+30d)</span>
                     </button>
                   </div>
@@ -1272,23 +1270,23 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
       {/* LUXURY 2-STEP LOGIN DELETION MODAL (Removes generic alert/confirm) */}
       <AnimatePresence>
         {deleteTargetClient && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#05070B]/85 backdrop-blur-md">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.92, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.92, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="relative w-full max-w-lg bg-gradient-to-b from-[#161B29] to-[#0E121E] border border-rose-500/30 rounded-3xl shadow-2xl shadow-rose-950/50 overflow-hidden"
+              className="relative w-full max-w-lg bg-white border border-stone-200 rounded-3xl shadow-2xl overflow-hidden"
               id="modal-luxury-delete-login"
             >
               {/* Glowing Top Accent Bar */}
-              <div className="h-1.5 w-full bg-stone-900 text-white" />
+              <div className="h-1.5 w-full bg-rose-600" />
 
               {/* Close Button */}
               <button
                 onClick={() => setDeleteTargetClient(null)}
                 disabled={isDeleting}
-                className="absolute top-4 right-4 p-2 text-stone-500 hover:text-stone-900 rounded-full bg-white hover:bg-white transition-colors cursor-pointer"
+                className="absolute top-4 right-4 p-2 text-stone-400 hover:text-stone-900 rounded-full bg-stone-100 hover:bg-stone-200 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1297,19 +1295,19 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                 {/* Header with Luxury Animated Shield */}
                 <div className="flex items-start space-x-4">
                   <div className="relative flex-shrink-0">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-rose-500/20 /10 border border-rose-500/40 flex items-center justify-center shadow-lg shadow-rose-950/50">
-                      <ShieldAlert className="w-7 h-7 text-rose-400" />
+                    <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center shadow-md">
+                      <ShieldAlert className="w-7 h-7 text-rose-500" />
                     </div>
                     {/* Animated Pulse Ring */}
                     <span className="absolute -top-1 -right-1 flex h-4 w-4">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-60"></span>
-                      <span className="relative inline-flex rounded-full h-4 w-4 bg-rose-500 border-2 border-[#161B29]"></span>
+                      <span className="relative inline-flex rounded-full h-4 w-4 bg-rose-500 border-2 border-white"></span>
                     </span>
                   </div>
 
                   <div>
                     <div className="flex items-center space-x-2">
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-rose-500/15 text-rose-300 border border-rose-500/30">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-rose-50 text-rose-600 border border-rose-100">
                         {deleteStep === 1 ? 'Etapa 1 de 2: Segurança' : 'Etapa 2 de 2: Confirmação Final'}
                       </span>
                     </div>
@@ -1352,9 +1350,9 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                       </div>
                     </div>
 
-                    <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/25 flex items-start space-x-3">
-                      <AlertTriangle className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
-                      <p className="text-xs text-rose-200/90 leading-relaxed">
+                    <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-100 flex items-start space-x-3">
+                      <AlertTriangle className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />
+                      <p className="text-xs text-rose-700 leading-relaxed">
                         Ao excluir este login, o lojista perderá imediatamente o acesso ao painel de administração e ao catálogo configurado.
                       </p>
                     </div>
@@ -1363,7 +1361,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                       <button
                         type="button"
                         onClick={() => setDeleteTargetClient(null)}
-                        className="px-4 py-2.5 bg-white hover:bg-slate-700 text-stone-600 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                        className="px-4 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-semibold border border-stone-200 transition-colors cursor-pointer"
                       >
                         Cancelar
                       </button>
@@ -1373,10 +1371,10 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                         whileTap={{ scale: 0.98 }}
                         type="button"
                         onClick={handleConfirmStep1}
-                        className="px-5 py-2.5 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-rose-950/50 flex items-center space-x-2 transition-all cursor-pointer"
+                        className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-rose-100 flex items-center space-x-2 transition-all cursor-pointer"
                       >
                         <span>Avançar para Etapa 2</span>
-                        <ArrowRight className="w-4 h-4" />
+                        <ArrowRight className="w-4 h-4 text-white" />
                       </motion.button>
                     </div>
                   </motion.div>
@@ -1390,8 +1388,8 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                     exit={{ opacity: 0, x: -10 }}
                     className="space-y-4"
                   >
-                    <div className="p-4 rounded-2xl bg-rose-950/20 border border-rose-500/30 space-y-2">
-                      <p className="text-xs text-stone-600">
+                    <div className="p-4 rounded-2xl bg-rose-50 border border-rose-100 space-y-2">
+                      <p className="text-xs text-stone-700">
                         Para confirmar a exclusão permanente de{' '}
                         <strong className="text-stone-900 font-bold">{deleteTargetClient.storeName}</strong>, digite{' '}
                         <span className="font-mono text-stone-900 font-bold bg-white px-1.5 py-0.5 rounded border border-stone-300">
@@ -1402,7 +1400,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-1.5">
+                      <label className="block text-[11px] font-bold text-stone-600 uppercase tracking-wider mb-1.5">
                         Confirmação de Segurança (digite o usuário ou "EXCLUIR"):
                       </label>
                       <input
@@ -1411,7 +1409,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                         value={deleteConfirmationInput}
                         onChange={(e) => setDeleteConfirmationInput(e.target.value)}
                         placeholder={`Digite "${deleteTargetClient.username}" ou "EXCLUIR"`}
-                        className="w-full px-4 py-2.5 bg-white border border-rose-500/40 rounded-xl text-sm font-mono text-stone-900 focus:outline-none focus:border-rose-400 transition-colors"
+                        className="w-full px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-sm font-mono text-stone-900 focus:outline-none focus:border-stone-400 transition-colors"
                         id="input-delete-confirmation"
                       />
                     </div>
@@ -1431,7 +1429,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                           type="button"
                           onClick={() => setDeleteTargetClient(null)}
                           disabled={isDeleting}
-                          className="px-4 py-2.5 bg-white hover:bg-slate-700 text-stone-600 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                          className="px-4 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-semibold border border-stone-200 transition-colors cursor-pointer"
                         >
                           Cancelar
                         </button>
@@ -1449,19 +1447,19 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                           className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-lg flex items-center space-x-2 transition-all cursor-pointer ${
                             deleteConfirmationInput.trim().toLowerCase() === deleteTargetClient.username.toLowerCase() ||
                             deleteConfirmationInput.trim().toUpperCase() === 'EXCLUIR'
-                              ? 'bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-stone-900 shadow-rose-950/60'
-                              : 'bg-white/80 text-stone-400 cursor-not-allowed border border-stone-200'
+                              ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-100'
+                              : 'bg-stone-50 text-stone-400 cursor-not-allowed border border-stone-200'
                           }`}
                           id="btn-confirm-final-delete"
                         >
                           {isDeleting ? (
                             <>
-                              <RefreshCw className="w-4 h-4 animate-spin text-stone-900" />
+                              <RefreshCw className="w-4 h-4 animate-spin text-white" />
                               <span>Excluindo...</span>
                             </>
                           ) : (
                             <>
-                              <Trash2 className="w-4 h-4 text-stone-900" />
+                              <Trash2 className="w-4 h-4 text-white" />
                               <span>Excluir Login Definitivamente</span>
                             </>
                           )}
