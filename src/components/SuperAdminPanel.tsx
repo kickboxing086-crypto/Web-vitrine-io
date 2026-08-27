@@ -102,7 +102,20 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
   }
 
   // Calculate days remaining or days overdue
-  const getDueStatus = (dueDateStr?: string) => {
+  const getDueStatus = (dueDateStr?: string, client?: any) => {
+    const isLifetime = (client && Number(client.planPrice) === 250) || (dueDateStr && (dueDateStr.startsWith('2126') || dueDateStr.startsWith('2099') || dueDateStr.startsWith('212')));
+    
+    if (isLifetime) {
+      return {
+        days: 99999,
+        status: 'ok',
+        label: 'Conta Vitalícia',
+        color: 'text-amber-600 bg-amber-500/10 border-amber-200',
+        badge: 'Conta Vitalícia',
+        isLifetime: true
+      };
+    }
+
     if (!dueDateStr) return { days: 999, status: 'ok', label: 'Sem vencimento', color: 'text-stone-500 bg-white border-stone-200' };
     
     try {
@@ -163,7 +176,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
         mrr += price;
       }
 
-      const dueInfo = getDueStatus(c.dueDate);
+      const dueInfo = getDueStatus(c.dueDate, c);
       if (dueInfo.status === 'overdue') {
         overdueCount++;
         overdueValue += price;
@@ -205,7 +218,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
 
       if (!matchesSearch) return false;
 
-      const dueInfo = getDueStatus(client.dueDate);
+      const dueInfo = getDueStatus(client.dueDate, client);
 
       if (statusFilter === 'all') return true;
       if (statusFilter === 'active') return client.status === 'active' && dueInfo.status === 'ok';
@@ -738,14 +751,14 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                 </thead>
                 <tbody className="divide-y divide-slate-800/80 text-xs sm:text-sm">
                   {filteredClients.map((client) => {
-                    const dueInfo = getDueStatus(client.dueDate);
+                    const dueInfo = getDueStatus(client.dueDate, client);
                     const isPassVisible = !!visiblePasswords[client.id];
                     const priceFormatted = `R$ ${(Number(client.planPrice) || 0).toFixed(2).replace('.', ',')}`;
 
                     return (
                       <tr
                         key={client.id}
-                        className={`hover:bg-stone-50 transition-colors ${
+                        className={`hover:bg-stone-100 transition-colors ${
                           dueInfo.status === 'overdue' ? 'bg-rose-950/10' : ''
                         }`}
                       >
@@ -791,22 +804,40 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                           <div className="font-extrabold text-stone-900 text-sm">
                             {priceFormatted}
                           </div>
-                          <span className="text-[10px] text-stone-500 uppercase tracking-wider">mensal</span>
+                          <span className="text-[10px] text-stone-500 uppercase tracking-wider">
+                            {Number(client.planPrice) === 250 ? 'vitalício' : 'mensal'}
+                          </span>
                         </td>
 
                         {/* Due Date & Remaining Days Badge */}
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="font-semibold text-stone-900 text-xs flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5 text-stone-500" />
-                            <span>{formatDateBr(client.dueDate)}</span>
-                          </div>
-                          <div className="mt-1">
-                            <span
-                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${dueInfo.color}`}
-                            >
-                              {dueInfo.label}
-                            </span>
-                          </div>
+                          {dueInfo.isLifetime ? (
+                            <div className="flex flex-col">
+                              <div className="font-bold text-amber-600 text-xs flex items-center gap-1.5">
+                                <Crown className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
+                                <span>Conta Vitalícia</span>
+                              </div>
+                              <div className="mt-1">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border text-amber-600 bg-amber-500/10 border-amber-200">
+                                  Acesso Permanente
+                                </span>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="font-semibold text-stone-900 text-xs flex items-center gap-1.5">
+                                <Calendar className="w-3.5 h-3.5 text-stone-500" />
+                                <span>{formatDateBr(client.dueDate)}</span>
+                              </div>
+                              <div className="mt-1">
+                                <span
+                                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${dueInfo.color}`}
+                                >
+                                  {dueInfo.label}
+                                </span>
+                              </div>
+                            </>
+                          )}
                         </td>
 
                         {/* Status */}
@@ -956,7 +987,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                       value={formData.storeName}
                       onChange={(e) => setFormData({ ...formData, storeName: e.target.value })}
                       placeholder="Ex: Boutique Elegance, Empório Natural..."
-                      className="w-full px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-stone-900 focus:outline-none focus:border-stone-900 transition-colors"
+                      className="w-full px-4 py-2.5 bg-stone-50 hover:bg-stone-100/50 focus:bg-white border border-stone-200 rounded-xl text-sm text-stone-900 focus:outline-none focus:border-stone-900 transition-all"
                       id="input-form-storename"
                     />
                   </div>
@@ -974,7 +1005,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                         value={formData.username}
                         onChange={(e) => setFormData({ ...formData, username: e.target.value.toLowerCase().replace(/[^a-z0-9_.-]/g, '') })}
                         placeholder="Ex: boutique_elegance"
-                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-stone-900 font-mono focus:outline-none focus:border-stone-900 transition-colors"
+                        className="w-full pl-10 pr-4 py-2.5 bg-stone-50 hover:bg-stone-100/50 focus:bg-white border border-stone-200 rounded-xl text-sm text-stone-900 font-mono focus:outline-none focus:border-stone-900 transition-all"
                         id="input-form-username"
                       />
                     </div>
@@ -1004,7 +1035,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         placeholder="Ex: 12345678"
-                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-stone-900 font-mono focus:outline-none focus:border-stone-900 transition-colors"
+                        className="w-full pl-10 pr-4 py-2.5 bg-stone-50 hover:bg-stone-100/50 focus:bg-white border border-stone-200 rounded-xl text-sm text-stone-900 font-mono focus:outline-none focus:border-stone-900 transition-all"
                         id="input-form-password"
                       />
                     </div>
@@ -1071,7 +1102,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                             className={`relative p-3 rounded-2xl border text-left flex flex-col justify-between transition-all cursor-pointer overflow-hidden select-none min-h-[96px] ${
                               isSelected
                                 ? 'bg-stone-900 border-stone-900 shadow-xl text-white'
-                                : 'bg-white hover:bg-stone-100 border-stone-200/80 hover:border-stone-300 text-stone-900'
+                                : 'bg-stone-50 hover:bg-stone-100 border-stone-200/80 hover:border-stone-300 text-stone-900'
                             }`}
                             id={`btn-plan-select-${plan.price}`}
                           >
@@ -1140,7 +1171,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                       required
                       value={formData.dueDate}
                       onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                      className="w-full px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-stone-900 focus:outline-none focus:border-stone-400 transition-colors"
+                      className="w-full px-4 py-2.5 bg-stone-50 hover:bg-stone-100/50 focus:bg-white border border-stone-200 rounded-xl text-sm text-stone-900 focus:outline-none focus:border-stone-900 transition-all"
                       id="input-form-duedate"
                     />
                   </div>
@@ -1155,7 +1186,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                       value={formData.phoneWhatsapp}
                       onChange={(e) => setFormData({ ...formData, phoneWhatsapp: e.target.value })}
                       placeholder="Ex: 11999998888 (com DDD)"
-                      className="w-full px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-sm text-stone-900 focus:outline-none focus:border-stone-900 transition-colors"
+                      className="w-full px-4 py-2.5 bg-stone-50 hover:bg-stone-100/50 focus:bg-white border border-stone-200 rounded-xl text-sm text-stone-900 focus:outline-none focus:border-stone-900 transition-all"
                       id="input-form-phone"
                     />
                   </div>

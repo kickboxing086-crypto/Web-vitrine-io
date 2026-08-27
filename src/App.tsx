@@ -103,7 +103,13 @@ export default function App() {
     if (urlParams.get('page') === 'admin' || urlParams.get('admin') === '1') {
       return 'store'; // Will trigger login modal in useEffect
     }
-    if (urlParams.get('page') === 'store' || urlParams.get('u')) {
+    if (
+      urlParams.get('page') === 'store' || 
+      urlParams.get('loja') || 
+      urlParams.get('u') || 
+      urlParams.get('store') || 
+      urlParams.get('slug')
+    ) {
       return 'store';
     }
     
@@ -323,6 +329,7 @@ export default function App() {
           const enriched = { ...client, isOfficial };
           setCurrentClient(enriched);
           localStorage.setItem('store_current_client', JSON.stringify(enriched));
+          setActiveView('store');
         }
       });
     }

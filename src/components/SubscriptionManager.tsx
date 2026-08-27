@@ -124,6 +124,8 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settin
     }
   })();
 
+  const isLifetime = Number(currentClient?.planPrice) === 250 || daysRemaining > 1000;
+
   const isPlanDisabled = (planId: string) => {
     if (daysRemaining <= 5) return false;
     if (planId === 'monthly') return true;
@@ -260,20 +262,35 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settin
             </p>
           </div>
           
-          <div className="bg-stone-800/90 border border-stone-700 rounded-2xl p-4 sm:p-5 flex items-center gap-4 min-w-[220px] shadow-lg">
-            <div className={`p-3 rounded-2xl ${daysRemaining <= 5 ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'}`}>
-              {daysRemaining <= 5 ? <AlertCircle className="w-7 h-7" /> : <Clock className="w-7 h-7" />}
-            </div>
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-stone-400">Tempo Restante</p>
-              <p className="text-2xl sm:text-3xl font-black text-white">{daysRemaining} {daysRemaining === 1 ? 'dia' : 'dias'}</p>
-              {currentClient?.dueDate && (
-                <p className="text-[10px] text-stone-400 mt-0.5 font-medium">
-                  Vence: {new Date(currentClient.dueDate + 'T00:00:00').toLocaleDateString('pt-BR')}
+          {isLifetime ? (
+            <div className="bg-stone-800/90 border border-amber-500/30 rounded-2xl p-4 sm:p-5 flex items-center gap-4 min-w-[220px] shadow-lg">
+              <div className="p-3 rounded-2xl bg-amber-500/20 text-amber-300 border border-amber-500/30 animate-pulse">
+                <Crown className="w-7 h-7 text-amber-400" />
+              </div>
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-amber-400">Plano Ativo</p>
+                <p className="text-xl sm:text-2xl font-black text-white">Conta Vitalícia</p>
+                <p className="text-[10px] text-amber-300/85 mt-0.5 font-bold">
+                  Acesso Permanente Liberado
                 </p>
-              )}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="bg-stone-800/90 border border-stone-700 rounded-2xl p-4 sm:p-5 flex items-center gap-4 min-w-[220px] shadow-lg">
+              <div className={`p-3 rounded-2xl ${daysRemaining <= 5 ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'}`}>
+                {daysRemaining <= 5 ? <AlertCircle className="w-7 h-7" /> : <Clock className="w-7 h-7" />}
+              </div>
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-stone-400">Tempo Restante</p>
+                <p className="text-2xl sm:text-3xl font-black text-white">{daysRemaining} {daysRemaining === 1 ? 'dia' : 'dias'}</p>
+                {currentClient?.dueDate && (
+                  <p className="text-[10px] text-stone-400 mt-0.5 font-medium">
+                    Vence: {new Date(currentClient.dueDate + 'T00:00:00').toLocaleDateString('pt-BR')}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </motion.div>
 
@@ -287,138 +304,155 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({ settin
             transition={{ duration: 0.25 }}
             className="space-y-6"
           >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-brand-border pb-3">
-              <div>
-                <h3 className="text-xl font-serif-luxury font-bold text-stone-900">
-                  Selecione o Período de Renovação
-                </h3>
-                <p className="text-xs text-stone-500 mt-0.5">
-                  Escolha a duração desejada para estender a operação e visibilidade da sua loja virtual.
+            {isLifetime ? (
+              <div className="p-8 bg-amber-500/[0.04] border border-amber-500/20 rounded-3xl text-center max-w-2xl mx-auto space-y-4 shadow-sm my-4">
+                <div className="w-16 h-16 bg-amber-500/10 text-amber-500 rounded-2xl flex items-center justify-center mx-auto border border-amber-300 animate-bounce">
+                  <Crown className="w-8 h-8" />
+                </div>
+                <h3 className="text-lg font-bold text-stone-900">Sua conta é Vitalícia!</h3>
+                <p className="text-xs text-stone-600 leading-relaxed max-w-md mx-auto">
+                  Você possui acesso definitivo e permanente à plataforma. Não há cobranças recorrentes, vencimentos ou faturas pendentes para o seu login. Sua vitrine continuará online e ativa por tempo indeterminado!
                 </p>
+                <div className="pt-2 text-stone-500 text-[11px] font-medium italic">
+                  Obrigado por fazer parte da nossa plataforma! ✨
+                </div>
               </div>
-              <div className="inline-flex items-center gap-1.5 text-xs text-stone-700 font-semibold bg-white px-3.5 py-1.5 rounded-xl border border-brand-border shadow-2xs">
-                <Lock className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Liberação instantânea via Pix</span>
-              </div>
-            </div>
-
-            {/* Commercial Plan Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {COMMERCIAL_PLANS.map((plan, index) => {
-                const disabled = isPlanDisabled(plan.id);
-                const isSelected = selectedPlan?.id === plan.id && !disabled;
-                return (
-                  <motion.div
-                    key={plan.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.08, duration: 0.3 }}
-                    whileHover={!disabled ? { y: -6, transition: { duration: 0.18 } } : {}}
-                    onClick={() => {
-                      if (!disabled) setSelectedPlan(plan);
-                    }}
-                    className={`relative flex flex-col p-5 sm:p-6 bg-white rounded-3xl border-2 transition-shadow shadow-xs ${
-                      disabled
-                        ? 'opacity-60 grayscale-[0.3] cursor-not-allowed border-stone-200'
-                        : `cursor-pointer hover:shadow-xl ${
-                            isSelected
-                              ? 'border-stone-900 ring-2 ring-stone-900/10 shadow-lg bg-gradient-to-b from-stone-50/80 to-white'
-                              : plan.popular
-                              ? 'border-amber-600 hover:border-amber-700'
-                              : 'border-brand-border hover:border-stone-400'
-                          }`
-                    }`}
-                  >
-                    {/* Badge */}
-                    {plan.badge && (
-                      <div className="absolute -top-3.5 inset-x-0 flex justify-center">
-                        <span className={`bg-stone-900 text-amber-300 text-[10px] font-extrabold uppercase tracking-wider px-3.5 py-1 rounded-full shadow-md border border-stone-700 ${disabled ? 'opacity-50' : ''}`}>
-                          {plan.badge}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-extrabold tracking-wider uppercase text-stone-500">
-                        {plan.period}
-                      </span>
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center border transition-colors ${
-                        isSelected ? 'bg-stone-900 border-stone-900 text-white' : 'border-stone-300'
-                      }`}>
-                        {isSelected && <Check className="w-3 h-3 text-emerald-400" />}
-                      </div>
-                    </div>
-
-                    <h4 className="text-lg font-serif-luxury font-bold text-stone-900 mb-1">
-                      {plan.title}
-                    </h4>
-
-                    <div className="flex items-baseline gap-1 my-2">
-                      <span className="text-sm text-stone-500 font-bold">R$</span>
-                      <span className="text-3xl font-black text-stone-900 tracking-tight">
-                        {plan.price.toFixed(2).replace('.', ',')}
-                      </span>
-                    </div>
-
-                    {plan.monthlyEquivalent && (
-                      <span className="text-[11px] font-semibold text-stone-600 mb-2">
-                        Equivalente a <strong className="text-stone-900">{plan.monthlyEquivalent}</strong>
-                      </span>
-                    )}
-
-                    {plan.saveAmount ? (
-                      <div className={`bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold px-2.5 py-1 rounded-xl mb-4 text-center ${disabled ? 'grayscale opacity-80' : ''}`}>
-                        {plan.saveAmount}
-                      </div>
-                    ) : (
-                      <div className="h-6 mb-4"></div>
-                    )}
-
-                    <p className="text-xs text-stone-600 mb-4 leading-relaxed">
-                      {plan.description}
+            ) : (
+              <>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-brand-border pb-3">
+                  <div>
+                    <h3 className="text-xl font-serif-luxury font-bold text-stone-900">
+                      Selecione o Período de Renovação
+                    </h3>
+                    <p className="text-xs text-stone-500 mt-0.5">
+                      Escolha a duração desejada para estender a operação e visibilidade da sua loja virtual.
                     </p>
+                  </div>
+                  <div className="inline-flex items-center gap-1.5 text-xs text-stone-700 font-semibold bg-white px-3.5 py-1.5 rounded-xl border border-brand-border shadow-2xs">
+                    <Lock className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Liberação instantânea via Pix</span>
+                  </div>
+                </div>
 
-                    {/* Features list */}
-                    <ul className="space-y-2 mb-6 pt-3 border-t border-stone-100 text-[11px] text-stone-700">
-                      {plan.features.map((feat, i) => (
-                        <li key={i} className="flex items-start gap-1.5">
-                          <CheckCircle2 className={`w-3.5 h-3.5 flex-shrink-0 mt-0.5 ${disabled ? 'text-stone-400' : 'text-emerald-600'}`} />
-                          <span>{feat}</span>
-                        </li>
-                      ))}
-                    </ul>
-
-                    {/* CTA Button */}
-                    <div className="mt-auto pt-2">
-                      <button
-                        type="button"
-                        disabled={disabled}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (!disabled) handleSelectPlan(plan);
+                {/* Commercial Plan Cards Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  {COMMERCIAL_PLANS.map((plan, index) => {
+                    const disabled = isPlanDisabled(plan.id);
+                    const isSelected = selectedPlan?.id === plan.id && !disabled;
+                    return (
+                      <motion.div
+                        key={plan.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.08, duration: 0.3 }}
+                        whileHover={!disabled ? { y: -6, transition: { duration: 0.18 } } : {}}
+                        onClick={() => {
+                          if (!disabled) setSelectedPlan(plan);
                         }}
-                        className={`w-full py-3 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs ${
+                        className={`relative flex flex-col p-5 sm:p-6 bg-white rounded-3xl border-2 transition-shadow shadow-xs ${
                           disabled
-                            ? 'bg-stone-200 text-stone-500 cursor-not-allowed'
-                            : isSelected
-                            ? 'bg-stone-900 hover:bg-stone-800 text-white cursor-pointer'
-                            : 'bg-stone-100 hover:bg-stone-200 text-stone-900 cursor-pointer'
+                            ? 'opacity-60 grayscale-[0.3] cursor-not-allowed border-stone-200'
+                            : `cursor-pointer hover:shadow-xl ${
+                                isSelected
+                                  ? 'border-stone-900 ring-2 ring-stone-900/10 shadow-lg bg-gradient-to-b from-stone-50/80 to-white'
+                                  : plan.popular
+                                  ? 'border-amber-600 hover:border-amber-700'
+                                  : 'border-brand-border hover:border-stone-400'
+                              }`
                         }`}
                       >
-                        {disabled ? (
-                          <span className="text-center w-full block">Restam {Math.max(1, daysRemaining - 5)} dias para liberar</span>
-                        ) : (
-                          <>
-                            <span>Contratar {plan.period}</span>
-                            <ArrowRight className="w-3.5 h-3.5" />
-                          </>
+                        {/* Badge */}
+                        {plan.badge && (
+                          <div className="absolute -top-3.5 inset-x-0 flex justify-center">
+                            <span className={`bg-stone-900 text-amber-300 text-[10px] font-extrabold uppercase tracking-wider px-3.5 py-1 rounded-full shadow-md border border-stone-700 ${disabled ? 'opacity-50' : ''}`}>
+                              {plan.badge}
+                            </span>
+                          </div>
                         )}
-                      </button>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
+
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-extrabold tracking-wider uppercase text-stone-500">
+                            {plan.period}
+                          </span>
+                          <div className={`w-5 h-5 rounded-full flex items-center justify-center border transition-colors ${
+                            isSelected ? 'bg-stone-900 border-stone-900 text-white' : 'border-stone-300'
+                          }`}>
+                            {isSelected && <Check className="w-3 h-3 text-emerald-400" />}
+                          </div>
+                        </div>
+
+                        <h4 className="text-lg font-serif-luxury font-bold text-stone-900 mb-1">
+                          {plan.title}
+                        </h4>
+
+                        <div className="flex items-baseline gap-1 my-2">
+                          <span className="text-sm text-stone-500 font-bold">R$</span>
+                          <span className="text-3xl font-black text-stone-900 tracking-tight">
+                            {plan.price.toFixed(2).replace('.', ',')}
+                          </span>
+                        </div>
+
+                        {plan.monthlyEquivalent && (
+                          <span className="text-[11px] font-semibold text-stone-600 mb-2">
+                            Equivalente a <strong className="text-stone-900">{plan.monthlyEquivalent}</strong>
+                          </span>
+                        )}
+
+                        {plan.saveAmount ? (
+                          <div className={`bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold px-2.5 py-1 rounded-xl mb-4 text-center ${disabled ? 'grayscale opacity-80' : ''}`}>
+                            {plan.saveAmount}
+                          </div>
+                        ) : (
+                          <div className="h-6 mb-4"></div>
+                        )}
+
+                        <p className="text-xs text-stone-600 mb-4 leading-relaxed">
+                          {plan.description}
+                        </p>
+
+                        {/* Features list */}
+                        <ul className="space-y-2 mb-6 pt-3 border-t border-stone-100 text-[11px] text-stone-700">
+                          {plan.features.map((feat, i) => (
+                            <li key={i} className="flex items-start gap-1.5">
+                              <CheckCircle2 className={`w-3.5 h-3.5 flex-shrink-0 mt-0.5 ${disabled ? 'text-stone-400' : 'text-emerald-600'}`} />
+                              <span>{feat}</span>
+                            </li>
+                          ))}
+                        </ul>
+
+                        {/* CTA Button */}
+                        <div className="mt-auto pt-2">
+                          <button
+                            type="button"
+                            disabled={disabled}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!disabled) handleSelectPlan(plan);
+                            }}
+                            className={`w-full py-3 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs ${
+                              disabled
+                                ? 'bg-stone-200 text-stone-500 cursor-not-allowed'
+                                : isSelected
+                                ? 'bg-stone-900 hover:bg-stone-800 text-white cursor-pointer'
+                                : 'bg-stone-100 hover:bg-stone-200 text-stone-900 cursor-pointer'
+                            }`}
+                          >
+                            {disabled ? (
+                              <span className="text-center w-full block">Restam {Math.max(1, daysRemaining - 5)} dias para liberar</span>
+                            ) : (
+                              <>
+                                <span>Contratar {plan.period}</span>
+                                <ArrowRight className="w-3.5 h-3.5" />
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </motion.div>
         )}
 
