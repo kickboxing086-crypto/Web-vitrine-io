@@ -173,13 +173,28 @@ export default function App() {
 
   const handleEnterStore = async (slug?: string | any) => {
     if (slug && typeof slug === 'string') {
-      const module = await import('./lib/firestoreService');
-      const client = await module.getClientByUsername(slug.trim().toLowerCase());
-      if (client) {
-        const isOfficial = client.username !== 'teste@123' && client.id !== 'client-test-natural';
-        const enriched = { ...client, isOfficial };
-        setCurrentClient(enriched);
-        localStorage.setItem('store_current_client', JSON.stringify(enriched));
+      const cleanSlug = slug.trim().toLowerCase();
+      if (cleanSlug === 'teste@123') {
+        const testClient = {
+          id: 'client-test-natural',
+          storeName: 'Elite Fashion Vitrine',
+          username: 'teste@123',
+          password: '01020304',
+          storeType: 'clothing',
+          isOfficial: false,
+          status: 'active'
+        };
+        setCurrentClient(testClient);
+        localStorage.setItem('store_current_client', JSON.stringify(testClient));
+      } else {
+        const module = await import('./lib/firestoreService');
+        const client = await module.getClientByUsername(cleanSlug);
+        if (client) {
+          const isOfficial = client.username !== 'teste@123' && client.id !== 'client-test-natural';
+          const enriched = { ...client, isOfficial };
+          setCurrentClient(enriched);
+          localStorage.setItem('store_current_client', JSON.stringify(enriched));
+        }
       }
     }
     setActiveView('store');

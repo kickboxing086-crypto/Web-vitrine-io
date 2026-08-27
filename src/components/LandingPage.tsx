@@ -103,7 +103,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           Sem comissões, sem intermediários.
         </p>
         
-        <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
           <a
             href={buyLink}
             target="_blank"
@@ -113,6 +113,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <span>Criar Minha Vitrine</span>
             <ArrowRight className="w-4 h-4" />
           </a>
+          <button
+            onClick={() => onEnterStore('teste@123')}
+            className="inline-flex items-center justify-center space-x-2 px-8 py-4 bg-white hover:bg-stone-100 text-stone-900 border border-stone-200 rounded-xl text-sm font-bold transition-colors w-full sm:w-auto"
+          >
+            <Store className="w-4 h-4" />
+            <span>Ver Vitrine de Exemplo</span>
+          </button>
         </div>
       </section>
 
@@ -153,10 +160,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {plans.map((plan, idx) => (
-            <div 
-              key={idx} 
-              className={`p-6 rounded-2xl flex flex-col justify-between border ${plan.highlight ? 'bg-stone-900 text-white border-stone-900 shadow-xl lg:-translate-y-4' : 'bg-white border-stone-200 text-stone-900'}`}
+          {plans.map((plan, idx) => {
+            const planMessage = encodeURIComponent(`Olá! Gostaria de abrir minha vitrine e ativar o Plano ${plan.name}. Como faço para liberar meu acesso imediato?`);
+            const planLink = `https://wa.me/${officialPhone}?text=${planMessage}`;
+            return (
+            <div key={idx} className={`p-6 rounded-2xl flex flex-col justify-between border ${plan.highlight ? 'bg-stone-900 text-white border-stone-900 shadow-xl lg:-translate-y-4' : 'bg-white border-stone-200 text-stone-900'}`}
             >
               <div>
                 <h3 className={`text-sm font-bold uppercase tracking-wider mb-2 ${plan.highlight ? 'text-stone-300' : 'text-stone-500'}`}>{plan.name}</h3>
@@ -182,7 +190,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </div>
               
               <a
-                href={buyLink}
+                href={planLink}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`w-full py-3 rounded-xl text-xs font-bold text-center transition-colors ${plan.highlight ? 'bg-white text-stone-900 hover:bg-stone-100' : 'bg-stone-100 text-stone-900 hover:bg-stone-200'}`}
@@ -190,7 +198,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 Escolher Plano
               </a>
             </div>
-          ))}
+          );})} 
         </div>
       </section>
 
