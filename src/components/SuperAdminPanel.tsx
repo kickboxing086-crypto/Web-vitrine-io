@@ -266,6 +266,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
       password: formData.password.trim(),
       planPrice: isNaN(priceNum) ? 29.99 : priceNum,
       dueDate: formData.dueDate || getDefaultDueDate(30),
+      storeType: 'clothing',
       
       phoneWhatsapp: formData.phoneWhatsapp.trim(),
       notes: formData.notes.trim(),
@@ -414,7 +415,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
             initial={{ opacity: 0, y: -20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            className="fixed top-6 right-6 z-50 flex items-center space-x-3 px-5 py-3 rounded-2xl bg-[#141B2D] border border-stone-200 shadow-2xl shadow-stone-950/80 backdrop-blur-md"
+            className="fixed top-6 right-6 z-50 flex items-center space-x-3 px-5 py-3 rounded-2xl bg-white border border-stone-200 shadow-2xl shadow-stone-950/80 backdrop-blur-md"
           >
             {feedbackToast.type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-600" />}
             {feedbackToast.type === 'info' && <CheckCircle2 className="w-5 h-5 text-stone-900" />}
@@ -444,7 +445,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                 </div>
                 <span className="absolute -bottom-1 -right-1 flex h-3.5 w-3.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-[#0F1420]"></span>
+                  <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white"></span>
                 </span>
               </div>
 
@@ -479,7 +480,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
 
               <button
                 onClick={onLogout}
-                className="flex items-center space-x-2 px-3.5 py-2.5 bg-[#171E2D] hover:bg-[#20293D] text-stone-600 hover:text-stone-900 rounded-xl text-xs font-semibold border border-stone-200 transition-colors cursor-pointer"
+                className="flex items-center space-x-2 px-3.5 py-2.5 bg-[#171E2D] hover:bg-stone-200 text-stone-600 hover:text-stone-900 rounded-xl text-xs font-semibold border border-stone-200 transition-colors cursor-pointer"
                 id="btn-gestor-logout"
               >
                 <LogOut className="w-4 h-4 text-stone-500" />
@@ -541,7 +542,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="p-5 sm:p-6 rounded-3xl bg-[#121724] border border-stone-200 shadow-xl relative overflow-hidden group hover:border-stone-200 transition-all"
+            className="p-5 sm:p-6 rounded-3xl bg-white border border-stone-200 shadow-xl relative overflow-hidden group hover:border-stone-200 transition-all"
           >
             <div className="absolute top-0 right-0 w-24 h-24 bg-stone-200 rounded-bl-full pointer-events-none" />
             <div className="flex items-center justify-between mb-3">
@@ -567,7 +568,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.05 }}
-            className="p-5 sm:p-6 rounded-3xl bg-[#121724] border border-emerald-500/20 shadow-xl relative overflow-hidden group hover:border-emerald-500/40 transition-all"
+            className="p-5 sm:p-6 rounded-3xl bg-white border border-emerald-500/20 shadow-xl relative overflow-hidden group hover:border-emerald-500/40 transition-all"
           >
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold uppercase tracking-wider text-stone-500">
@@ -592,7 +593,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.1 }}
-            className="p-5 sm:p-6 rounded-3xl bg-[#121724] border border-stone-200 shadow-xl relative overflow-hidden group hover:border-stone-200 transition-all"
+            className="p-5 sm:p-6 rounded-3xl bg-white border border-stone-200 shadow-xl relative overflow-hidden group hover:border-stone-200 transition-all"
           >
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold uppercase tracking-wider text-stone-500">
@@ -619,7 +620,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.15 }}
-            className="p-5 sm:p-6 rounded-3xl bg-[#121724] border border-rose-500/20 shadow-xl relative overflow-hidden group hover:border-rose-500/40 transition-all"
+            className="p-5 sm:p-6 rounded-3xl bg-white border border-rose-500/20 shadow-xl relative overflow-hidden group hover:border-rose-500/40 transition-all"
           >
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold uppercase tracking-wider text-stone-500">
@@ -642,7 +643,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
         </div>
 
         {/* Section Header & Filters Bar */}
-        <div className="bg-[#121724] p-5 sm:p-6 rounded-3xl border border-stone-200 shadow-xl space-y-4">
+        <div className="bg-white p-5 sm:p-6 rounded-3xl border border-stone-200 shadow-xl space-y-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <h2 className="text-lg sm:text-xl font-bold text-stone-900 flex items-center gap-2">
@@ -692,8 +693,8 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                   onClick={() => setStatusFilter(tab.id as any)}
                   className={`px-3.5 py-1.5 rounded-xl font-bold transition-all flex items-center space-x-1.5 flex-shrink-0 cursor-pointer ${
                     isSelected
-                      ? 'bg-stone-900 text-white text-white shadow-md shadow-stone-200'
-                      : 'bg-[#182030] text-stone-600 hover:bg-[#20293D] border border-stone-200'
+                      ? 'bg-stone-900 text-white shadow-md shadow-stone-200'
+                      : 'bg-stone-100 text-stone-600 hover:bg-stone-200 border border-stone-200'
                   }`}
                 >
                   {tab.icon && <tab.icon className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : tab.color}`} />}
@@ -705,7 +706,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
         </div>
 
         {/* Clients Table / Cards List */}
-        <div className="bg-[#121724] rounded-3xl border border-stone-200 shadow-2xl overflow-hidden">
+        <div className="bg-white rounded-3xl border border-stone-200 shadow-2xl overflow-hidden">
           {filteredClients.length === 0 ? (
             <div className="p-12 text-center space-y-3">
               <div className="w-16 h-16 rounded-2xl bg-stone-100 text-stone-900 flex items-center justify-center mx-auto border border-stone-200">
@@ -717,7 +718,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
               </p>
               <button
                 onClick={handleOpenAddModal}
-                className="mt-3 px-4 py-2 bg-stone-900 text-white hover:bg-stone-900 text-white text-white font-bold rounded-xl text-xs shadow-lg transition-all cursor-pointer"
+                className="mt-3 px-4 py-2 bg-stone-900 text-white hover:bg-stone-900 text-white font-bold rounded-xl text-xs shadow-lg transition-all cursor-pointer"
               >
                 Cadastrar Primeira Loja
               </button>
@@ -744,7 +745,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                     return (
                       <tr
                         key={client.id}
-                        className={`hover:bg-[#182030]/60 transition-colors ${
+                        className={`hover:bg-stone-50 transition-colors ${
                           dueInfo.status === 'overdue' ? 'bg-rose-950/10' : ''
                         }`}
                       >
@@ -844,7 +845,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                             {/* Copy Full Credentials Message */}
                             <button
                               onClick={() => handleCopyFullAccessMessage(client)}
-                              className="p-2 bg-[#182030] hover:bg-[#20293D] text-stone-600 hover:text-stone-900 rounded-xl border border-stone-200 transition-colors cursor-pointer"
+                              className="p-2 bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-stone-900 rounded-xl border border-stone-200 transition-colors cursor-pointer"
                               title="Copiar Convite / Acesso Completo"
                             >
                               {copiedId === `msg-${client.id}` ? (
@@ -868,7 +869,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                               href={`/?loja=${client.storeSlug || client.username}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="p-2 bg-[#182030] hover:bg-emerald-100 text-stone-600 hover:text-emerald-600 rounded-xl border border-stone-200 hover:border-emerald-500/40 transition-colors inline-flex items-center"
+                              className="p-2 bg-stone-100 hover:bg-emerald-100 text-stone-600 hover:text-emerald-600 rounded-xl border border-stone-200 hover:border-emerald-500/40 transition-colors inline-flex items-center"
                               title="Abrir Vitrine em Nova Aba"
                             >
                               <ExternalLink className="w-4 h-4" />
@@ -877,7 +878,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                             {/* Edit Client */}
                             <button
                               onClick={() => handleOpenEditModal(client)}
-                              className="p-2 bg-[#182030] hover:bg-[#20293D] text-stone-600 hover:text-stone-900 rounded-xl border border-stone-200 transition-colors cursor-pointer"
+                              className="p-2 bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-stone-900 rounded-xl border border-stone-200 transition-colors cursor-pointer"
                               title="Editar Loja e Valores"
                             >
                               <Edit3 className="w-4 h-4" />
@@ -914,7 +915,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="relative w-full max-w-2xl bg-[#121724] border border-stone-300 rounded-3xl shadow-2xl overflow-hidden my-8"
+              className="relative w-full max-w-2xl bg-white border border-stone-300 rounded-3xl shadow-2xl overflow-hidden my-8"
               id="modal-gestor-client-form"
             >
               {/* Modal Header */}
@@ -1062,8 +1063,8 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                             }}
                             className={`relative p-3 rounded-2xl border text-left flex flex-col justify-between transition-all cursor-pointer overflow-hidden select-none min-h-[96px] ${
                               isSelected
-                                ? 'bg-gradient-to-b /20 /10 to-transparent border-stone-900 shadow-lg shadow-stone-200 ring-1 ring-stone-400'
-                                : 'bg-white hover:bg-[#101624] border-stone-200/80 hover:border-slate-600'
+                                ? 'bg-stone-50 border-stone-900 shadow-lg shadow-stone-200 ring-1 ring-stone-400'
+                                : 'bg-white hover:bg-stone-100 border-stone-200/80 hover:border-stone-300'
                             }`}
                             id={`btn-plan-select-${plan.price}`}
                           >
@@ -1078,7 +1079,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
 
                             {/* Top Badge */}
                             {plan.badge && (
-                              <span className="self-start px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider bg-stone-900 text-white text-white mb-1 shadow-2xs">
+                              <span className="self-start px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider bg-stone-900 text-white mb-1 shadow-2xs">
                                 {plan.badge}
                               </span>
                             )}
@@ -1091,7 +1092,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                                 className={`w-4 h-4 rounded-full flex items-center justify-center border transition-all ${
                                   isSelected
                                     ? 'bg-stone-900 text-white border-stone-900 text-white scale-110'
-                                    : 'border-slate-600 bg-transparent'
+                                    : 'border-stone-300 bg-transparent'
                                 }`}
                               >
                                 {isSelected && (
@@ -1249,7 +1250,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                   <div className="w-full mt-4 flex gap-3">
                     <button
                       onClick={() => setRenewTargetClient(null)}
-                      className="flex-1 py-3 px-4 rounded-xl bg-[#182030] hover:bg-[#20293D] text-stone-600 text-sm font-bold border border-stone-200 transition-colors"
+                      className="flex-1 py-3 px-4 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-600 text-sm font-bold border border-stone-200 transition-colors"
                     >
                       Cancelar
                     </button>
@@ -1339,7 +1340,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                       </div>
                       <div className="flex justify-between items-center text-xs">
                         <span className="text-stone-500 font-medium">👤 Usuário de Acesso:</span>
-                        <span className="font-mono text-stone-900 font-bold bg-[#141B2D] px-2 py-0.5 rounded border border-stone-200">
+                        <span className="font-mono text-stone-900 font-bold bg-white px-2 py-0.5 rounded border border-stone-200">
                           {deleteTargetClient.username}
                         </span>
                       </div>
