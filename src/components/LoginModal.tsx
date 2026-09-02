@@ -92,7 +92,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       return;
     }
 
-    const cleanUser = username.trim().toLowerCase();
+    const cleanUser = username.trim().toLowerCase().replace(/^@+/, '');
     const cleanPass = password.trim();
 
     if (!cleanUser) {

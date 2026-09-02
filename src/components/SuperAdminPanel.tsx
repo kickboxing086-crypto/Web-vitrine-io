@@ -29,6 +29,7 @@ import {
   ArrowRight,
   ChevronDown,
   ExternalLink,
+  ShieldCheck,
 } from 'lucide-react';
 import { StoreClient } from '../types';
 import { getClients, saveClient, deleteClient } from '../lib/firestoreService';
@@ -464,10 +465,13 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
 
               <div>
                 <div className="flex items-center space-x-2">
-                  <h1 className="font-bold text-lg text-stone-900 tracking-wide flex items-center gap-1.5">
+                  <h1 className="font-bold text-lg text-stone-900 tracking-wide flex items-center gap-1.5 flex-wrap">
                     Webgestor Vitrine
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-stone-100 text-stone-900 border border-stone-300">
                       Master SaaS
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-300 flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3 text-emerald-600" /> Criptografia AES-256 Ativa
                     </span>
                   </h1>
                 </div>

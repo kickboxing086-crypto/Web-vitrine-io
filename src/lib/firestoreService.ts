@@ -41,6 +41,11 @@ import {
   saveStoredFinance,
   saveStoredAdminUser,
 } from './storage';
+import {
+  encryptClientData,
+  decryptClientData,
+  hashPassword,
+} from './cryptoUtils';
 
 export enum OperationType {
   CREATE = 'create',
@@ -615,8 +620,17 @@ export const resetDatabaseToDefaults = async (): Promise<void> => {
 
 export const authenticateClient = async (username: string, password: string): Promise<any | null> => {
   try {
-    const cleanUser = username.trim().toLowerCase();
-    const cleanPass = password.trim();
+    const rawClean = (username || '').trim().toLowerCase().replace(/^@+/, '');
+    const cleanPass = (password || '').trim();
+
+    if (!rawClean || !cleanPass) return null;
+
+    const normalizedQuery = rawClean
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]/g, '');
+
+    const inputPasswordHash = await hashPassword(cleanPass);
 
     const clientsCol = collection(db, COLLECTIONS.CLIENTS);
     const snapshot = await getDocs(clientsCol);
@@ -625,24 +639,51 @@ export const authenticateClient = async (username: string, password: string): Pr
       return null;
     }
     
-    const matchedDoc = snapshot.docs.find((docSnap) => {
-      const data = docSnap.data();
-      const u = (data.username || '').toString().trim().toLowerCase();
-      const s = (data.storeSlug || '').toString().trim().toLowerCase();
-      const p = (data.password || '').toString().trim();
-      return (u === cleanUser || s === cleanUser) && p === cleanPass;
-    });
+    for (const docSnap of snapshot.docs) {
+      const rawData = docSnap.data();
+      const decrypted = await decryptClientData(rawData);
 
-    if (matchedDoc) {
-      const data = matchedDoc.data();
-      return { 
-        id: matchedDoc.id, 
-        isOfficial: true,
-        ...data,
-        storeName: data.storeName || data.name || 'Minha Loja',
-        username: (data.username || '').toString().trim().toLowerCase(),
-        storeSlug: data.storeSlug || (data.username || '').toString().trim().toLowerCase(),
-      };
+      const u = (decrypted.username || '').toString().trim().toLowerCase().replace(/^@+/, '');
+      const s = (decrypted.storeSlug || '').toString().trim().toLowerCase().replace(/^@+/, '');
+      const name = (decrypted.storeName || decrypted.name || '').toString().trim().toLowerCase();
+      const id = (docSnap.id || '').toString().trim().toLowerCase();
+      const email = (decrypted.email || '').toString().trim().toLowerCase();
+
+      const uNorm = u.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+      const sNorm = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+      const nameNorm = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+      const emailPrefix = email.split('@')[0].normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+
+      const isUserMatch =
+        u === rawClean ||
+        s === rawClean ||
+        id === rawClean ||
+        id === `client-${rawClean}` ||
+        email === rawClean ||
+        uNorm === normalizedQuery ||
+        sNorm === normalizedQuery ||
+        nameNorm === normalizedQuery ||
+        emailPrefix === normalizedQuery;
+
+      if (isUserMatch) {
+        const storedPass = (decrypted.password || '').toString().trim();
+        const storedHash = (rawData.passwordHash || '').toString().trim();
+
+        const isPasswordMatch =
+          storedPass === cleanPass ||
+          (storedHash && storedHash === inputPasswordHash);
+
+        if (isPasswordMatch) {
+          return {
+            id: docSnap.id,
+            isOfficial: true,
+            ...decrypted,
+            storeName: decrypted.storeName || decrypted.name || 'Minha Loja',
+            username: u,
+            storeSlug: s || u,
+          };
+        }
+      }
     }
 
     return null;
@@ -656,20 +697,26 @@ export const getClients = (callback: (clients: any[]) => void) => {
   const clientsCol = collection(db, COLLECTIONS.CLIENTS);
   return onSnapshot(
     clientsCol,
-    (snapshot) => {
-      const items: any[] = [];
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        items.push({ 
-          id: docSnap.id, 
-          isOfficial: true,
-          ...data,
-          storeName: data.storeName || data.name || 'Minha Loja',
-          username: (data.username || '').toString().trim().toLowerCase(),
-          storeSlug: data.storeSlug || (data.username || '').toString().trim().toLowerCase(),
+    async (snapshot) => {
+      try {
+        const decryptedPromises = snapshot.docs.map(async (docSnap) => {
+          const rawData = docSnap.data();
+          const decrypted = await decryptClientData(rawData);
+          return {
+            id: docSnap.id,
+            isOfficial: true,
+            ...decrypted,
+            storeName: decrypted.storeName || decrypted.name || 'Minha Loja',
+            username: (decrypted.username || '').toString().trim().toLowerCase().replace(/^@+/, ''),
+            storeSlug: (decrypted.storeSlug || decrypted.username || '').toString().trim().toLowerCase().replace(/^@+/, ''),
+          };
         });
-      });
-      callback(items);
+        const items = await Promise.all(decryptedPromises);
+        callback(items);
+      } catch (e) {
+        console.error('Error decrypting clients in snapshot:', e);
+        callback([]);
+      }
     },
     (error) => {
       console.error('Error fetching clients:', error);
@@ -680,9 +727,10 @@ export const getClients = (callback: (clients: any[]) => void) => {
 
 export const saveClient = async (clientData: any) => {
   try {
-    const cleanUsername = (clientData.username || '').toString().trim().toLowerCase();
-    const cleanSlug = clientData.storeSlug || cleanUsername;
+    const cleanUsername = (clientData.username || '').toString().trim().toLowerCase().replace(/^@+/, '');
+    const cleanSlug = (clientData.storeSlug || cleanUsername).trim().toLowerCase().replace(/^@+/, '');
     const clientId = clientData.id || `client-${Date.now()}`;
+    const rawPhone = (clientData.phoneWhatsapp || '').toString().trim();
 
     const normalizedClient = {
       ...clientData,
@@ -690,29 +738,53 @@ export const saveClient = async (clientData: any) => {
       username: cleanUsername,
       storeSlug: cleanSlug,
       isOfficial: true,
-      storeName: clientData.storeName || 'Minha Loja',
+      storeName: (clientData.storeName || 'Minha Loja').trim(),
+      phoneWhatsapp: rawPhone,
     };
 
-    const docRef = doc(db, COLLECTIONS.CLIENTS, clientId);
-    await setDoc(docRef, normalizedClient, { merge: true });
+    // Encrypt sensitive fields (password, phoneWhatsapp, notes) before writing to Firestore
+    const encryptedClientPayload = await encryptClientData(normalizedClient);
 
-    // Initialize tenant settings document in Firestore to prevent falling back to test store
+    const docRef = doc(db, COLLECTIONS.CLIENTS, clientId);
+    await setDoc(docRef, encryptedClientPayload, { merge: true });
+
+    // Initialize or update tenant settings document in Firestore so their store is 100% active and isolated
     try {
       const tenantSettingsRef = getDocRef(COLLECTIONS.SETTINGS, SETTINGS_DOC_ID, clientId);
       const tenantSnap = await getDoc(tenantSettingsRef);
-      if (!tenantSnap.exists()) {
-        const initialTenantSettings: StoreSettings = {
-          ...initialStoreSettings,
-          storeName: normalizedClient.storeName,
-          phoneWhatsapp: normalizedClient.phoneWhatsapp || initialStoreSettings.phoneWhatsapp,
-          storeType: normalizedClient.storeType || 'clothing',
-          isFirstSetupDone: true,
-          announcementBannerText: `💎 Bem-vindo à vitrine oficial da ${normalizedClient.storeName}! Explore o catálogo e faça seu pedido direto pelo WhatsApp.`,
-        };
-        await setDoc(tenantSettingsRef, initialTenantSettings);
+      const currentSettings: Partial<StoreSettings> = tenantSnap.exists() ? (tenantSnap.data() as StoreSettings) : {};
+
+      const initialTenantSettings: StoreSettings = {
+        ...initialStoreSettings,
+        ...currentSettings,
+        storeName: normalizedClient.storeName,
+        phoneWhatsapp: rawPhone || currentSettings.phoneWhatsapp || initialStoreSettings.phoneWhatsapp,
+        storeType: normalizedClient.storeType || 'clothing',
+        isFirstSetupDone: true,
+        showAnnouncementBanner: true,
+        announcementBannerText: `💎 Bem-vindo à vitrine oficial da ${normalizedClient.storeName}! Explore o catálogo e faça seu pedido direto pelo WhatsApp.`,
+      };
+      await setDoc(tenantSettingsRef, initialTenantSettings, { merge: true });
+
+      // Pre-seed starter categories for this tenant if empty
+      const tenantCatCol = getCollectionRef(COLLECTIONS.CATEGORIES, clientId);
+      const catSnap = await getDocs(tenantCatCol);
+      if (catSnap.empty) {
+        for (const cat of initialCategories) {
+          await setDoc(doc(tenantCatCol, cat.id), cat);
+        }
+      }
+
+      // Pre-seed starter tags for this tenant if empty
+      const tenantTagsCol = getCollectionRef(COLLECTIONS.TAGS, clientId);
+      const tagsSnap = await getDocs(tenantTagsCol);
+      if (tagsSnap.empty) {
+        for (const tag of initialTags) {
+          await setDoc(doc(tenantTagsCol, tag.id), tag);
+        }
       }
     } catch (tenantErr) {
-      console.warn('Could not pre-seed tenant settings, it will auto-create on first load:', tenantErr);
+      console.warn('Could not pre-seed tenant settings/categories:', tenantErr);
     }
   } catch (error) {
     console.error('Error saving client:', error);
@@ -732,7 +804,9 @@ export const deleteClient = async (id: string) => {
 
 export const getClientByUsername = async (slugOrUsername: string): Promise<any | null> => {
   try {
-    const rawClean = slugOrUsername.trim().toLowerCase();
+    const rawClean = (slugOrUsername || '').trim().toLowerCase().replace(/^@+/, '');
+    if (!rawClean) return null;
+
     const normalizedQuery = rawClean
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
@@ -745,41 +819,41 @@ export const getClientByUsername = async (slugOrUsername: string): Promise<any |
       return null;
     }
 
-    const matchedDoc = snapshot.docs.find((docSnap) => {
-      const data = docSnap.data();
-      const u = (data.username || '').toString().trim().toLowerCase();
-      const s = (data.storeSlug || '').toString().trim().toLowerCase();
-      const name = (data.storeName || data.name || '').toString().trim().toLowerCase();
+    for (const docSnap of snapshot.docs) {
+      const rawData = docSnap.data();
+      const decrypted = await decryptClientData(rawData);
+
+      const u = (decrypted.username || '').toString().trim().toLowerCase().replace(/^@+/, '');
+      const s = (decrypted.storeSlug || '').toString().trim().toLowerCase().replace(/^@+/, '');
+      const name = (decrypted.storeName || decrypted.name || '').toString().trim().toLowerCase();
       const id = (docSnap.id || '').toString().trim().toLowerCase();
-      const email = (data.email || '').toString().trim().toLowerCase();
+      const email = (decrypted.email || '').toString().trim().toLowerCase();
 
       const uNorm = u.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
       const sNorm = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
       const nameNorm = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
       const emailPrefix = email.split('@')[0].normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
 
-      return (
+      const isMatch =
         u === rawClean ||
         s === rawClean ||
         id === rawClean ||
+        id === `client-${rawClean}` ||
         uNorm === normalizedQuery ||
         sNorm === normalizedQuery ||
         nameNorm === normalizedQuery ||
-        emailPrefix === normalizedQuery ||
-        id === `client-${rawClean}`
-      );
-    });
+        emailPrefix === normalizedQuery;
 
-    if (matchedDoc) {
-      const data = matchedDoc.data();
-      return { 
-        id: matchedDoc.id, 
-        isOfficial: true,
-        ...data,
-        storeName: data.storeName || data.name || 'Minha Loja',
-        username: (data.username || '').toString().trim().toLowerCase(),
-        storeSlug: data.storeSlug || (data.username || '').toString().trim().toLowerCase(),
-      };
+      if (isMatch) {
+        return {
+          id: docSnap.id,
+          isOfficial: true,
+          ...decrypted,
+          storeName: decrypted.storeName || decrypted.name || 'Minha Loja',
+          username: u,
+          storeSlug: s || u,
+        };
+      }
     }
 
     return null;
