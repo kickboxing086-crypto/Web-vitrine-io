@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
-import { Download, Check, Loader2 } from 'lucide-react';
+import { Download, Check, Loader2, Sparkles, CheckCircle2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface PWAInstallButtonProps {
   variant?: 'gold' | 'dark' | 'outline' | 'pill' | 'floating';
@@ -17,31 +18,40 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
 }) => {
   const { isInstalled, install } = usePWAInstall();
   const [isInstalling, setIsInstalling] = useState(false);
-  const [justInstalled, setJustInstalled] = useState(false);
-
-  if (isInstalled || justInstalled) {
-    return (
-      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-950/70 border border-emerald-500/40 text-emerald-400 text-xs font-semibold select-none shadow-2xs">
-        <Check className="w-3.5 h-3.5 text-emerald-400" />
-        <span>Instalado</span>
-      </div>
-    );
-  }
+  const [downloadSuccess, setDownloadSuccess] = useState(false);
 
   const handleInstallClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
     setIsInstalling(true);
+
     try {
-      const accepted = await install();
-      if (accepted) {
-        setJustInstalled(true);
+      // 1. Immediately trigger the file download (WebVitrine-App.apk)
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.href = '/WebVitrine-App.apk';
+      downloadAnchor.download = 'WebVitrine-App.apk';
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      document.body.removeChild(downloadAnchor);
+
+      // 2. Also trigger the browser's native PWA prompt if available
+      try {
+        await install();
+      } catch (pwaErr) {
+        console.debug('PWA prompt handled alongside download:', pwaErr);
       }
+
+      setDownloadSuccess(true);
+      setTimeout(() => {
+        setDownloadSuccess(false);
+      }, 4500);
     } catch (err) {
-      console.error('Erro na ação de instalar:', err);
+      console.error('Erro ao gerar arquivo do aplicativo:', err);
     } finally {
-      setTimeout(() => setIsInstalling(false), 800);
+      setTimeout(() => {
+        setIsInstalling(false);
+      }, 600);
     }
   };
 
@@ -54,20 +64,46 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
   };
 
   return (
-    <button
-      onClick={handleInstallClick}
-      type="button"
-      disabled={isInstalling}
-      className={`inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer text-xs ${buttonStyles[variant]} ${className} disabled:opacity-85 disabled:cursor-wait`}
-      title="Instalar aplicativo"
-      id="btn-install-app"
-    >
-      {isInstalling ? (
-        <Loader2 className="w-4 h-4 text-amber-700 animate-spin" />
-      ) : (
-        <Download className="w-4 h-4 text-amber-700" />
-      )}
-      {showText && <span>{isInstalling ? 'Instalando...' : label}</span>}
-    </button>
+    <>
+      <button
+        onClick={handleInstallClick}
+        type="button"
+        disabled={isInstalling}
+        className={`inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer text-xs ${buttonStyles[variant]} ${className} disabled:opacity-85 disabled:cursor-wait`}
+        title="Baixar e instalar aplicativo"
+        id="btn-install-app"
+      >
+        {isInstalling ? (
+          <Loader2 className="w-4 h-4 text-amber-700 animate-spin" />
+        ) : (
+          <Download className="w-4 h-4 text-amber-700" />
+        )}
+        {showText && <span>{isInstalling ? 'Gerando arquivo...' : label}</span>}
+      </button>
+
+      {/* Instant Notification Toast that file was generated and downloaded */}
+      <AnimatePresence>
+        {downloadSuccess && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="fixed top-5 right-5 z-[9999] max-w-sm bg-stone-950/95 border border-[#D4AF37] rounded-2xl p-4 shadow-2xl backdrop-blur-xl text-white flex items-start gap-3"
+          >
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#B8860B] flex items-center justify-center text-stone-950 flex-shrink-0 mt-0.5">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+            <div className="flex-1 text-left">
+              <span className="block text-xs font-bold text-white">
+                Arquivo do Aplicativo Gerado!
+              </span>
+              <p className="text-[11px] text-stone-300 mt-0.5 leading-tight">
+                O arquivo <strong>WebVitrine-App.apk</strong> foi baixado com sucesso. Verifique seus downloads para instalar!
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
