@@ -1,7 +1,7 @@
 {
-  "name": "Web Vitrine - Vitrine Virtual de Luxo",
-  "short_name": "WebVitrine",
-  "description": "Catálogo de produtos online com carrinho e envio de pedidos direto no WhatsApp.",
+  "name": "Web Vitrine",
+  "short_name": "Web Vitrine",
+  "description": "Vitrine virtual e catálogo digital oficial.",
   "start_url": "/",
   "id": "/",
   "scope": "/",
