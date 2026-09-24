@@ -15,14 +15,6 @@ registerSW({
   },
 });
 
-// Fallback direct service worker registration if supported
-if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch((e) => {
-    // Non-fatal fallback
-    console.debug('Direct sw registration note:', e);
-  });
-}
-
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
