@@ -11,6 +11,11 @@ declare global {
   }
 }
 
+export interface InstallResult {
+  status: 'accepted' | 'dismissed' | 'prompted' | 'iframe' | 'ios' | 'manual';
+  message?: string;
+}
+
 export function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(() => {
     if (typeof window !== 'undefined' && window.__deferredPWAInstallPrompt) {
@@ -26,6 +31,9 @@ export function usePWAInstall() {
       (window.navigator as unknown as { standalone?: boolean }).standalone === true
     );
   });
+
+  const isIframe = typeof window !== 'undefined' && window.self !== window.top;
+  const isIOS = typeof window !== 'undefined' && /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
 
   useEffect(() => {
     const checkStandalone = () => {
@@ -71,9 +79,10 @@ export function usePWAInstall() {
     };
   }, []);
 
-  const install = async (): Promise<boolean> => {
+  const install = async (): Promise<InstallResult> => {
     const promptEvent = deferredPrompt || (typeof window !== 'undefined' ? window.__deferredPWAInstallPrompt : null);
 
+    // If native PWA install prompt is ready
     if (promptEvent) {
       try {
         await promptEvent.prompt();
@@ -84,18 +93,41 @@ export function usePWAInstall() {
           if (typeof window !== 'undefined') {
             window.__deferredPWAInstallPrompt = null;
           }
-          return true;
+          return { status: 'accepted' };
         }
+        return { status: 'dismissed' };
       } catch (error) {
-        console.error('Erro ao acionar prompt nativo de instalação:', error);
+        console.error('Erro ao executar prompt:', error);
       }
     }
-    return false;
+
+    // If inside iframe (AI Studio preview)
+    if (isIframe) {
+      return {
+        status: 'iframe',
+        message: 'O instalador precisa ser aberto na aba principal do navegador.',
+      };
+    }
+
+    // If iOS Safari (WebKit does not support beforeinstallprompt)
+    if (isIOS) {
+      return {
+        status: 'ios',
+        message: 'No iOS Safari, toque em Compartilhar e Adicionar à Tela de Início.',
+      };
+    }
+
+    return {
+      status: 'manual',
+      message: 'Toque no menu ⋮ do navegador e escolha "Instalar aplicativo".',
+    };
   };
 
   return {
     isInstallable: Boolean(deferredPrompt || (typeof window !== 'undefined' && window.__deferredPWAInstallPrompt)),
     isInstalled,
+    isIframe,
+    isIOS,
     install,
   };
 }
