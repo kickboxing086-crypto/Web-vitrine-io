@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { formatPhone, cleanPhoneForWhatsapp } from '../lib/formatters';
 import { checkStoreHoursStatus } from '../lib/themeUtils';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface NavbarProps {
   settings: StoreSettings;
@@ -91,6 +92,9 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Right Controls: Store Hours, Search, Bag, System Landing, Admin toggle */}
           <div className="flex items-center space-x-1.5 sm:space-x-2.5">
+            {/* PWA Install Button */}
+            <PWAInstallButton variant="pill" showText={false} className="sm:inline-flex" />
+
             {/* Store Hours Highlighted Clock Button */}
             {onOpenStoreHours && activeView === 'store' && (
               <button

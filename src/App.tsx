@@ -159,6 +159,14 @@ export default function App() {
       };
       setCurrentClient(enrichedClient);
       localStorage.setItem('store_current_client', JSON.stringify(enrichedClient));
+      if (client.storeName) {
+        setSettings((prev) => ({
+          ...prev,
+          storeName: client.storeName,
+          phoneWhatsapp: client.phoneWhatsapp || prev.phoneWhatsapp,
+          storeType: client.storeType || prev.storeType || 'clothing',
+        }));
+      }
     }
     if (type === 'super_admin') {
       setActiveView('super_admin');
@@ -388,6 +396,15 @@ export default function App() {
   // Real-time Cloud Firestore synchronization
   useEffect(() => {
     setIsCloudSyncing(true);
+
+    if (currentClient && currentClient.storeName) {
+      setSettings((prev) => ({
+        ...prev,
+        storeName: currentClient.storeName,
+        phoneWhatsapp: currentClient.phoneWhatsapp || prev.phoneWhatsapp,
+        storeType: currentClient.storeType || prev.storeType || 'clothing',
+      }));
+    }
 
     // Clear local states immediately to prevent flashing data from previous client
     setProducts([]);

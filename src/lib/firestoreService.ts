@@ -222,14 +222,18 @@ export const subscribeToSettings = (
     (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.data() as StoreSettings;
+        if (clientStoreName && (data.storeName === 'Web Vitrine' || data.storeName === 'Minha Loja' || !data.storeName)) {
+          data.storeName = clientStoreName;
+        }
         callback(data);
         if (!clientId) saveStoredSettings(data);
       } else {
-        // Fallback: create settings doc
-        const defaultSettings = { 
+        // Fallback: create settings doc with specific client store name
+        const defaultSettings: StoreSettings = { 
           ...initialStoreSettings, 
           storeName: clientStoreName || 'Minha Loja',
-          isFirstSetupDone: false 
+          isFirstSetupDone: true,
+          announcementBannerText: clientStoreName ? `💎 Bem-vindo à vitrine oficial da ${clientStoreName}!` : initialStoreSettings.announcementBannerText,
         };
         setDoc(settingsRef, defaultSettings).catch(console.error);
         callback(defaultSettings);
