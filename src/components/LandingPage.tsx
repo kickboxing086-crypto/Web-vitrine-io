@@ -55,8 +55,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       a: 'Zero comissão. Todo o lucro de cada venda é 100% seu. Você paga apenas o valor fixo da sua assinatura.',
     },
     {
-      q: 'Como funciona a opção de PWA / Aplicativo Instalável?',
-      a: 'Sua vitrine já vem pronta como Progressive Web App (PWA). Tanto você quanto seus clientes podem instalar a loja com um clique na tela do celular ou computador, como um aplicativo nativo, sem necessidade de baixar pelas lojas Google Play ou Apple Store.',
+      q: 'Como funciona a opção de Aplicativo Instalável?',
+      a: 'Sua vitrine já vem pronta para ser adicionada no celular ou computador. Tanto você quanto seus clientes podem instalar o aplicativo com 1 clique direto pelo navegador, como um app nativo, sem necessidade de baixar pelas lojas Google Play ou Apple Store.',
     },
     {
       q: 'Como recebo o pagamento dos pedidos?',
@@ -93,7 +93,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       image: 'https://images.unsplash.com/photo-1556742049-0a670f4a4591?auto=format&fit=crop&w=800&q=80',
     },
     {
-      title: 'App PWA Nativo no Celular',
+      title: 'Aplicativo Direto no Celular',
       description: 'Instalação instantânea na tela inicial do seu cliente sem passar por burocracias de App Stores.',
       icon: Smartphone,
       image: 'https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&w=800&q=80',
@@ -232,7 +232,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </div>
               <div className="flex items-center gap-2">
                 <Smartphone className="w-4 h-4 text-[#D4AF37]" />
-                <span>Transformável em App PWA</span>
+                <span>Aplicativo Instalável</span>
               </div>
               <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-[#D4AF37]" />
@@ -271,7 +271,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     <Crown className="w-5 h-5 text-[#D4AF37]" />
                     <div>
                       <span className="block text-xs font-bold text-white">Sua Marca de Sucesso</span>
-                      <span className="text-[10px] text-[#F3E5AB]">Visual Elegante & PWA Nativo</span>
+                      <span className="text-[10px] text-[#F3E5AB]">Visual Elegante & App no Celular</span>
                     </div>
                   </div>
                 </div>
@@ -352,14 +352,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </section>
 
-      {/* PWA & Native App Showcase Banner */}
+      {/* Native App Showcase Banner */}
       <section className="py-20 relative z-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="relative rounded-3xl bg-gradient-to-r from-stone-900 via-stone-950 to-stone-900 border border-[#D4AF37]/40 p-8 sm:p-12 overflow-hidden shadow-2xl">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-7 space-y-5 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold">
                 <Smartphone className="w-4 h-4 text-[#D4AF37]" />
-                <span>Aplicativo Web PWA Integrado</span>
+                <span>Aplicativo Integrado</span>
               </div>
 
               <h2 className="text-3xl sm:text-4xl font-serif-luxury font-bold text-white">
@@ -372,7 +372,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </p>
 
               <div className="pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-3">
-                <PWAInstallButton variant="gold" showText={true} />
+                <PWAInstallButton variant="gold" label="Instalar" showText={true} />
                 <button
                   type="button"
                   onClick={() => onEnterStore('teste@123')}
@@ -390,10 +390,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#D4AF37] to-[#B8860B] flex items-center justify-center text-stone-950 shadow-lg font-serif-luxury font-bold text-2xl">
                     W
                   </div>
-                  <span className="font-serif-luxury font-bold text-white text-sm">Sua Loja PWA</span>
+                  <span className="font-serif-luxury font-bold text-white text-sm">Sua Loja no Celular</span>
                   <p className="text-[10px] text-stone-400">Salva na tela do celular como um App nativo!</p>
                   <div className="w-full py-2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-xl text-[11px] font-bold">
-                    ✓ Instalável & Off-line
+                    ✓ Instalável no Celular
                   </div>
                 </div>
                 <div className="w-12 h-1 bg-stone-700 rounded-full mx-auto mt-2" />
@@ -468,7 +468,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     </li>
                     <li className="flex items-center gap-2.5">
                       <Check className="w-4 h-4 text-[#D4AF37]" />
-                      <span>Instalação PWA Nativa</span>
+                      <span>Instalação do Aplicativo</span>
                     </li>
                     <li className="flex items-center gap-2.5">
                       <Check className="w-4 h-4 text-[#D4AF37]" />

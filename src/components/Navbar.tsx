@@ -92,8 +92,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Right Controls: Store Hours, Search, Bag, System Landing, Admin toggle */}
           <div className="flex items-center space-x-1.5 sm:space-x-2.5">
-            {/* PWA Install Button */}
-            <PWAInstallButton variant="pill" showText={false} className="sm:inline-flex" />
+            {/* Install Button */}
+            <PWAInstallButton variant="pill" showText={true} label="Instalar" className="inline-flex px-2.5 sm:px-3 py-1.5" />
 
             {/* Store Hours Highlighted Clock Button */}
             {onOpenStoreHours && activeView === 'store' && (

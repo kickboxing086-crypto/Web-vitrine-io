@@ -4,15 +4,17 @@ import { Download, Smartphone, Check, X, Share, PlusSquare, Sparkles } from 'luc
 import { motion, AnimatePresence } from 'motion/react';
 
 interface PWAInstallButtonProps {
-  variant?: 'gold' | 'dark' | 'outline' | 'pill';
+  variant?: 'gold' | 'dark' | 'outline' | 'pill' | 'floating';
   className?: string;
   showText?: boolean;
+  label?: string;
 }
 
 export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
   variant = 'gold',
   className = '',
   showText = true,
+  label = 'Instalar',
 }) => {
   const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
   const [showIOSGuide, setShowIOSGuide] = useState(false);
@@ -20,9 +22,9 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
 
   if (isInstalled) {
     return (
-      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
+      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-950/70 border border-emerald-500/40 text-emerald-400 text-xs font-semibold">
         <Check className="w-3.5 h-3.5 text-emerald-400" />
-        <span>App Instalado</span>
+        <span>Instalado</span>
       </div>
     );
   }
@@ -33,19 +35,17 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
       if (res) {
         setInstalledNotice(true);
       }
-    } else if (isIOS) {
-      setShowIOSGuide(true);
     } else {
-      // Browser doesn't trigger beforeinstallprompt yet or standard Android/Chrome prompt guidance
       setShowIOSGuide(true);
     }
   };
 
   const buttonStyles = {
-    gold: 'bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#B8860B] text-stone-950 font-bold hover:brightness-110 shadow-md shadow-amber-500/10',
-    dark: 'bg-stone-900 border border-amber-500/30 text-amber-300 font-bold hover:bg-stone-800 shadow-sm',
-    outline: 'border border-amber-500/40 text-amber-400 hover:bg-amber-500/10 font-bold',
-    pill: 'bg-amber-400/10 border border-amber-400/30 text-amber-300 hover:bg-amber-400/20 font-bold text-xs rounded-full',
+    gold: 'bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#B8860B] text-stone-950 font-bold hover:brightness-110 shadow-md shadow-amber-500/20 active:scale-95',
+    dark: 'bg-stone-900 border border-amber-500/30 text-amber-300 font-bold hover:bg-stone-800 shadow-sm active:scale-95',
+    outline: 'border border-amber-500/40 text-amber-400 hover:bg-amber-500/10 font-bold active:scale-95',
+    pill: 'bg-gradient-to-r from-amber-500/15 to-amber-600/15 border border-amber-500/40 text-amber-300 hover:bg-amber-500/25 font-bold text-xs rounded-full shadow-2xs active:scale-95',
+    floating: 'bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#B8860B] text-stone-950 font-extrabold shadow-xl shadow-amber-600/30 border border-white/40 active:scale-95',
   };
 
   return (
@@ -55,21 +55,22 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
         type="button"
         className={`inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer text-xs ${buttonStyles[variant]} ${className}`}
         title="Instalar aplicativo no celular ou computador"
-        id="btn-install-pwa-app"
+        id="btn-install-app"
       >
-        <Smartphone className="w-4 h-4 text-amber-600" />
-        {showText && <span>Instalar App PWA</span>}
+        <Download className="w-4 h-4 text-amber-700 animate-bounce" />
+        {showText && <span>{label}</span>}
       </button>
 
-      {/* Guide Modal for iOS Safari / Unsupported prompt */}
+      {/* Guide Modal for iOS Safari & unsupported desktop/android */}
       <AnimatePresence>
         {showIOSGuide && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/80 backdrop-blur-sm p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/80 backdrop-blur-md p-4">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-sm rounded-3xl bg-stone-900 border border-amber-500/30 p-6 shadow-2xl text-stone-100 relative"
+              initial={{ opacity: 0, scale: 0.92, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 15 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className="w-full max-w-sm rounded-3xl bg-stone-900 border border-[#D4AF37]/40 p-6 shadow-2xl text-stone-100 relative"
             >
               <button
                 onClick={() => setShowIOSGuide(false)}
@@ -79,44 +80,44 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
               </button>
 
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#D4AF37] to-[#B8860B] flex items-center justify-center text-stone-950 shadow-md">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#D4AF37] to-[#B8860B] flex items-center justify-center text-stone-950 shadow-md">
                   <Smartphone className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="text-[10px] uppercase tracking-widest font-bold text-amber-400">Instalação Direta</span>
-                  <h3 className="text-base font-serif-luxury font-bold text-white">Instalar o App no Celular</h3>
+                  <span className="text-[10px] uppercase tracking-widest font-bold text-[#D4AF37]">Acesso Instantâneo</span>
+                  <h3 className="text-base font-serif-luxury font-bold text-white">Instalar o Aplicativo</h3>
                 </div>
               </div>
 
               {isIOS ? (
                 <div className="space-y-3 text-xs text-stone-300">
-                  <p>Para instalar na tela inicial do seu iPhone ou iPad:</p>
-                  <ol className="space-y-2 bg-stone-950/80 p-3.5 rounded-2xl border border-stone-800">
-                    <li className="flex items-start gap-2">
-                      <Share className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-                      <span>1. Toque no botão <strong>Compartilhar</strong> no menu do Safari (ícone de quadrado com seta).</span>
+                  <p>Para adicionar o aplicativo na tela inicial do seu iPhone ou iPad:</p>
+                  <ol className="space-y-2.5 bg-stone-950/90 p-3.5 rounded-2xl border border-stone-800">
+                    <li className="flex items-start gap-2.5">
+                      <Share className="w-4 h-4 text-[#D4AF37] flex-shrink-0 mt-0.5" />
+                      <span>1. Toque no ícone <strong>Compartilhar</strong> na barra do Safari (quadrado com seta para cima).</span>
                     </li>
-                    <li className="flex items-start gap-2">
-                      <PlusSquare className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-                      <span>2. Role a lista e selecione <strong>Adicionar à Tela de Início</strong>.</span>
+                    <li className="flex items-start gap-2.5">
+                      <PlusSquare className="w-4 h-4 text-[#D4AF37] flex-shrink-0 mt-0.5" />
+                      <span>2. Role as opções e selecione <strong>Adicionar à Tela de Início</strong>.</span>
                     </li>
-                    <li className="flex items-start gap-2">
-                      <Sparkles className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-                      <span>3. Toque em <strong>Adicionar</strong> no canto superior direito!</span>
+                    <li className="flex items-start gap-2.5">
+                      <Sparkles className="w-4 h-4 text-[#D4AF37] flex-shrink-0 mt-0.5" />
+                      <span>3. Toque em <strong>Adicionar</strong> no canto superior direito.</span>
                     </li>
                   </ol>
                 </div>
               ) : (
                 <div className="space-y-3 text-xs text-stone-300">
-                  <p>Adicione a Web Vitrine à sua tela de início para ter navegação instantânea em modo aplicativo sem baixar nada pela loja de aplicativos:</p>
-                  <ol className="space-y-2 bg-stone-950/80 p-3.5 rounded-2xl border border-stone-800">
-                    <li className="flex items-start gap-2">
-                      <Smartphone className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-                      <span>1. No menu do Chrome/Navegador (3 pontinhos), escolha <strong>Instalar Aplicativo</strong> ou <strong>Adicionar à Tela Inicial</strong>.</span>
+                  <p>Tenha a vitrine como um aplicativo nativo na sua tela inicial:</p>
+                  <ol className="space-y-2.5 bg-stone-950/90 p-3.5 rounded-2xl border border-stone-800">
+                    <li className="flex items-start gap-2.5">
+                      <Smartphone className="w-4 h-4 text-[#D4AF37] flex-shrink-0 mt-0.5" />
+                      <span>1. No menu do seu navegador (três pontinhos), toque em <strong>Instalar aplicativo</strong> ou <strong>Adicionar à tela inicial</strong>.</span>
                     </li>
-                    <li className="flex items-start gap-2">
+                    <li className="flex items-start gap-2.5">
                       <Check className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
-                      <span>2. O ícone oficial da sua vitrine ficará salvo no seu celular como um app nativo!</span>
+                      <span>2. Confirme a instalação para abrir o aplicativo diretamente da tela do seu aparelho com rapidez máxima!</span>
                     </li>
                   </ol>
                 </div>
@@ -124,9 +125,9 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
 
               <button
                 onClick={() => setShowIOSGuide(false)}
-                className="mt-5 w-full py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-stone-950 font-bold text-xs hover:brightness-110 shadow-md"
+                className="mt-5 w-full py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-stone-950 font-bold text-xs hover:brightness-110 shadow-lg cursor-pointer"
               >
-                Entendi, voltar para a vitrine
+                Entendi, continuar
               </button>
             </motion.div>
           </div>

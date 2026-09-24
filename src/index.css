@@ -78,7 +78,16 @@
   body {
     font-family: var(--font-body);
     zoom: 0.78;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
+  
+  @media (max-width: 640px) {
+    body {
+      zoom: 0.88;
+    }
+  }
+
   h1, h2, h3, h4, h5, h6, .font-serif-luxury, .font-cormorant {
     font-family: var(--font-serif-luxury) !important;
   }

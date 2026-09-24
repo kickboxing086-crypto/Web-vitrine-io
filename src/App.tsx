@@ -64,6 +64,8 @@ import { LandingHeroModal } from './components/LandingHeroModal';
 import { StoreHoursModal } from './components/StoreHoursModal';
 import { ShareProductModal } from './components/ShareProductModal';
 import { PaymentSuccessModal } from './components/PaymentSuccessModal';
+import { AppEntranceAnimation } from './components/AppEntranceAnimation';
+import { InstallFloatingBar } from './components/InstallFloatingBar';
 import { SlidersHorizontal, AlertCircle, Tag as TagIcon, ShoppingBag, ArrowLeft, MessageCircle, ChevronDown, Check, Instagram, MapPin, Clock, ExternalLink } from 'lucide-react';
 import { getFontFamilyCss, checkStoreHoursStatus, applyStoreTheme } from './lib/themeUtils';
 import { formatCurrency, cleanPhoneForWhatsapp } from './lib/formatters';
@@ -85,6 +87,9 @@ export default function App() {
   const [isLocationModalOpen, setIsLocationModalOpen] = useState<boolean>(false);
   const [isLandingHeroModalOpen, setIsLandingHeroModalOpen] = useState<boolean>(false);
   const [isCloudSyncing, setIsCloudSyncing] = useState<boolean>(true);
+  const [showEntranceAnimation, setShowEntranceAnimation] = useState<boolean>(() => {
+    return !sessionStorage.getItem('app_entered_session');
+  });
   const [paymentSuccessInfo, setPaymentSuccessInfo] = useState<{
     isOpen: boolean;
     planTitle: string;
@@ -831,6 +836,15 @@ export default function App() {
   if (activeView === 'landing') {
     return (
       <>
+        {showEntranceAnimation && (
+          <AppEntranceAnimation
+            storeName="Web Vitrine"
+            onAnimationComplete={() => {
+              setShowEntranceAnimation(false);
+              sessionStorage.setItem('app_entered_session', 'true');
+            }}
+          />
+        )}
         <LandingPage
           settings={settings}
           onEnterStore={handleEnterStore}
@@ -854,16 +868,18 @@ export default function App() {
             setPaymentSuccessInfo((prev) => ({ ...prev, isOpen: false }));
           }}
         />
+        <InstallFloatingBar />
       </>
     );
   }
 
-  if (isCloudSyncing) {
+  // Speed Optimization: Only show full-screen blocking loader if there is no cache whatsoever and entrance is not playing
+  if (isCloudSyncing && !settings.storeName && products.length === 0 && !showEntranceAnimation) {
     return (
-      <div className="min-h-screen bg-[#12110F] flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-[#D4AF37] text-sm font-bold animate-pulse">Sincronizando Vitrine...</p>
+      <div className="min-h-screen bg-[#0B0A0C] flex items-center justify-center p-4">
+        <div className="text-center space-y-3">
+          <div className="w-10 h-10 border-3 border-[#D4AF37] border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-[#D4AF37] text-xs font-bold tracking-wider animate-pulse uppercase">Carregando Vitrine...</p>
         </div>
       </div>
     );
@@ -1366,6 +1382,20 @@ export default function App() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Luxury Entrance Animation (proportional to screen and zoom) */}
+      {showEntranceAnimation && (
+        <AppEntranceAnimation
+          storeName={currentClient?.storeName || settings.storeName || 'Web Vitrine'}
+          onAnimationComplete={() => {
+            setShowEntranceAnimation(false);
+            sessionStorage.setItem('app_entered_session', 'true');
+          }}
+        />
+      )}
+
+      {/* Floating Install Bar */}
+      <InstallFloatingBar />
     </div>
   );
 }
