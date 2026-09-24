@@ -23,6 +23,20 @@
     <meta name="application-name" content="WEB VITRINE" />
     <meta name="format-detection" content="telephone=no" />
 
+    <script>
+      // Capture PWA installation prompt globally at the earliest possible instant
+      window.__deferredPWAInstallPrompt = null;
+      window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+        window.__deferredPWAInstallPrompt = e;
+        window.dispatchEvent(new CustomEvent('pwa-install-ready'));
+      });
+      window.addEventListener('appinstalled', function() {
+        window.__deferredPWAInstallPrompt = null;
+        window.dispatchEvent(new CustomEvent('pwa-installed'));
+      });
+    </script>
+
     <!-- Open Graph / WhatsApp Preview -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="WEB VITRINE" />
