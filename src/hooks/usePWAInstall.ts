@@ -11,11 +11,6 @@ declare global {
   }
 }
 
-export interface InstallResult {
-  status: 'accepted' | 'dismissed' | 'prompted' | 'iframe' | 'ios' | 'manual';
-  message?: string;
-}
-
 export function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(() => {
     if (typeof window !== 'undefined' && window.__deferredPWAInstallPrompt) {
@@ -31,9 +26,6 @@ export function usePWAInstall() {
       (window.navigator as unknown as { standalone?: boolean }).standalone === true
     );
   });
-
-  const isIframe = typeof window !== 'undefined' && window.self !== window.top;
-  const isIOS = typeof window !== 'undefined' && /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
 
   useEffect(() => {
     const checkStandalone = () => {
@@ -54,11 +46,27 @@ export function usePWAInstall() {
       const promptEvent = e as BeforeInstallPromptEvent;
       window.__deferredPWAInstallPrompt = promptEvent;
       setDeferredPrompt(promptEvent);
+
+      // Auto-trigger if arrived via direct install request
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('install') === '1') {
+        promptEvent.prompt().catch(() => {});
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete('install');
+        window.history.replaceState({}, '', cleanUrl.toString());
+      }
     };
 
     const handleInstallReady = () => {
       if (window.__deferredPWAInstallPrompt) {
         setDeferredPrompt(window.__deferredPWAInstallPrompt);
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('install') === '1') {
+          window.__deferredPWAInstallPrompt.prompt().catch(() => {});
+          const cleanUrl = new URL(window.location.href);
+          cleanUrl.searchParams.delete('install');
+          window.history.replaceState({}, '', cleanUrl.toString());
+        }
       }
     };
 
@@ -72,17 +80,29 @@ export function usePWAInstall() {
     window.addEventListener('pwa-install-ready', handleInstallReady);
     window.addEventListener('appinstalled', handleAppInstalled);
 
+    // Check if arrived with ?install=1 and prompt was already captured
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('install') === '1') {
+      const existing = deferredPrompt || window.__deferredPWAInstallPrompt;
+      if (existing) {
+        existing.prompt().catch(() => {});
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete('install');
+        window.history.replaceState({}, '', cleanUrl.toString());
+      }
+    }
+
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('pwa-install-ready', handleInstallReady);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
-  }, []);
+  }, [deferredPrompt]);
 
-  const install = async (): Promise<InstallResult> => {
+  const install = async (): Promise<boolean> => {
     const promptEvent = deferredPrompt || (typeof window !== 'undefined' ? window.__deferredPWAInstallPrompt : null);
 
-    // If native PWA install prompt is ready
+    // 1. Direct native prompt if available
     if (promptEvent) {
       try {
         await promptEvent.prompt();
@@ -93,41 +113,33 @@ export function usePWAInstall() {
           if (typeof window !== 'undefined') {
             window.__deferredPWAInstallPrompt = null;
           }
-          return { status: 'accepted' };
+          return true;
         }
-        return { status: 'dismissed' };
+        return false;
       } catch (error) {
-        console.error('Erro ao executar prompt:', error);
+        console.error('Erro no prompt nativo:', error);
       }
     }
 
-    // If inside iframe (AI Studio preview)
+    // 2. If running inside an iframe (e.g. AI Studio preview), open directly in the browser outside the iframe
+    const isIframe = typeof window !== 'undefined' && window.self !== window.top;
     if (isIframe) {
-      return {
-        status: 'iframe',
-        message: 'O instalador precisa ser aberto na aba principal do navegador.',
-      };
+      const targetUrl = new URL(window.location.href);
+      targetUrl.searchParams.set('install', '1');
+      window.open(targetUrl.toString(), '_blank');
+      return true;
     }
 
-    // If iOS Safari (WebKit does not support beforeinstallprompt)
-    if (isIOS) {
-      return {
-        status: 'ios',
-        message: 'No iOS Safari, toque em Compartilhar e Adicionar à Tela de Início.',
-      };
-    }
-
-    return {
-      status: 'manual',
-      message: 'Toque no menu ⋮ do navegador e escolha "Instalar aplicativo".',
-    };
+    // 3. If in standalone browser tab and prompt was not yet intercepted, trigger reload with install intent
+    const targetUrl = new URL(window.location.href);
+    targetUrl.searchParams.set('install', '1');
+    window.location.href = targetUrl.toString();
+    return true;
   };
 
   return {
     isInstallable: Boolean(deferredPrompt || (typeof window !== 'undefined' && window.__deferredPWAInstallPrompt)),
     isInstalled,
-    isIframe,
-    isIOS,
     install,
   };
 }
