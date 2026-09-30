@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { fileToBase64 } from '../lib/imageUtils';
-import { STORE_FONTS, STORE_COLOR_PALETTES, WEEK_DAYS, formatBusinessDaysLabel, applyStoreTheme } from '../lib/themeUtils';
+import { STORE_FONTS, WEEK_DAYS, formatBusinessDaysLabel, applyStoreTheme } from '../lib/themeUtils';
 import { getStoreShareUrl, copyToClipboardSafe } from '../lib/formatters';
 
 interface StoreSetupModalProps {
@@ -630,111 +630,33 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
               )}
             </div>
 
-            {/* Section 2: Identidade Visual (Cores & Tipografia de Luxo) */}
+            {/* Section 2: Tipografia & Estilo das Letras */}
             <div className="space-y-4">
               <div className="flex items-center space-x-2 text-stone-900 border-b border-brand-border pb-2">
                 <Palette className="w-4 h-4 text-brand-primary-dark" />
                 <h3 className="font-semibold text-sm tracking-wide uppercase text-stone-800">
-                  2. Identidade Visual (Cores & Fontes de Luxo)
+                  2. Tipografia & Estilo das Letras (Fontes Exclusivas)
                 </h3>
               </div>
 
-              {/* 10 Luxury Color Palettes */}
-              <div className="p-4 bg-white border border-brand-border-dark rounded-2xl space-y-3">
-                <div className="flex items-center justify-between">
+              {/* Official Brand Colors Badge */}
+              <div className="p-3.5 bg-stone-950 border border-[#D4AF37]/40 rounded-2xl flex items-center justify-between text-white">
+                <div className="flex items-center space-x-3">
+                  <div className="flex -space-x-1.5">
+                    <span className="w-6 h-6 rounded-full bg-[#0D0D0F] border border-[#D4AF37]/60 shadow-md inline-block" />
+                    <span className="w-6 h-6 rounded-full bg-gradient-to-tr from-[#D4AF37] to-[#F3E5AB] border border-black shadow-md inline-block" />
+                  </div>
                   <div>
-                    <span className="text-xs font-bold text-stone-900 block">
-                      Paleta de Cor Primária da Vitrine
+                    <span className="text-xs font-bold text-white block">
+                      Cores Oficiais da Vitrine: Preto & Dourado
                     </span>
-                    <span className="text-[11px] text-stone-500">
-                      Escolha a tonalidade nobre que definirá os detalhes, botões e destaques da loja.
+                    <span className="text-[10px] text-stone-400">
+                      Paleta exclusiva padronizada em alta costura para máxima sofisticação.
                     </span>
                   </div>
-                  {formData.primaryColor && (
-                    <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-stone-100 rounded-lg text-xs font-mono">
-                      <span
-                        className="w-3 h-3 rounded-full border border-black/20"
-                        style={{ backgroundColor: formData.primaryColor }}
-                      />
-                      <span>{formData.primaryColor}</span>
-                    </div>
-                  )}
                 </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-1">
-                  {STORE_COLOR_PALETTES.map((pal) => {
-                    const isSelected =
-                      (formData.primaryColor || '#B8860B').toLowerCase() === pal.hex.toLowerCase();
-                    return (
-                      <button
-                        key={pal.id}
-                        type="button"
-                        onClick={() => {
-                          const updated = {
-                            ...formData,
-                            primaryColor: pal.hex,
-                          };
-                          setFormData(updated);
-                          applyStoreTheme(updated);
-                        }}
-                        className={`p-2.5 rounded-xl border text-left flex flex-col justify-between space-y-2 transition-all cursor-pointer ${
-                          isSelected
-                            ? 'ring-2 ring-stone-900 border-stone-900 bg-stone-50 shadow-sm'
-                            : 'border-stone-200 hover:border-stone-400 bg-white'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span
-                            className="w-5 h-5 rounded-full border border-black/10 shadow-xs flex items-center justify-center"
-                            style={{ backgroundColor: pal.hex }}
-                          >
-                            {isSelected && <Check className="w-3 h-3 text-white" />}
-                          </span>
-                          <span className="text-[10px] text-stone-400 font-mono">
-                            {pal.hex}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="font-semibold text-xs text-stone-900 block leading-tight">
-                            {pal.name}
-                          </span>
-                          <span className="text-[9px] text-stone-500 line-clamp-1">
-                            {pal.description}
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Custom Color Input */}
-                <div className="flex items-center space-x-3 pt-2 border-t border-stone-100 text-xs">
-                  <span className="text-stone-600 font-medium">Ou personalize a cor Hex:</span>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="color"
-                      value={formData.primaryColor || '#B8860B'}
-                      onChange={(e) => {
-                        const updated = { ...formData, primaryColor: e.target.value };
-                        setFormData(updated);
-                        applyStoreTheme(updated);
-                      }}
-                      className="w-7 h-7 rounded-lg border border-stone-300 cursor-pointer p-0.5"
-                    />
-                    <input
-                      type="text"
-                      value={formData.primaryColor || '#B8860B'}
-                      onChange={(e) => {
-                        const updated = { ...formData, primaryColor: e.target.value };
-                        setFormData(updated);
-                        if (e.target.value.startsWith('#') && e.target.value.length === 7) {
-                          applyStoreTheme(updated);
-                        }
-                      }}
-                      placeholder="#B8860B"
-                      className="w-24 px-2 py-1 bg-brand-bg border border-stone-300 rounded-lg font-mono text-xs text-stone-800 uppercase"
-                    />
-                  </div>
+                <div className="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] font-bold">
+                  Padrão Oficial
                 </div>
               </div>
 
@@ -742,7 +664,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
               <div className="p-4 bg-white border border-brand-border-dark rounded-2xl space-y-3">
                 <div>
                   <span className="text-xs font-bold text-stone-900 block">
-                    Tipografia da Loja (10 Fontes Exclusivas)
+                    Escolha o Estilo das Letras (10 Fontes de Luxo)
                   </span>
                   <span className="text-[11px] text-stone-500">
                     Defina a fonte que compõe os títulos, menus e detalhes do seu catálogo.

@@ -868,7 +868,6 @@ export default function App() {
             setPaymentSuccessInfo((prev) => ({ ...prev, isOpen: false }));
           }}
         />
-        <InstallFloatingBar />
       </>
     );
   }
@@ -886,7 +885,7 @@ export default function App() {
   }
 
   return (
-    <div className={`min-h-screen bg-brand-bg text-stone-900 flex flex-col selection:bg-brand-border ${activeStoreType === 'natural' ? 'theme-natural' : ''}`}>
+    <div className="min-h-screen bg-[#0D0D0F] text-stone-100 flex flex-col selection:bg-[#D4AF37] selection:text-stone-950">
       {/* Top Navbar */}
       <Navbar
         settings={settings}
@@ -908,19 +907,19 @@ export default function App() {
       {/* Main Content Body */}
       <main className="flex-1">
         {activeView === 'store' ? (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
-            {/* Instagram-Style Centered Store Profile Header */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            {/* Store Profile Header */}
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
+              initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35 }}
-              className="pt-2 pb-6 text-center max-w-2xl mx-auto border-b border-brand-border/60 mb-6"
+              transition={{ duration: 0.25 }}
+              className="pt-2 pb-6 text-center max-w-2xl mx-auto border-b border-[#27272A] mb-6"
               id="storefront-instagram-profile-header"
             >
-              {/* Big Centered Avatar with Instagram Gradient Ring */}
+              {/* Centered Avatar with Gold Accent */}
               <div className="flex justify-center mb-3.5">
-                <div className="relative p-1 sm:p-1.5 bg-gradient-to-tr from-amber-600 via-amber-400 to-amber-200 rounded-full shadow-xl transition-transform hover:scale-105 duration-300">
-                  <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full overflow-hidden bg-stone-100 border-2 sm:border-4 border-white flex items-center justify-center shadow-inner">
+                <div className="relative p-1 rounded-full bg-gradient-to-tr from-[#D4AF37] via-[#FFF3D1] to-[#B8860B] shadow-xl">
+                  <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full overflow-hidden bg-[#16161A] border-2 border-[#121215] flex items-center justify-center shadow-inner">
                     {settings.logoUrl ? (
                       <img
                         src={settings.logoUrl}
@@ -928,7 +927,7 @@ export default function App() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full bg-brand-secondary text-brand-primary flex items-center justify-center font-serif-luxury font-bold text-3xl sm:text-4xl md:text-5xl">
+                      <div className="w-full h-full bg-[#16161A] text-[#D4AF37] flex items-center justify-center font-serif-luxury font-bold text-3xl sm:text-4xl">
                         {settings.storeName ? settings.storeName.charAt(0) : 'V'}
                       </div>
                     )}
@@ -937,25 +936,25 @@ export default function App() {
               </div>
 
               {/* Store Title */}
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif-luxury font-bold text-stone-900 tracking-tight">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif-luxury font-bold text-white tracking-tight">
                 {settings.storeName || 'Web Vitrine'}
               </h1>
 
               {/* Slogan */}
               {settings.slogan && (
-                <p className="text-xs sm:text-sm font-semibold text-amber-700 tracking-wide mt-1 uppercase">
+                <p className="text-xs sm:text-sm font-semibold text-[#D4AF37] tracking-wider mt-1 uppercase">
                   {settings.slogan}
                 </p>
               )}
 
               {/* Bio / Description */}
               {settings.description && (
-                <p className="text-xs sm:text-sm text-stone-600 mt-2 max-w-lg mx-auto leading-relaxed px-4">
+                <p className="text-xs sm:text-sm text-stone-300 mt-2 max-w-lg mx-auto leading-relaxed px-4">
                   {settings.description}
                 </p>
               )}
 
-              {/* Contact & Meta Pills (Instagram-style bio links) */}
+              {/* Contact & Meta Pills */}
               <div className="flex flex-wrap items-center justify-center gap-2 mt-4 px-2">
                 {/* Instagram link */}
                 {settings.instagramHandle && (
@@ -963,9 +962,9 @@ export default function App() {
                     href={`https://instagram.com/${settings.instagramHandle.replace('@', '')}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-stone-200 text-stone-800 text-xs font-semibold hover:border-amber-400 hover:text-amber-700 transition-colors shadow-2xs cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#16161A] border border-[#27272A] text-stone-200 text-xs font-semibold hover:border-[#D4AF37] hover:text-[#D4AF37] transition-colors cursor-pointer"
                   >
-                    <Instagram className="w-3.5 h-3.5 text-pink-600" />
+                    <Instagram className="w-3.5 h-3.5 text-[#D4AF37]" />
                     <span>@{settings.instagramHandle.replace('@', '')}</span>
                   </a>
                 )}
@@ -976,9 +975,9 @@ export default function App() {
                     href={`https://wa.me/${cleanPhoneForWhatsapp(settings.phoneWhatsapp)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold hover:bg-emerald-100 transition-colors shadow-2xs cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-bold transition-colors shadow-sm cursor-pointer"
                   >
-                    <MessageCircle className="w-3.5 h-3.5 fill-emerald-600 text-emerald-600" />
+                    <MessageCircle className="w-3.5 h-3.5 fill-white text-white" />
                     <span>WhatsApp</span>
                   </a>
                 )}
@@ -987,12 +986,12 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setIsStoreHoursModalOpen(true)}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold transition-all cursor-pointer shadow-2xs ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-colors cursor-pointer ${
                     checkStoreHoursStatus(settings).isBreakNow
-                      ? 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100'
+                      ? 'bg-amber-950/40 text-amber-300 border-amber-800/60'
                       : checkStoreHoursStatus(settings).isOpenNow
-                      ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
-                      : 'bg-stone-100 text-stone-700 border-stone-300 hover:bg-stone-200'
+                      ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/60'
+                      : 'bg-[#16161A] text-stone-400 border-[#27272A]'
                   }`}
                 >
                   <Clock className="w-3.5 h-3.5" />
@@ -1010,9 +1009,9 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => setIsLocationModalOpen(true)}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-brand-primary-light/10 border border-brand-primary/30 text-brand-primary-darker text-xs font-bold shadow-sm hover:bg-brand-primary-light/20 hover:border-brand-primary transition-all cursor-pointer group"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#16161A] border border-[#27272A] text-stone-200 text-xs font-medium hover:border-[#D4AF37] hover:text-[#D4AF37] transition-colors cursor-pointer"
                   >
-                    <MapPin className="w-4 h-4 text-brand-primary-dark group-hover:scale-110 transition-transform" />
+                    <MapPin className="w-3.5 h-3.5 text-[#D4AF37]" />
                     <span>Localização</span>
                   </button>
                 )}
@@ -1022,18 +1021,18 @@ export default function App() {
             {/* Quick Tag Pills (if tags exist) */}
             {tagNames.length > 0 && (
               <div className="flex items-center gap-1.5 overflow-x-auto pb-3 pt-1 scrollbar-none text-xs mb-3">
-                <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider mr-1 flex items-center gap-1 flex-shrink-0">
-                  <TagIcon className="w-3 h-3 text-brand-primary-darker" />
+                <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider mr-1 flex items-center gap-1 flex-shrink-0">
+                  <TagIcon className="w-3 h-3 text-[#D4AF37]" />
                   Tags:
                 </span>
 
                 <button
                   type="button"
                   onClick={() => setSelectedTag('all')}
-                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all flex-shrink-0 cursor-pointer ${
+                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors flex-shrink-0 cursor-pointer ${
                     selectedTag === 'all'
-                      ? 'bg-stone-900 text-white shadow-2xs'
-                      : 'bg-white hover:bg-stone-100 text-stone-700 border border-brand-border'
+                      ? 'bg-[#D4AF37] text-stone-950 font-bold'
+                      : 'bg-[#16161A] hover:bg-[#202026] text-stone-300 border border-[#27272A]'
                   }`}
                 >
                   Todas as Tags
@@ -1044,10 +1043,10 @@ export default function App() {
                     key={tag}
                     type="button"
                     onClick={() => setSelectedTag(tag === selectedTag ? 'all' : tag)}
-                    className={`px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 cursor-pointer ${
+                    className={`px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors flex-shrink-0 cursor-pointer ${
                       selectedTag === tag
-                        ? 'bg-brand-primary-darker text-white shadow-2xs'
-                        : 'bg-white hover:bg-brand-bg-alt text-stone-700 border border-brand-border-dark'
+                        ? 'bg-[#D4AF37] text-stone-950 font-bold'
+                        : 'bg-[#16161A] hover:bg-[#202026] text-stone-300 border border-[#27272A]'
                     }`}
                   >
                     #{tag}
@@ -1059,15 +1058,15 @@ export default function App() {
             {/* Catalog Header & Sorting */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
               <div>
-                <h2 className="text-xl sm:text-2xl font-serif-luxury font-bold text-stone-900">
-                  {selectedCategory === 'all' ? (activeStoreType === 'natural' ? 'Cardápio de Produtos' : 'Catálogo de Peças') : selectedCategory}
+                <h2 className="text-xl sm:text-2xl font-serif-luxury font-bold text-white">
+                  {selectedCategory === 'all' ? 'Catálogo de Peças' : selectedCategory}
                   {selectedTag !== 'all' && (
-                    <span className="text-sm font-sans font-semibold text-brand-primary-darker ml-2">
+                    <span className="text-sm font-sans font-semibold text-[#D4AF37] ml-2">
                       (Tag: #{selectedTag})
                     </span>
                   )}
                 </h2>
-                <p className="text-xs text-stone-500 mt-0.5">
+                <p className="text-xs text-stone-400 mt-0.5">
                   {sortedProducts.length} {sortedProducts.length === 1 ? 'peça disponível' : 'peças disponíveis'}
                 </p>
               </div>
@@ -1075,11 +1074,11 @@ export default function App() {
               {/* Sort selector */}
               <div className="flex items-center space-x-2 self-start sm:self-auto relative">
                 <SlidersHorizontal className="w-3.5 h-3.5 text-stone-400" />
-                <span className="text-xs font-semibold text-stone-600">Ordenar por:</span>
+                <span className="text-xs font-semibold text-stone-400">Ordenar por:</span>
                 <button
                   type="button"
                   onClick={() => setIsSortOpen(!isSortOpen)}
-                  className="bg-white border border-brand-border-dark rounded-xl px-3 py-1.5 text-xs font-medium text-stone-800 focus:outline-none flex items-center gap-1.5 shadow-2xs cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all"
+                  className="bg-[#16161A] border border-[#27272A] hover:border-stone-600 rounded-xl px-3 py-1.5 text-xs font-medium text-stone-200 focus:outline-none flex items-center gap-1.5 cursor-pointer transition-colors"
                   id="select-sort-vitrine-btn"
                 >
                   <span>
@@ -1088,7 +1087,7 @@ export default function App() {
                     {sortBy === 'price-desc' && 'Maior Preço'}
                     {sortBy === 'newest' && 'Lançamentos Recentes'}
                   </span>
-                  <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+                  <ChevronDown className="w-3.5 h-3.5 text-stone-400" />
                 </button>
 
                 <AnimatePresence>
@@ -1103,7 +1102,7 @@ export default function App() {
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 5 }}
                         transition={{ duration: 0.12, ease: "easeOut" }}
-                        className="absolute right-0 top-full mt-2 w-64 bg-stone-900 border border-brand-border-dark shadow-xl rounded-2xl p-2 z-50 space-y-1"
+                        className="absolute right-0 top-full mt-2 w-64 bg-[#16161A] border border-[#27272A] shadow-xl rounded-2xl p-2 z-50 space-y-1"
                       >
                         {[
                           { value: 'featured', label: 'Mais Procurados / Destaques' },
@@ -1120,15 +1119,15 @@ export default function App() {
                                 setSortBy(item.value as any);
                                 setIsSortOpen(false);
                               }}
-                              className={`w-full text-left px-3 py-2 text-xs rounded-xl transition-all flex items-center justify-between cursor-pointer ${
+                              className={`w-full text-left px-3 py-2 text-xs rounded-xl transition-colors flex items-center justify-between cursor-pointer ${
                                 isSelected
-                                  ? 'bg-stone-800 text-brand-primary font-bold shadow-xs'
-                                  : 'text-stone-300 hover:bg-stone-800/60 hover:text-white'
+                                  ? 'bg-[#22222A] text-[#D4AF37] font-bold'
+                                  : 'text-stone-300 hover:bg-[#1E1E26] hover:text-white'
                               }`}
                             >
                               <span>{item.label}</span>
                               {isSelected && (
-                                <Check className="w-3.5 h-3.5 text-brand-primary" />
+                                <Check className="w-3.5 h-3.5 text-[#D4AF37]" />
                               )}
                             </button>
                           );
@@ -1142,12 +1141,12 @@ export default function App() {
 
             {/* Products Grid */}
             {sortedProducts.length === 0 ? (
-              <div className="text-center py-16 space-y-3 bg-white rounded-3xl border border-brand-border p-8">
-                <AlertCircle className="w-10 h-10 text-stone-400 mx-auto" />
-                <h3 className="font-serif-luxury text-lg font-medium text-stone-800">
+              <div className="text-center py-16 space-y-3 bg-[#141417] rounded-3xl border border-[#27272A] p-8">
+                <AlertCircle className="w-10 h-10 text-stone-500 mx-auto" />
+                <h3 className="font-serif-luxury text-lg font-medium text-white">
                   Nenhuma peça encontrada
                 </h3>
-                <p className="text-xs text-stone-500 max-w-sm mx-auto">
+                <p className="text-xs text-stone-400 max-w-sm mx-auto">
                   Não encontramos produtos para os filtros ou busca aplicados. Tente selecionar outra categoria ou limpar a busca.
                 </p>
                 <button
@@ -1157,15 +1156,13 @@ export default function App() {
                     setSelectedTag('all');
                     setSearchQuery('');
                   }}
-                  className="mt-2 px-4 py-2 bg-stone-900 text-white rounded-xl text-xs font-bold cursor-pointer"
+                  className="mt-2 px-4 py-2 bg-[#D4AF37] hover:bg-[#C5A059] text-stone-950 rounded-xl text-xs font-bold cursor-pointer transition-colors"
                 >
                   Ver Todas as Peças
                 </button>
               </div>
             ) : (
-              <div className={activeStoreType === 'natural' 
-                ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3" 
-                : "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5"}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
                 {sortedProducts.map((product) => (
                   <ProductCard
                     key={product.id}
@@ -1174,7 +1171,6 @@ export default function App() {
                     onOpenDetails={handleOpenProductDetails}
                     onQuickAddToCart={handleQuickAddToCart}
                     onShareProduct={handleShareProduct}
-                    isShopee={activeStoreType === 'natural'}
                   />
                 ))}
               </div>
@@ -1328,32 +1324,32 @@ export default function App() {
       {/* Location Modal */}
       <AnimatePresence>
         {isLocationModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="w-full max-w-sm bg-white rounded-3xl border border-brand-border shadow-2xl overflow-hidden"
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="w-full max-w-sm bg-[#121215] text-stone-100 rounded-3xl border border-[#27272A] shadow-2xl overflow-hidden"
             >
               <div className="p-6 text-center space-y-4">
-                <div className="w-16 h-16 bg-brand-bg rounded-full flex items-center justify-center mx-auto text-brand-primary-dark border border-[#E8DACB]">
-                  <MapPin className="w-8 h-8" />
+                <div className="w-14 h-14 bg-[#18181E] rounded-full flex items-center justify-center mx-auto text-[#D4AF37] border border-[#2B2B33]">
+                  <MapPin className="w-7 h-7" />
                 </div>
                 
                 <div>
-                  <h3 className="font-serif-luxury text-xl font-bold text-stone-900">
-                    Nossa Localização
+                  <h3 className="font-serif-luxury text-xl font-bold text-white">
+                    Localização da Loja
                   </h3>
-                  <p className="text-xs text-stone-500 mt-1 uppercase tracking-widest font-bold">
+                  <p className="text-xs text-[#D4AF37] mt-1 font-semibold uppercase tracking-wider">
                     {settings.storeName}
                   </p>
                 </div>
 
-                <div className="p-4 bg-brand-bg rounded-2xl border border-stone-100 space-y-1">
-                  <p className="text-sm font-semibold text-stone-800">
-                    {settings.address || 'Endereço não informado'}
+                <div className="p-4 bg-[#18181E] rounded-2xl border border-[#27272A] space-y-1">
+                  <p className="text-sm font-semibold text-stone-200">
+                    {settings.address || 'Endereço sob consulta'}
                   </p>
-                  <p className="text-xs text-stone-500">
+                  <p className="text-xs text-stone-400">
                     {settings.cityState}
                   </p>
                 </div>
@@ -1363,16 +1359,16 @@ export default function App() {
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${settings.address}, ${settings.cityState}`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full py-3 bg-stone-900 hover:bg-stone-800 text-white rounded-2xl text-xs font-bold shadow-md transition-all cursor-pointer"
+                    className="flex items-center justify-center gap-2 w-full py-3 bg-[#D4AF37] hover:bg-[#C5A059] text-stone-950 rounded-xl text-xs font-bold shadow-md transition-colors cursor-pointer"
                   >
-                    <ExternalLink className="w-4 h-4 text-brand-primary" />
+                    <ExternalLink className="w-4 h-4 text-stone-950" />
                     <span>Ver no Google Maps</span>
                   </a>
                   
                   <button
                     type="button"
                     onClick={() => setIsLocationModalOpen(false)}
-                    className="w-full py-3 bg-white hover:bg-stone-50 text-stone-500 text-xs font-bold rounded-2xl transition-colors cursor-pointer"
+                    className="w-full py-2.5 bg-[#18181E] hover:bg-stone-800 text-stone-300 text-xs font-semibold rounded-xl border border-[#27272A] transition-colors cursor-pointer"
                   >
                     Fechar
                   </button>

@@ -240,103 +240,40 @@ export function getLuminance(hex: string): number {
 }
 
 export function applyStoreTheme(settings?: { fontFamily?: string; primaryColor?: string }) {
-  if (typeof document === 'undefined' || !settings) return;
+  if (typeof document === 'undefined') return;
   const root = document.documentElement;
 
-  // Visual Archetypes Mapping
-  const archetypeConfig = {
-    classic: {
-      radius: { sm: '0.25rem', md: '0.375rem', lg: '0.5rem', xl: '0.75rem', '2xl': '1rem', '3xl': '1.5rem' },
-      shadow: { sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)', md: '0 4px 6px -1px rgb(0 0 0 / 0.1)', lg: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }
-    },
-    modern: {
-      radius: { sm: '0.5rem', md: '0.75rem', lg: '1rem', xl: '1.25rem', '2xl': '1.75rem', '3xl': '2.5rem' },
-      shadow: { sm: '0 1px 3px 0 rgb(0 0 0 / 0.1)', md: '0 10px 15px -3px rgb(0 0 0 / 0.1)', lg: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }
-    },
-    bold: {
-      radius: { sm: '0', md: '0.125rem', lg: '0.25rem', xl: '0.375rem', '2xl': '0.5rem', '3xl': '0.75rem' },
-      shadow: { sm: '2px 2px 0 0 rgb(0 0 0 / 1)', md: '4px 4px 0 0 rgb(0 0 0 / 1)', lg: '8px 8px 0 0 rgb(0 0 0 / 1)' }
-    },
-    soft: {
-      radius: { sm: '0.75rem', md: '1rem', lg: '1.25rem', xl: '1.75rem', '2xl': '2.5rem', '3xl': '4rem' },
-      shadow: { sm: '0 2px 10px 0 rgba(0,0,0,0.03)', md: '0 10px 30px 0 rgba(0,0,0,0.04)', lg: '0 20px 50px 0 rgba(0,0,0,0.05)' }
-    }
-  };
+  // The official, standard colors are strictly Black & Gold (Preto e Dourado)
+  root.style.setProperty('--brand-primary', '#D4AF37');
+  root.style.setProperty('--brand-primary-dark', '#B8860B');
+  root.style.setProperty('--brand-primary-darker', '#8C6508');
+  root.style.setProperty('--brand-secondary', '#0D0D0F');
+  root.style.setProperty('--brand-bg', '#0D0D0F');
+  root.style.setProperty('--brand-bg-alt', '#16161A');
+  root.style.setProperty('--brand-border', '#27272A');
+  root.style.setProperty('--brand-border-dark', '#3F3F46');
+  root.style.setProperty('--brand-surface', '#141417');
+  root.style.setProperty('--brand-accent', '#E5C378');
+  root.style.setProperty('--brand-muted', '#1A1A20');
+  root.style.setProperty('--brand-primary-fg', '#0D0D0F');
+  root.style.setProperty('--brand-text-main', '#FFFFFF');
+  root.style.setProperty('--brand-text-muted', '#A1A1AA');
 
-  // Apply Color Palette & Archetype
-  if (settings.primaryColor) {
-    const hex = settings.primaryColor.trim();
-    const matchedPalette = STORE_COLOR_PALETTES.find(
-      (p) => p.hex.toLowerCase() === hex.toLowerCase() || p.id.toLowerCase() === hex.toLowerCase()
-    );
+  // Radii
+  root.style.setProperty('--brand-radius-sm', '0.375rem');
+  root.style.setProperty('--brand-radius-md', '0.5rem');
+  root.style.setProperty('--brand-radius-lg', '0.75rem');
+  root.style.setProperty('--brand-radius-xl', '1rem');
+  root.style.setProperty('--brand-radius-2xl', '1.25rem');
+  root.style.setProperty('--brand-radius-3xl', '1.5rem');
 
-    const archKey = matchedPalette?.archetype || 'modern';
-    const config = archetypeConfig[archKey];
+  // Shadows
+  root.style.setProperty('--brand-shadow-sm', '0 1px 2px 0 rgb(0 0 0 / 0.3)');
+  root.style.setProperty('--brand-shadow-md', '0 4px 6px -1px rgb(0 0 0 / 0.4)');
+  root.style.setProperty('--brand-shadow-lg', '0 10px 15px -3px rgb(0 0 0 / 0.5)');
 
-    // Smart Contrast Color
-    const luminance = getLuminance(hex);
-    const contrastColor = luminance > 0.5 ? '#000000' : '#ffffff';
-    root.style.setProperty('--brand-primary-fg', contrastColor);
-
-    // Also determine a readable background for cards if the theme color is used as BG
-    const isDarkTheme = luminance < 0.4;
-    
-    // Apply Radii
-    root.style.setProperty('--brand-radius-sm', config.radius.sm);
-    root.style.setProperty('--brand-radius-md', config.radius.md);
-    root.style.setProperty('--brand-radius-lg', config.radius.lg);
-    root.style.setProperty('--brand-radius-xl', config.radius.xl);
-    root.style.setProperty('--brand-radius-2xl', config.radius['2xl']);
-    root.style.setProperty('--brand-radius-3xl', config.radius['3xl']);
-
-    // Apply Shadows
-    root.style.setProperty('--brand-shadow-sm', config.shadow.sm);
-    root.style.setProperty('--brand-shadow-md', config.shadow.md);
-    root.style.setProperty('--brand-shadow-lg', config.shadow.lg);
-
-    if (matchedPalette) {
-      root.style.setProperty('--brand-primary', matchedPalette.hex);
-      root.style.setProperty('--brand-primary-dark', matchedPalette.darkHex);
-      root.style.setProperty('--brand-primary-darker', adjustColorBrightness(matchedPalette.darkHex, -15));
-      root.style.setProperty('--brand-bg', matchedPalette.bgHex);
-      root.style.setProperty('--brand-bg-alt', adjustColorBrightness(matchedPalette.bgHex, -6));
-      root.style.setProperty('--brand-border', adjustColorBrightness(matchedPalette.bgHex, -12));
-      root.style.setProperty('--brand-border-dark', adjustColorBrightness(matchedPalette.bgHex, -22));
-      
-      // Additional variables for a more complete visual change
-      root.style.setProperty('--brand-surface', matchedPalette.bgHex === '#FAF7EE' || matchedPalette.bgHex === '#FFFFFF' ? '#FFFFFF' : adjustColorBrightness(matchedPalette.bgHex, 2));
-      root.style.setProperty('--brand-accent', adjustColorBrightness(matchedPalette.hex, 10));
-      root.style.setProperty('--brand-muted', adjustColorBrightness(matchedPalette.bgHex, -2));
-      root.style.setProperty('--brand-secondary', matchedPalette.darkHex);
-      
-      // Semantic colors for text visibility
-      root.style.setProperty('--brand-text-main', isDarkTheme ? '#FFFFFF' : '#1C1917');
-      root.style.setProperty('--brand-text-muted', isDarkTheme ? '#D1D5DB' : '#57534E');
-    } else {
-      root.style.setProperty('--brand-primary', hex);
-      const darkHex = adjustColorBrightness(hex, -20);
-      const darkerHex = adjustColorBrightness(hex, -35);
-      const bgHex = adjustColorBrightness(hex, 92); // even lighter BG for custom colors
-      root.style.setProperty('--brand-primary-dark', darkHex);
-      root.style.setProperty('--brand-primary-darker', darkerHex);
-      root.style.setProperty('--brand-bg', bgHex);
-      root.style.setProperty('--brand-bg-alt', adjustColorBrightness(bgHex, -6));
-      root.style.setProperty('--brand-border', adjustColorBrightness(bgHex, -12));
-      root.style.setProperty('--brand-border-dark', adjustColorBrightness(bgHex, -22));
-      
-      root.style.setProperty('--brand-surface', '#FFFFFF');
-      root.style.setProperty('--brand-accent', adjustColorBrightness(hex, 10));
-      root.style.setProperty('--brand-muted', adjustColorBrightness(bgHex, -2));
-      root.style.setProperty('--brand-secondary', darkHex);
-
-      const isCustomDark = getLuminance(hex) < 0.4;
-      root.style.setProperty('--brand-text-main', isCustomDark ? '#FFFFFF' : '#1C1917');
-      root.style.setProperty('--brand-text-muted', isCustomDark ? '#D1D5DB' : '#57534E');
-    }
-  }
-
-  // Apply Font (should come after primary color as it might depend on the archetype)
-  if (settings.fontFamily) {
+  // Apply Font
+  if (settings?.fontFamily) {
     const fontCss = getFontFamilyCss(settings.fontFamily);
     root.style.setProperty('--font-serif-luxury', fontCss);
     

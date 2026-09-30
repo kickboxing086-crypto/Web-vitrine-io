@@ -17,17 +17,13 @@ import {
   Tag,
   CheckCircle2,
   CreditCard,
-  MapPin,
   User,
-  Phone,
-  Clock,
   ArrowLeft,
   ChevronDown,
   Check,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'motion/react';
-import { checkStoreHoursStatus } from '../lib/themeUtils';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -54,14 +50,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   onOrderCreated,
   onSaveCoupon,
 }) => {
-  // Order details
   const [orderType, setOrderType] = useState<'pickup' | 'delivery'>(
     settings.deliveryMode === 'pickup' ? 'pickup' : 'delivery'
   );
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [cep, setCep] = useState('');
-  const [isLoadingCep, setIsLoadingCep] = useState(false);
   const [street, setStreet] = useState('');
   const [number, setNumber] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
@@ -98,28 +92,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const [shakeNumber, setShakeNumber] = useState(false);
   const [shakeNeighborhood, setShakeNeighborhood] = useState(false);
 
-  // CEP Lookup
-  const handleCepSearch = async (cepVal: string) => {
-    const clean = cepVal.replace(/\D/g, '');
-    if (clean.length === 8) {
-      setIsLoadingCep(true);
-      try {
-        const res = await fetch(`https://viacep.com.br/ws/${clean}/json/`);
-        const data = await res.json();
-        if (!data.erro) {
-          if (data.logradouro) setStreet(data.logradouro);
-          if (data.bairro) setNeighborhood(data.bairro);
-          if (data.localidade) setCity(data.localidade);
-          if (data.uf) setAddressState(data.uf);
-        }
-      } catch (err) {
-        console.error('Erro ao buscar CEP:', err);
-      } finally {
-        setIsLoadingCep(false);
-      }
-    }
-  };
-
   // Coupon
   const [couponInput, setCouponInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
@@ -145,7 +117,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     if (discountAmount > subtotal) discountAmount = subtotal;
   }
 
-  // Delivery fee calculation with custom rate support
+  // Delivery fee calculation
   const isDelivery = orderType === 'delivery';
   let deliveryFee = 0;
   if (isDelivery) {
@@ -157,14 +129,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       settings.customDeliveryRates.length > 0
     ) {
       const matchedRate = settings.customDeliveryRates.find((r) => {
-        const matchNeigh = neighborhood && r.neighborhood.toLowerCase().trim() === neighborhood.toLowerCase().trim();
-        const matchCity = !city || !r.city || r.city.toLowerCase().trim() === city.toLowerCase().trim();
-        const matchState = !addressState || !r.state || r.state.toLowerCase().trim() === addressState.toLowerCase().trim();
-        return matchNeigh && matchCity && matchState;
-      }) || settings.customDeliveryRates.find((r) => 
-        neighborhood && r.neighborhood.toLowerCase().trim() === neighborhood.toLowerCase().trim()
-      );
-      deliveryFee = matchedRate ? matchedRate.fee : settings.deliveryFee || 0;
+        return neighborhood && r.neighborhood.toLowerCase().trim() === neighborhood.toLowerCase().trim();
+      });
+      deliveryFee = matchedRate ? matchedRate.fee : (settings.deliveryFee || 0);
     } else {
       deliveryFee = settings.deliveryFee || 0;
     }
@@ -174,22 +141,16 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
   const handleApplyCoupon = () => {
     setCouponError('');
+    if (!couponInput.trim()) return;
     const found = coupons.find(
       (c) => c.code.toUpperCase() === couponInput.trim().toUpperCase() && c.isActive
     );
     if (!found) {
-      setCouponError('Cupom inválido ou expirado.');
-      setAppliedCoupon(null);
-      return;
-    }
-    if (found.maxUses !== undefined && found.maxUses > 0 && (found.usageCount || 0) >= found.maxUses) {
-      setCouponError('Este cupom esgotou o limite máximo de utilizações.');
-      setAppliedCoupon(null);
+      setCouponError('Cupom inválido ou expirado');
       return;
     }
     if (found.minOrderValue && subtotal < found.minOrderValue) {
-      setCouponError(`Válido apenas para compras acima de ${formatCurrency(found.minOrderValue)}`);
-      setAppliedCoupon(null);
+      setCouponError(`Pedido mínimo de ${formatCurrency(found.minOrderValue)} para este cupom`);
       return;
     }
     setAppliedCoupon(found);
@@ -209,10 +170,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         setShakePhone(true);
         setTimeout(() => setShakePhone(false), 500);
       }
-      
-      // Auto-scroll to first error
-      const firstError = !customerName.trim() ? 'input-name' : 'input-phone';
-      document.getElementById(firstError)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 
@@ -220,9 +177,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       const parsedAmount = parseFloat(cashAmount.replace(',', '.'));
       if (isNaN(parsedAmount) || parsedAmount < finalTotal) {
         setShakeCash(true);
-        setCashError('O valor precisa ser maior ou igual ao total (R$ ' + finalTotal.toFixed(2).replace('.', ',') + ')');
+        setCashError('O valor precisa ser maior ou igual ao total (' + formatCurrency(finalTotal) + ')');
         setTimeout(() => setShakeCash(false), 500);
-        document.getElementById('cash-input-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
       setCashError('');
@@ -241,9 +197,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         setShakeNeighborhood(true);
         setTimeout(() => setShakeNeighborhood(false), 500);
       }
-      
-      // Scroll to delivery section
-      document.getElementById('delivery-section-header')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 
@@ -294,10 +247,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       createdAt: new Date().toISOString(),
     };
 
-    // Save to order history
     onOrderCreated(newOrder);
 
-    // If coupon was applied, increment usage count
     if (appliedCoupon && onSaveCoupon) {
       onSaveCoupon({
         ...appliedCoupon,
@@ -305,14 +256,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       });
     }
 
-    // Trigger celebratory confetti
     confetti({
       particleCount: 80,
       spread: 70,
       origin: { y: 0.6 },
     });
 
-    // Generate WhatsApp link and redirect
     const encodedMsg = generateWhatsappOrderMessage(newOrder, settings);
     const storePhone = cleanPhoneForWhatsapp(settings.phoneWhatsapp);
     window.open(`https://wa.me/${storePhone}?text=${encodedMsg}`, '_blank');
@@ -324,13 +273,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 overflow-hidden">
-        {/* Snappy fast overlay */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.12, ease: "easeOut" }}
-          className="absolute inset-0 bg-black/60 backdrop-blur-[2px]"
+          transition={{ duration: 0.15 }}
+          className="absolute inset-0 bg-black/80 backdrop-blur-xs"
           onClick={onClose}
         />
 
@@ -338,22 +286,22 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
           initial={{ x: '100%' }}
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
-          transition={{ type: 'tween', ease: 'easeOut', duration: 0.15 }}
-          className="absolute inset-y-0 right-0 max-w-full flex pl-6 z-10"
+          transition={{ type: 'tween', duration: 0.18 }}
+          className="absolute inset-y-0 right-0 max-w-full flex pl-4 sm:pl-8 z-10"
         >
-          <div className="w-screen max-w-lg bg-brand-bg border-l border-brand-border shadow-2xl flex flex-col justify-between">
+          <div className="w-screen max-w-lg bg-[#121215] text-stone-100 border-l border-[#27272A] shadow-2xl flex flex-col justify-between">
             {/* Header */}
-            <div className="p-5 sm:p-6 bg-white border-b border-brand-border flex items-center justify-between">
+            <div className="p-5 sm:p-6 bg-[#141417] border-b border-[#27272A] flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="p-2.5 bg-brand-bg text-brand-primary-dark rounded-xl border border-[#E8DACB]">
+                <div className="p-2.5 bg-[#1C1C22] text-[#D4AF37] rounded-xl border border-[#2B2B33]">
                   <ShoppingBag className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-serif-luxury font-semibold text-stone-900">
-                    Sua Sacola de Pedidos
+                  <h2 className="text-lg font-serif-luxury font-semibold text-white">
+                    Sua Sacola
                   </h2>
-                  <span className="text-xs text-stone-500">
-                    {cart.reduce((acc, i) => acc + i.quantity, 0)} {cart.length === 1 ? 'item' : 'itens'} selecionados
+                  <span className="text-xs text-stone-400">
+                    {cart.reduce((acc, i) => acc + i.quantity, 0)} {cart.length === 1 ? 'item' : 'itens'} adicionados
                   </span>
                 </div>
               </div>
@@ -362,18 +310,17 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex items-center space-x-1.5 px-3 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                  className="flex items-center space-x-1.5 px-3 py-1.5 bg-[#1C1C22] hover:bg-stone-800 text-stone-300 rounded-xl text-xs font-semibold border border-[#2B2B33] transition-colors cursor-pointer"
                   id="btn-cart-header-continue-shopping"
-                  title="Continuar Comprando no Catálogo"
+                  title="Continuar Comprando"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Continuar Comprando</span>
-                  <span className="sm:hidden">Comprar +</span>
+                  <span className="hidden sm:inline">Continuar</span>
                 </button>
 
                 <button
                   onClick={onClose}
-                  className="p-2 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-full transition-colors cursor-pointer"
+                  className="p-2 text-stone-400 hover:text-white hover:bg-stone-800 rounded-full transition-colors cursor-pointer"
                   id="btn-close-cart"
                   title="Fechar"
                 >
@@ -382,49 +329,49 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               </div>
             </div>
 
-            {/* Progress Bar (Only if cart not empty) */}
+            {/* Stepper */}
             {cart.length > 0 && (
-              <div className="px-6 sm:px-10 py-3 bg-stone-50/50 border-b border-stone-100 flex items-center justify-center space-x-2">
+              <div className="px-6 sm:px-10 py-3 bg-[#16161A] border-b border-[#232328] flex items-center justify-center space-x-2">
                 {[1, 2, 3].map((step) => (
                   <React.Fragment key={step}>
                     <div 
                       className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold transition-all ${
                         checkoutStep === step 
-                          ? 'bg-stone-900 text-white shadow-md scale-110' 
+                          ? 'bg-[#D4AF37] text-stone-950 shadow-md scale-105' 
                           : checkoutStep > step 
                           ? 'bg-emerald-500 text-white' 
-                          : 'bg-stone-200 text-stone-500'
+                          : 'bg-[#22222A] text-stone-400'
                       }`}
                     >
                       {checkoutStep > step ? '✓' : (step as number)}
                     </div>
-                    {step < 3 && <div className={`w-8 h-0.5 rounded-full ${checkoutStep > step ? 'bg-emerald-500' : 'bg-stone-200'}`} />}
+                    {step < 3 && <div className={`w-8 h-0.5 rounded-full ${checkoutStep > step ? 'bg-emerald-500' : 'bg-[#27272A]'}`} />}
                   </React.Fragment>
                 ))}
               </div>
             )}
 
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
               {cart.length === 0 ? (
                 <div className="text-center py-16 space-y-3">
-                  <div className="w-16 h-16 mx-auto bg-brand-bg-alt rounded-full flex items-center justify-center text-stone-400">
-                    <ShoppingBag className="w-8 h-8" />
+                  <div className="w-16 h-16 mx-auto bg-[#1C1C22] border border-[#2B2B33] rounded-full flex items-center justify-center text-stone-400">
+                    <ShoppingBag className="w-8 h-8 text-[#D4AF37]" />
                   </div>
-                  <h3 className="font-serif-luxury text-lg text-stone-800 font-medium">
+                  <h3 className="font-serif-luxury text-lg text-white font-medium">
                     Sua sacola está vazia
                   </h3>
-                  <p className="text-xs text-stone-500 max-w-xs mx-auto">
-                    Explore nossas peças exclusivas no catálogo e adicione suas roupas favoritas.
+                  <p className="text-xs text-stone-400 max-w-xs mx-auto">
+                    Navegue pelo catálogo e escolha suas peças favoritas para fazer o pedido.
                   </p>
                   <button
                     type="button"
                     onClick={onClose}
-                    className="mt-3 inline-flex items-center space-x-2 px-6 py-3 bg-stone-900 hover:bg-stone-800 text-white rounded-2xl text-xs font-bold shadow-md cursor-pointer transition-all"
+                    className="mt-3 inline-flex items-center space-x-2 px-6 py-3 bg-[#D4AF37] hover:bg-[#C5A059] text-stone-950 rounded-xl text-xs font-bold shadow-md cursor-pointer transition-colors"
                     id="btn-empty-cart-continue-shopping"
                   >
                     <ArrowLeft className="w-4 h-4" />
-                    <span>Continuar Comprando</span>
+                    <span>Ver Catálogo</span>
                   </button>
                 </div>
               ) : (
@@ -432,23 +379,22 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   {checkoutStep === 1 && (
                     <motion.div
                       key="step1"
-                      initial={{ opacity: 0, x: -20 }}
+                      initial={{ opacity: 0, x: -15 }}
                       animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
-                      className="space-y-6"
+                      exit={{ opacity: 0, x: 15 }}
+                      className="space-y-5"
                     >
-                      {/* Step 1: Items List */}
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between text-[11px] text-stone-500 pb-1.5 border-b border-stone-100">
-                          <span className="font-bold uppercase tracking-widest text-stone-900 flex items-center gap-2">
-                            <ShoppingBag className="w-3.5 h-3.5" />
-                            Sua Seleção ({cart.length})
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between text-[11px] text-stone-400 pb-1.5 border-b border-[#232328]">
+                          <span className="font-bold uppercase tracking-wider text-stone-300 flex items-center gap-1.5">
+                            <ShoppingBag className="w-3.5 h-3.5 text-[#D4AF37]" />
+                            Itens Selecionados ({cart.length})
                           </span>
                           <button
                             onClick={onClearCart}
-                            className="text-stone-400 hover:text-red-600 transition-colors font-semibold"
+                            className="text-stone-400 hover:text-red-400 transition-colors font-medium text-xs cursor-pointer"
                           >
-                            Remover Tudo
+                            Limpar Sacola
                           </button>
                         </div>
 
@@ -459,38 +405,38 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                           return (
                             <div
                               key={`${item.product.id}-${index}`}
-                              className="flex gap-4 p-4 bg-white rounded-2xl border border-brand-border shadow-sm hover:shadow-md transition-all group"
+                              className="flex gap-3.5 p-3.5 bg-[#18181E] rounded-2xl border border-[#27272A] hover:border-[#3F3F46] transition-all"
                             >
-                              <div className="w-16 h-20 sm:w-20 sm:h-28 rounded-xl overflow-hidden bg-brand-bg border border-brand-border/40 shrink-0">
+                              <div className="w-16 h-20 sm:w-20 sm:h-24 rounded-xl overflow-hidden bg-black border border-[#27272A] shrink-0">
                                 <img
                                   src={item.product.images[0]}
                                   alt={item.product.name}
-                                  className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                                  className="w-full h-full object-cover"
                                 />
                               </div>
 
-                              <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
+                              <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
                                 <div>
                                   <div className="flex justify-between items-start gap-2">
-                                    <h4 className="text-xs sm:text-sm font-bold text-stone-900 truncate pr-2">
+                                    <h4 className="text-xs sm:text-sm font-bold text-white truncate pr-2">
                                       {item.product.name}
                                     </h4>
                                     <button
                                       onClick={() => onRemoveItem(index)}
-                                      className="p-1 text-stone-300 hover:text-red-500 transition-colors shrink-0"
-                                      title="Remover item"
+                                      className="p-1 text-stone-500 hover:text-red-400 transition-colors shrink-0 cursor-pointer"
+                                      title="Remover"
                                     >
                                       <Trash2 className="w-3.5 h-3.5" />
                                     </button>
                                   </div>
                                   
-                                  <div className="flex flex-wrap gap-1.5 mt-1.5">
-                                    <span className="inline-flex items-center px-1.5 py-0.5 bg-stone-50 border border-stone-100 rounded text-[9px] font-bold text-stone-500 uppercase tracking-wider">
+                                  <div className="flex flex-wrap gap-1.5 mt-1">
+                                    <span className="inline-flex items-center px-2 py-0.5 bg-[#22222A] border border-[#2E2E38] rounded text-[9px] font-bold text-stone-300 uppercase">
                                       {item.selectedSize}
                                     </span>
-                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-stone-50 border border-stone-100 rounded text-[9px] font-bold text-stone-500 uppercase tracking-wider">
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#22222A] border border-[#2E2E38] rounded text-[9px] font-bold text-stone-300 uppercase">
                                       <span
-                                        className="w-2 h-2 rounded-full border border-black/10"
+                                        className="w-2 h-2 rounded-full border border-black/30"
                                         style={{ backgroundColor: item.selectedColor.hex }}
                                       />
                                       {item.selectedColor.name}
@@ -498,24 +444,24 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                                   </div>
                                 </div>
 
-                                <div className="flex items-center justify-between mt-3">
-                                  <span className="text-sm font-bold text-stone-900">
+                                <div className="flex items-center justify-between mt-2.5">
+                                  <span className="text-sm font-bold text-white">
                                     {formatCurrency(itemPrice * item.quantity)}
                                   </span>
 
-                                  <div className="flex items-center border border-brand-border rounded-lg bg-brand-bg p-0.5 shadow-2xs">
+                                  <div className="flex items-center border border-[#2E2E38] rounded-lg bg-[#22222A] p-0.5">
                                     <button
                                       onClick={() => onUpdateQuantity(index, -1)}
-                                      className="w-6 h-6 flex items-center justify-center rounded hover:bg-white text-stone-400 hover:text-stone-900 transition-colors"
+                                      className="w-6 h-6 flex items-center justify-center rounded hover:bg-stone-800 text-stone-300 hover:text-white transition-colors cursor-pointer"
                                     >
                                       <Minus className="w-3 h-3" />
                                     </button>
-                                    <span className="w-6 text-center text-[10px] font-bold text-stone-800">
+                                    <span className="w-6 text-center text-[10px] font-bold text-white">
                                       {item.quantity}
                                     </span>
                                     <button
                                       onClick={() => onUpdateQuantity(index, 1)}
-                                      className="w-6 h-6 flex items-center justify-center rounded hover:bg-white text-stone-400 hover:text-stone-900 transition-colors"
+                                      className="w-6 h-6 flex items-center justify-center rounded hover:bg-stone-800 text-stone-300 hover:text-white transition-colors cursor-pointer"
                                     >
                                       <Plus className="w-3 h-3" />
                                     </button>
@@ -529,39 +475,40 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                         <button
                           type="button"
                           onClick={onClose}
-                          className="w-full py-3 px-4 border border-dashed border-stone-300 hover:border-brand-primary-dark rounded-xl text-[10px] font-bold text-stone-600 hover:text-stone-900 bg-white/50 hover:bg-white flex items-center justify-center space-x-2 transition-all cursor-pointer"
+                          className="w-full py-2.5 px-4 border border-dashed border-[#2E2E38] hover:border-[#D4AF37] rounded-xl text-xs font-semibold text-stone-300 hover:text-white bg-[#16161A] flex items-center justify-center space-x-2 transition-colors cursor-pointer"
                         >
-                          <Plus className="w-3.5 h-3.5" />
-                          <span>Adicionar mais itens</span>
+                          <Plus className="w-3.5 h-3.5 text-[#D4AF37]" />
+                          <span>Adicionar mais peças</span>
                         </button>
                       </div>
 
                       {/* Coupon Area */}
-                      <div className="p-4 bg-white rounded-2xl border border-brand-border">
-                        <div className="flex items-center space-x-2 mb-3">
-                          <Tag className="w-3.5 h-3.5 text-brand-primary-dark" />
-                          <span className="text-xs font-bold text-stone-800 uppercase tracking-tight">Cupom de Desconto</span>
+                      <div className="p-4 bg-[#18181E] rounded-2xl border border-[#27272A]">
+                        <div className="flex items-center space-x-2 mb-2.5">
+                          <Tag className="w-3.5 h-3.5 text-[#D4AF37]" />
+                          <span className="text-xs font-bold text-stone-200 uppercase tracking-wider">Cupom de Desconto</span>
                         </div>
                         <div className="flex gap-2">
                           <input
                             type="text"
                             value={couponInput}
                             onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                            placeholder="CÓDIGO"
-                            className="flex-1 px-3 py-2 bg-brand-bg border border-brand-border-dark rounded-xl text-xs uppercase font-mono font-semibold text-stone-900 focus:outline-none"
+                            placeholder="CÓDIGO DO CUPOM"
+                            className="flex-1 px-3 py-2 bg-[#121215] border border-[#2B2B33] rounded-xl text-xs uppercase font-mono font-semibold text-white placeholder:text-stone-500 focus:outline-none focus:border-[#D4AF37]"
                           />
                           <button
                             type="button"
                             onClick={handleApplyCoupon}
-                            className="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-bold transition-colors"
+                            className="px-4 py-2 bg-[#D4AF37] hover:bg-[#C5A059] text-stone-950 font-bold rounded-xl text-xs transition-colors cursor-pointer"
                           >
                             Aplicar
                           </button>
                         </div>
+                        {couponError && <p className="text-xs text-red-400 mt-1.5">{couponError}</p>}
                         {appliedCoupon && (
-                          <div className="flex items-center justify-between text-[10px] text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-lg mt-2 font-bold">
+                          <div className="flex items-center justify-between text-[11px] text-emerald-300 bg-emerald-950/40 border border-emerald-800/60 px-2.5 py-1.5 rounded-lg mt-2 font-bold">
                             <span>✓ CUPOM {appliedCoupon.code} ATIVADO</span>
-                            <button onClick={() => setAppliedCoupon(null)} className="text-emerald-500">✕</button>
+                            <button onClick={() => setAppliedCoupon(null)} className="text-emerald-400 cursor-pointer">✕</button>
                           </div>
                         )}
                       </div>
@@ -571,83 +518,80 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   {checkoutStep === 2 && (
                     <motion.div
                       key="step2"
-                      initial={{ opacity: 0, x: -20 }}
+                      initial={{ opacity: 0, x: -15 }}
                       animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
-                      className="space-y-6"
+                      exit={{ opacity: 0, x: 15 }}
+                      className="space-y-5"
                     >
-                      {/* Step 2: Delivery Option */}
-                      <div className="space-y-4">
-                        <div className="flex items-center space-x-2 pb-1 border-b border-stone-100">
-                          <Truck className="w-4 h-4 text-brand-primary-dark" />
-                          <span className="text-xs font-bold uppercase tracking-widest text-stone-900">Entrega ou Retirada</span>
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-2 pb-1 border-b border-[#232328]">
+                          <Truck className="w-4 h-4 text-[#D4AF37]" />
+                          <span className="text-xs font-bold uppercase tracking-wider text-stone-200">Entrega ou Retirada</span>
                         </div>
 
                         {settings.deliveryMode === 'both' ? (
                           <div className="grid grid-cols-2 gap-2">
                             <button
                               onClick={() => setOrderType('delivery')}
-                              className={`p-4 rounded-2xl border text-left flex flex-col space-y-1 transition-all ${
+                              className={`p-3.5 rounded-xl border text-left flex flex-col space-y-1 transition-all cursor-pointer ${
                                 orderType === 'delivery'
-                                  ? 'bg-stone-900 border-stone-900 text-white shadow-md'
-                                  : 'bg-white border-brand-border text-stone-600 hover:border-stone-400'
+                                  ? 'bg-[#1E1E26] border-[#D4AF37] text-white shadow-sm'
+                                  : 'bg-[#18181E] border-[#27272A] text-stone-400 hover:border-stone-600'
                               }`}
                             >
-                              <span className="text-xs font-bold">Receber</span>
-                              <span className={`text-[10px] ${orderType === 'delivery' ? 'text-white/60' : 'text-stone-400'}`}>Entrega rápida</span>
+                              <span className="text-xs font-bold text-white">Receber em Casa</span>
+                              <span className="text-[10px] text-stone-400">Entrega rápida</span>
                             </button>
                             <button
                               onClick={() => setOrderType('pickup')}
-                              className={`p-4 rounded-2xl border text-left flex flex-col space-y-1 transition-all ${
+                              className={`p-3.5 rounded-xl border text-left flex flex-col space-y-1 transition-all cursor-pointer ${
                                 orderType === 'pickup'
-                                  ? 'bg-stone-900 border-stone-900 text-white shadow-md'
-                                  : 'bg-white border-brand-border text-stone-600 hover:border-stone-400'
+                                  ? 'bg-[#1E1E26] border-[#D4AF37] text-white shadow-sm'
+                                  : 'bg-[#18181E] border-[#27272A] text-stone-400 hover:border-stone-600'
                               }`}
                             >
-                              <span className="text-xs font-bold">Retirar</span>
-                              <span className={`text-[10px] ${orderType === 'pickup' ? 'text-white/60' : 'text-stone-400'}`}>Na nossa loja</span>
+                              <span className="text-xs font-bold text-white">Retirar na Loja</span>
+                              <span className="text-[10px] text-stone-400">Direto no endereço</span>
                             </button>
                           </div>
                         ) : (
-                          <div className="p-4 bg-stone-100 rounded-2xl text-xs font-bold text-stone-700 flex items-center gap-3">
-                            {settings.deliveryMode === 'pickup' ? <Building2 className="w-4 h-4" /> : <Truck className="w-4 h-4" />}
-                            <span>{settings.deliveryMode === 'pickup' ? 'Somente Retirada na Loja' : 'Somente Entrega via Motoboy/Envio'}</span>
+                          <div className="p-3.5 bg-[#18181E] border border-[#27272A] rounded-xl text-xs font-bold text-stone-300 flex items-center gap-2.5">
+                            {settings.deliveryMode === 'pickup' ? <Building2 className="w-4 h-4 text-[#D4AF37]" /> : <Truck className="w-4 h-4 text-[#D4AF37]" />}
+                            <span>{settings.deliveryMode === 'pickup' ? 'Somente Retirada na Loja' : 'Somente Entrega'}</span>
                           </div>
                         )}
                       </div>
 
                       {/* Customer Info Form */}
-                      <div className="space-y-4">
-                        <div className="flex items-center space-x-2 pb-1 border-b border-stone-100">
-                          <User className="w-4 h-4 text-brand-primary-dark" />
-                          <span className="text-xs font-bold uppercase tracking-widest text-stone-900">Seus Dados</span>
+                      <div className="space-y-3.5">
+                        <div className="flex items-center space-x-2 pb-1 border-b border-[#232328]">
+                          <User className="w-4 h-4 text-[#D4AF37]" />
+                          <span className="text-xs font-bold uppercase tracking-wider text-stone-200">Seus Dados</span>
                         </div>
 
-                        <div className="space-y-4">
-                          <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider ml-1">Nome Completo</label>
-                            <motion.input
-                              animate={shakeName ? { x: [-5, 5, -5, 5, 0] } : {}}
+                        <div className="space-y-3">
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Nome Completo</label>
+                            <input
                               type="text"
                               value={customerName}
                               onChange={(e) => setCustomerName(e.target.value)}
-                              placeholder="Como quer ser chamado?"
-                              className={`w-full px-4 py-3 bg-white border rounded-xl text-sm focus:outline-none transition-all ${
-                                shakeName ? 'border-red-500 ring-1 ring-red-500' : 'border-brand-border-dark focus:ring-brand-primary-dark'
+                              placeholder="Como quer ser chamado(a)?"
+                              className={`w-full px-3.5 py-2.5 bg-[#18181E] border rounded-xl text-xs text-white placeholder:text-stone-500 focus:outline-none ${
+                                shakeName ? 'border-red-500' : 'border-[#27272A] focus:border-[#D4AF37]'
                               }`}
                             />
                           </div>
 
-                          <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider ml-1">Seu WhatsApp</label>
-                            <motion.input
-                              animate={shakePhone ? { x: [-5, 5, -5, 5, 0] } : {}}
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Seu WhatsApp</label>
+                            <input
                               type="text"
                               value={customerPhone}
                               onChange={(e) => setCustomerPhone(e.target.value)}
                               placeholder="(00) 00000-0000"
-                              className={`w-full px-4 py-3 bg-white border rounded-xl text-sm focus:outline-none transition-all ${
-                                shakePhone ? 'border-red-500 ring-1 ring-red-500' : 'border-brand-border-dark focus:ring-brand-primary-dark'
+                              className={`w-full px-3.5 py-2.5 bg-[#18181E] border rounded-xl text-xs text-white placeholder:text-stone-500 focus:outline-none ${
+                                shakePhone ? 'border-red-500' : 'border-[#27272A] focus:border-[#D4AF37]'
                               }`}
                             />
                           </div>
@@ -655,83 +599,74 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
                         {/* Address if delivery */}
                         {isDelivery && (
-                          <div className="space-y-4 pt-4 border-t border-stone-50">
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider ml-1">Endereço de Entrega</label>
+                          <div className="space-y-3 pt-3 border-t border-[#232328]">
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Rua e Número</label>
                               <div className="grid grid-cols-3 gap-2">
-                                <motion.input
-                                  animate={shakeStreet ? { x: [-5, 5, -5, 5, 0] } : {}}
+                                <input
                                   type="text"
                                   value={street}
                                   onChange={(e) => setStreet(e.target.value)}
-                                  placeholder="Rua / Logradouro"
-                                  className={`col-span-2 px-4 py-3 bg-white border rounded-xl text-sm focus:outline-none ${
-                                    shakeStreet ? 'border-red-500' : 'border-brand-border-dark'
+                                  placeholder="Rua / Avenida"
+                                  className={`col-span-2 px-3.5 py-2.5 bg-[#18181E] border rounded-xl text-xs text-white placeholder:text-stone-500 focus:outline-none ${
+                                    shakeStreet ? 'border-red-500' : 'border-[#27272A] focus:border-[#D4AF37]'
                                   }`}
                                 />
-                                <motion.input
-                                  animate={shakeNumber ? { x: [-5, 5, -5, 5, 0] } : {}}
+                                <input
                                   type="text"
                                   value={number}
                                   onChange={(e) => setNumber(e.target.value)}
                                   placeholder="Nº"
-                                  className={`px-4 py-3 bg-white border rounded-xl text-sm focus:outline-none ${
-                                    shakeNumber ? 'border-red-500' : 'border-brand-border-dark'
+                                  className={`px-3.5 py-2.5 bg-[#18181E] border rounded-xl text-xs text-white placeholder:text-stone-500 focus:outline-none ${
+                                    shakeNumber ? 'border-red-500' : 'border-[#27272A] focus:border-[#D4AF37]'
                                   }`}
                                 />
                               </div>
                             </div>
 
-                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider ml-1">Bairro de Entrega</label>
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Bairro de Entrega</label>
                               {settings.deliveryFeeType === 'custom' && settings.customDeliveryRates?.length ? (
                                 <div className="relative">
-                                  <motion.button
-                                    animate={shakeNeighborhood ? { x: [-5, 5, -5, 5, 0] } : {}}
+                                  <button
+                                    type="button"
                                     onClick={() => setIsNeighborhoodOpen(!isNeighborhoodOpen)}
-                                    className={`w-full px-4 py-3 bg-white border rounded-xl text-sm flex items-center justify-between ${
-                                      shakeNeighborhood ? 'border-red-500' : 'border-brand-border-dark'
+                                    className={`w-full px-3.5 py-2.5 bg-[#18181E] border rounded-xl text-xs flex items-center justify-between text-left ${
+                                      shakeNeighborhood ? 'border-red-500' : 'border-[#27272A] focus:border-[#D4AF37]'
                                     }`}
                                   >
-                                    <span className={neighborhood ? 'text-stone-900' : 'text-stone-400'}>
-                                      {neighborhood || 'Escolha o bairro...'}
+                                    <span className={neighborhood ? 'text-white' : 'text-stone-500'}>
+                                      {neighborhood || 'Selecione seu bairro...'}
                                     </span>
-                                    <ChevronDown className="w-4 h-4 opacity-50" />
-                                  </motion.button>
-                                  <AnimatePresence>
-                                    {isNeighborhoodOpen && (
-                                      <motion.div
-                                        initial={{ opacity: 0, y: 5 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: 5 }}
-                                        className="absolute z-50 left-0 right-0 top-full mt-1 bg-white border border-brand-border-dark shadow-xl rounded-xl p-1 max-h-48 overflow-y-auto"
-                                      >
-                                        {settings.customDeliveryRates.map((r, i) => (
-                                          <button
-                                            key={i}
-                                            onClick={() => {
-                                              setNeighborhood(r.neighborhood);
-                                              setIsNeighborhoodOpen(false);
-                                            }}
-                                            className="w-full text-left px-3 py-2 text-xs hover:bg-stone-50 rounded-lg flex items-center justify-between"
-                                          >
-                                            <span>{r.neighborhood}</span>
-                                            <span className="font-bold text-brand-primary-dark">R$ {r.fee.toFixed(2)}</span>
-                                          </button>
-                                        ))}
-                                      </motion.div>
-                                    )}
-                                  </AnimatePresence>
+                                    <ChevronDown className="w-4 h-4 text-stone-400" />
+                                  </button>
+                                  {isNeighborhoodOpen && (
+                                    <div className="absolute z-50 left-0 right-0 top-full mt-1 bg-[#18181E] border border-[#27272A] shadow-xl rounded-xl p-1 max-h-48 overflow-y-auto">
+                                      {settings.customDeliveryRates.map((r, i) => (
+                                        <button
+                                          key={i}
+                                          type="button"
+                                          onClick={() => {
+                                            setNeighborhood(r.neighborhood);
+                                            setIsNeighborhoodOpen(false);
+                                          }}
+                                          className="w-full text-left px-3 py-2 text-xs hover:bg-[#22222A] text-stone-200 rounded-lg flex items-center justify-between cursor-pointer"
+                                        >
+                                          <span>{r.neighborhood}</span>
+                                          <span className="font-bold text-[#D4AF37]">R$ {r.fee.toFixed(2)}</span>
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
                                 </div>
                               ) : (
-                                <motion.input
-                                  animate={shakeNeighborhood ? { x: [-5, 5, -5, 5, 0] } : {}}
+                                <input
                                   type="text"
                                   value={neighborhood}
                                   onChange={(e) => setNeighborhood(e.target.value)}
                                   placeholder="Digite seu bairro"
-                                  className={`w-full px-4 py-3 bg-white border rounded-xl text-sm focus:outline-none ${
-                                    shakeNeighborhood ? 'border-red-500' : 'border-brand-border-dark'
+                                  className={`w-full px-3.5 py-2.5 bg-[#18181E] border rounded-xl text-xs text-white placeholder:text-stone-500 focus:outline-none ${
+                                    shakeNeighborhood ? 'border-red-500' : 'border-[#27272A] focus:border-[#D4AF37]'
                                   }`}
                                 />
                               )}
@@ -745,116 +680,75 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   {checkoutStep === 3 && (
                     <motion.div
                       key="step3"
-                      initial={{ opacity: 0, x: -20 }}
+                      initial={{ opacity: 0, x: -15 }}
                       animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
-                      className="space-y-6"
+                      exit={{ opacity: 0, x: 15 }}
+                      className="space-y-5"
                     >
-                      {/* Step 3: Payment Method */}
-                      <div className="space-y-4">
-                        <div className="flex items-center space-x-2 pb-1 border-b border-stone-100">
-                          <CreditCard className="w-4 h-4 text-brand-primary-dark" />
-                          <span className="text-xs font-bold uppercase tracking-widest text-stone-900">Forma de Pagamento</span>
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-2 pb-1 border-b border-[#232328]">
+                          <CreditCard className="w-4 h-4 text-[#D4AF37]" />
+                          <span className="text-xs font-bold uppercase tracking-wider text-stone-200">Forma de Pagamento</span>
                         </div>
 
                         <div className="space-y-2">
                           {[
-                            { id: 'pix', label: 'Pix', sub: 'Instantâneo', icon: <CheckCircle2 className="w-4 h-4" /> },
-                            { id: orderType === 'delivery' ? 'card_delivery' : 'card_pickup', label: 'Cartão', sub: 'Pagar na entrega', icon: <CreditCard className="w-4 h-4" /> },
-                            { id: 'cash', label: 'Dinheiro', sub: 'Com troco se precisar', icon: <span className="font-bold text-[10px]">R$</span> },
+                            { id: 'pix', label: 'Pix', sub: 'Chave direta e aprovação rápida', icon: <CheckCircle2 className="w-4 h-4 text-emerald-400" /> },
+                            { id: orderType === 'delivery' ? 'card_delivery' : 'card_pickup', label: 'Cartão de Crédito/Débito', sub: 'Pagar na maquininha', icon: <CreditCard className="w-4 h-4 text-[#D4AF37]" /> },
+                            { id: 'cash', label: 'Dinheiro', sub: 'Com troco se necessário', icon: <span className="font-bold text-[11px] text-stone-300">R$</span> },
                           ].map((p) => (
                             <button
                               key={p.id}
+                              type="button"
                               onClick={() => setPaymentMethod(p.id as any)}
-                              className={`w-full p-4 rounded-2xl border flex items-center justify-between transition-all ${
+                              className={`w-full p-3.5 rounded-xl border flex items-center justify-between transition-all cursor-pointer ${
                                 paymentMethod === p.id
-                                  ? 'bg-stone-900 border-stone-900 text-white shadow-md'
-                                  : 'bg-white border-brand-border text-stone-600 hover:border-stone-400'
+                                  ? 'bg-[#1E1E26] border-[#D4AF37] text-white shadow-sm'
+                                  : 'bg-[#18181E] border-[#27272A] text-stone-300 hover:border-stone-600'
                               }`}
                             >
                               <div className="flex items-center gap-3">
-                                <div className={`p-2 rounded-xl ${paymentMethod === p.id ? 'bg-white/10 text-white' : 'bg-stone-50 text-stone-400'}`}>
+                                <div className="p-2 rounded-lg bg-[#22222A]">
                                   {p.icon}
                                 </div>
                                 <div className="text-left">
-                                  <span className="text-xs font-bold block">{p.label}</span>
-                                  <span className={`text-[10px] ${paymentMethod === p.id ? 'text-white/50' : 'text-stone-400'}`}>{p.sub}</span>
+                                  <span className="text-xs font-bold block text-white">{p.label}</span>
+                                  <span className="text-[10px] text-stone-400">{p.sub}</span>
                                 </div>
                               </div>
-                              {paymentMethod === p.id && <Check className="w-4 h-4 text-brand-primary" />}
+                              {paymentMethod === p.id && <Check className="w-4 h-4 text-[#D4AF37]" />}
                             </button>
                           ))}
                         </div>
 
                         {/* Cash Info */}
                         {paymentMethod === 'cash' && (
-                          <div className="p-4 bg-brand-bg rounded-2xl border border-brand-border-dark space-y-3">
+                          <div className="p-3.5 bg-[#18181E] rounded-xl border border-[#27272A] space-y-3">
                             <label className="flex items-center space-x-2 cursor-pointer">
                               <input
                                 type="checkbox"
                                 checked={noChangeNeeded}
                                 onChange={(e) => setNoChangeNeeded(e.target.checked)}
-                                className="w-4 h-4 rounded text-stone-900"
+                                className="w-4 h-4 rounded accent-[#D4AF37]"
                               />
-                              <span className="text-[11px] font-bold text-stone-700 uppercase tracking-tight">Não preciso de troco</span>
+                              <span className="text-xs font-semibold text-stone-200">Não preciso de troco</span>
                             </label>
                             {!noChangeNeeded && (
-                              <div className="space-y-3" id="cash-input-section">
-                                <div className="space-y-1.5">
-                                  <label className="text-[10px] font-bold text-stone-400 uppercase">Troco para quanto?</label>
-                                  <motion.input
-                                    animate={shakeCash ? { x: [-5, 5, -5, 5, 0] } : {}}
-                                    type="number"
-                                    value={cashAmount}
-                                    onChange={(e) => {
-                                      setCashAmount(e.target.value);
-                                      setCashError('');
-                                    }}
-                                    placeholder="R$ 100,00"
-                                    className={`w-full px-4 py-3 bg-white border rounded-xl text-sm font-bold focus:outline-none transition-colors ${
-                                      shakeCash ? 'border-red-500 ring-1 ring-red-500' : 'border-brand-border-dark'
-                                    }`}
-                                  />
-                                  {cashError && <p className="text-xs text-red-500 font-medium">{cashError}</p>}
-                                </div>
-                                
-                                <div className="space-y-2">
-                                  <label className="text-[10px] font-bold text-stone-400 uppercase">Selecionar Cédulas / Moedas</label>
-                                  <div className="grid grid-cols-4 gap-2">
-                                    {[
-                                      { value: 2, bg: 'bg-[#0d285c]', text: 'text-white' },
-                                      { value: 5, bg: 'bg-[#5a3c75]', text: 'text-white' },
-                                      { value: 10, bg: 'bg-[#a73c41]', text: 'text-white' },
-                                      { value: 20, bg: 'bg-[#cfa331]', text: 'text-white' },
-                                      { value: 50, bg: 'bg-[#a8794c]', text: 'text-white' },
-                                      { value: 100, bg: 'bg-[#488998]', text: 'text-white' },
-                                      { value: 200, bg: 'bg-[#847a6b]', text: 'text-white' },
-                                    ].map(bill => (
-                                      <button
-                                        key={bill.value}
-                                        type="button"
-                                        onClick={() => {
-                                          const current = parseFloat(cashAmount.replace(',', '.')) || 0;
-                                          setCashAmount((current + bill.value).toString());
-                                          setCashError('');
-                                        }}
-                                        className={`py-2 rounded-lg font-bold text-xs shadow-sm active:scale-95 transition-transform ${bill.bg} ${bill.text}`}
-                                      >
-                                        R$ {bill.value}
-                                      </button>
-                                    ))}
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setCashAmount('');
-                                        setCashError('');
-                                      }}
-                                      className="py-2 rounded-lg font-bold text-xs shadow-sm bg-stone-200 text-stone-700 active:scale-95 transition-transform"
-                                    >
-                                      Limpar
-                                    </button>
-                                  </div>
-                                </div>
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-stone-400 uppercase">Troco para quanto?</label>
+                                <input
+                                  type="number"
+                                  value={cashAmount}
+                                  onChange={(e) => {
+                                    setCashAmount(e.target.value);
+                                    setCashError('');
+                                  }}
+                                  placeholder="Ex: 100"
+                                  className={`w-full px-3.5 py-2.5 bg-[#121215] border rounded-xl text-xs text-white focus:outline-none ${
+                                    shakeCash ? 'border-red-500' : 'border-[#27272A] focus:border-[#D4AF37]'
+                                  }`}
+                                />
+                                {cashError && <p className="text-xs text-red-400">{cashError}</p>}
                               </div>
                             )}
                           </div>
@@ -862,14 +756,14 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       </div>
 
                       {/* Observations */}
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-stone-400 uppercase ml-1">Observações do Pedido</label>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-stone-400 uppercase">Observações (Opcional)</label>
                         <textarea
                           value={customerNotes}
                           onChange={(e) => setCustomerNotes(e.target.value)}
-                          placeholder="Ex: Deixar na portaria, campainha com defeito..."
+                          placeholder="Ex: Ponto de referência, observações para o atendente..."
                           rows={2}
-                          className="w-full px-4 py-3 bg-white border border-brand-border-dark rounded-xl text-xs text-stone-900 focus:outline-none"
+                          className="w-full px-3.5 py-2 bg-[#18181E] border border-[#27272A] rounded-xl text-xs text-white placeholder:text-stone-500 focus:outline-none focus:border-[#D4AF37]"
                         />
                       </div>
                     </motion.div>
@@ -880,35 +774,36 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
             {/* Sticky Footer Summary */}
             {cart.length > 0 && (
-              <div className="p-6 bg-white border-t border-brand-border space-y-4">
-                <div className="space-y-1.5 text-xs">
-                  <div className="flex justify-between text-stone-500">
+              <div className="p-5 sm:p-6 bg-[#141417] border-t border-[#27272A] space-y-3.5">
+                <div className="space-y-1 text-xs">
+                  <div className="flex justify-between text-stone-400">
                     <span>Subtotal</span>
                     <span>{formatCurrency(subtotal)}</span>
                   </div>
                   {discountAmount > 0 && (
-                    <div className="flex justify-between text-emerald-600 font-bold">
+                    <div className="flex justify-between text-emerald-400 font-semibold">
                       <span>Desconto</span>
                       <span>-{formatCurrency(discountAmount)}</span>
                     </div>
                   )}
                   {isDelivery && deliveryFee > 0 && (
-                    <div className="flex justify-between text-stone-500">
+                    <div className="flex justify-between text-stone-400">
                       <span>Taxa de Entrega</span>
                       <span>{formatCurrency(deliveryFee)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between text-base font-bold text-stone-900 pt-1 border-t border-stone-50">
+                  <div className="flex justify-between text-base font-bold text-white pt-2 border-t border-[#232328]">
                     <span>Total</span>
-                    <span>{formatCurrency(finalTotal)}</span>
+                    <span className="text-[#D4AF37]">{formatCurrency(finalTotal)}</span>
                   </div>
                 </div>
 
                 <div className="flex gap-2">
                   {checkoutStep > 1 && (
                     <button
+                      type="button"
                       onClick={() => setCheckoutStep((prev) => (prev - 1) as any)}
-                      className="flex-1 py-4 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-2xl text-[11px] font-bold transition-all flex items-center justify-center gap-2"
+                      className="flex-1 py-3 bg-[#1C1C22] hover:bg-stone-800 text-stone-200 border border-[#2B2B33] rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <ArrowLeft className="w-3.5 h-3.5" />
                       <span>Voltar</span>
@@ -917,8 +812,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   
                   {checkoutStep < 3 ? (
                     <button
+                      type="button"
                       onClick={() => {
-                        // Minimal validation before moving to step 3
                         if (checkoutStep === 2) {
                           let hasError = false;
                           if (!customerName.trim()) { setShakeName(true); hasError = true; }
@@ -936,24 +831,25 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                         }
                         setCheckoutStep((prev) => (prev + 1) as any);
                       }}
-                      className="flex-[2] py-4 bg-stone-900 hover:bg-stone-800 text-white rounded-2xl text-[11px] font-bold shadow-lg transition-all flex items-center justify-center gap-2"
+                      className="flex-[2] py-3 bg-[#D4AF37] hover:bg-[#C5A059] text-stone-950 rounded-xl text-xs font-bold shadow-md transition-colors flex items-center justify-center gap-2 cursor-pointer"
                     >
-                      <span>Continuar</span>
+                      <span>Avançar</span>
                       <ArrowLeft className="w-3.5 h-3.5 rotate-180" />
                     </button>
                   ) : (
                     <button
+                      type="button"
                       onClick={handleCheckout}
-                      className="flex-[2] py-4 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-2xl text-[11px] font-bold shadow-lg transition-all flex items-center justify-center gap-2"
+                      className="flex-[2] py-3 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl text-xs font-bold shadow-md transition-colors flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <MessageCircle className="w-4 h-4 fill-white" />
-                      <span>Finalizar no WhatsApp</span>
+                      <span>Enviar Pedido no WhatsApp</span>
                     </button>
                   )}
                 </div>
 
-                <p className="text-[9px] text-center text-stone-400 font-medium">
-                  Atendimento via WhatsApp: {settings.openingTime || '08:00'} - {settings.closingTime || '18:00'}
+                <p className="text-[10px] text-center text-stone-500">
+                  Ao clicar, a lista formatada com as peças será enviada direto no WhatsApp da loja.
                 </p>
               </div>
             )}

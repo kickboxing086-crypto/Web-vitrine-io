@@ -34,7 +34,7 @@ export const LandingHeroModal: React.FC<LandingHeroModalProps> = ({
   if (!isOpen) return null;
 
   const handleAcquireWhatsapp = () => {
-    const phone = '5511999999999';
+    const phone = '5584986113980';
     const message = encodeURIComponent('Olá! Gostaria de adquirir o sistema da Web Vitrine por R$ 29,99/mês.');
     window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
   };
@@ -63,7 +63,7 @@ export const LandingHeroModal: React.FC<LandingHeroModalProps> = ({
             <div className="lg:col-span-5 relative bg-stone-900 overflow-hidden flex flex-col justify-between p-6 sm:p-8 min-h-[280px] lg:min-h-full">
               {/* Background Luxury Vitrine Image with dark luxury gradient overlay */}
               <img
-                src=""
+                src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80"
                 alt="Web Vitrine"
                 className="absolute inset-0 w-full h-full object-cover object-center opacity-45 scale-105"
               />
@@ -153,8 +153,8 @@ export const LandingHeroModal: React.FC<LandingHeroModalProps> = ({
                 <div className="flex items-start space-x-2.5 p-2.5 bg-stone-900/60 rounded-xl border border-stone-800">
                   <Layers className="w-4 h-4 text-[#D4AF37] mt-0.5 shrink-0" />
                   <div>
-                    <span className="font-semibold text-white block">10 Fontes & Cores de Loja</span>
-                    <span className="text-[11px] text-stone-400">Personalização de identidade visual</span>
+                    <span className="font-semibold text-white block">10 Estilos de Letras Exclusivas</span>
+                    <span className="text-[11px] text-stone-400">Identidade visual oficial Preto & Ouro</span>
                   </div>
                 </div>
 

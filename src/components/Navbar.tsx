@@ -4,18 +4,12 @@ import { StoreSettings } from '../types';
 import {
   ShoppingBag,
   Search,
-  Instagram,
-  Phone,
   LayoutDashboard,
   Store,
-  Share2,
-  CheckCircle2,
   X,
   Clock,
   Crown,
-  Smartphone,
 } from 'lucide-react';
-import { formatPhone, cleanPhoneForWhatsapp } from '../lib/formatters';
 import { checkStoreHoursStatus } from '../lib/themeUtils';
 import { PWAInstallButton } from './PWAInstallButton';
 
@@ -47,7 +41,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   selectedCategory,
   onSelectCategory,
   categories,
-  onOpenStoreSetup,
   onOpenStoreHours,
   onOpenLandingHero,
   isOfficialStore = false,
@@ -56,7 +49,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const hoursStatus = checkStoreHoursStatus(settings);
 
   return (
-    <header className="sticky top-0 z-40 bg-brand-bg/98 backdrop-blur-md border-b border-brand-bg-alt transition-all">
+    <header className="sticky top-0 z-40 bg-[#0D0D0F]/95 backdrop-blur-md border-b border-[#27272A] transition-all">
       {/* Main Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-18">
@@ -74,85 +67,84 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <img
                   src={settings.logoUrl}
                   alt={settings.storeName}
-                  className="w-10 h-10 rounded-full object-cover border border-brand-border-dark shadow-2xs group-hover:scale-105 transition-transform"
+                  className="w-10 h-10 rounded-full object-cover border border-[#D4AF37]/40 shadow-sm group-hover:scale-105 transition-transform"
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-brand-secondary text-brand-primary flex items-center justify-center font-serif-luxury font-bold text-lg shadow-2xs">
-                  {settings.storeName ? settings.storeName.charAt(0) : 'A'}
+                <div className="w-10 h-10 rounded-full bg-[#16161A] text-[#D4AF37] border border-[#D4AF37]/30 flex items-center justify-center font-serif-luxury font-bold text-lg shadow-sm">
+                  {settings.storeName ? settings.storeName.charAt(0) : 'V'}
                 </div>
               )}
 
               <div>
-                <span className="font-serif-luxury text-lg sm:text-xl font-bold tracking-tight text-stone-900 group-hover:text-brand-primary-dark transition-colors block">
-                  {settings.storeName}
+                <span className="font-serif-luxury text-lg sm:text-xl font-bold tracking-tight text-white group-hover:text-[#D4AF37] transition-colors block">
+                  {settings.storeName || 'Web Vitrine'}
                 </span>
               </div>
             </button>
           </div>
 
           {/* Right Controls: Store Hours, Search, Bag, System Landing, Admin toggle */}
-          <div className="flex items-center space-x-1.5 sm:space-x-2.5">
+          <div className="flex items-center space-x-2 sm:space-x-3">
             {/* Install Button */}
-            <PWAInstallButton variant="pill" showText={true} label="Instalar" className="inline-flex px-2.5 sm:px-3 py-1.5" />
+            <PWAInstallButton variant="gold" showText={true} label="Instalar" className="inline-flex px-3 py-1.5 text-xs font-bold" />
 
             {/* Store Hours Highlighted Clock Button */}
             {onOpenStoreHours && activeView === 'store' && (
               <button
                 type="button"
                 onClick={onOpenStoreHours}
-                className={`flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer shadow-2xs ${
+                className={`flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs font-medium border transition-colors cursor-pointer shadow-xs ${
                   hoursStatus.isBreakNow
-                    ? 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
+                    ? 'bg-amber-950/30 text-amber-300 border-amber-800/60 hover:bg-amber-950/50'
                     : hoursStatus.isOpenNow
-                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
-                    : 'bg-stone-100 text-stone-700 border-stone-200 hover:bg-stone-200'
+                    ? 'bg-emerald-950/30 text-emerald-300 border-emerald-800/60 hover:bg-emerald-950/50'
+                    : 'bg-stone-900 text-stone-400 border-stone-800 hover:bg-stone-800'
                 }`}
-                title="Ver horários de funcionamento e intervalo"
+                title="Ver horários de funcionamento"
                 id="btn-navbar-store-hours"
               >
                 <div className="relative">
-                  <Clock className="w-4 h-4" />
-                  <span className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full ${
+                  <Clock className="w-3.5 h-3.5" />
+                  <span className={`absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full ${
                     hoursStatus.isBreakNow
-                      ? 'bg-amber-500 animate-pulse'
+                      ? 'bg-amber-400'
                       : hoursStatus.isOpenNow
-                      ? 'bg-emerald-500'
-                      : 'bg-stone-400'
+                      ? 'bg-emerald-400'
+                      : 'bg-stone-500'
                   }`} />
                 </div>
-                <span className="hidden sm:inline font-bold">
+                <span className="hidden sm:inline">
                   {hoursStatus.isBreakNow ? 'Em Intervalo' : hoursStatus.isOpenNow ? 'Aberto' : 'Horários'}
                 </span>
               </button>
             )}
 
-            {/* Presentation / Landing Button ("Adquira Sua Vitrine") only on Demo/Platform showcase */}
+            {/* Presentation / Landing Button */}
             {onOpenLandingHero && activeView === 'store' && !isOfficialStore && (
               <button
                 type="button"
                 onClick={onOpenLandingHero}
-                className="inline-flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 bg-gradient-to-r from-stone-900 via-stone-800 to-stone-900 hover:from-black hover:to-stone-900 text-[#E5C378] rounded-xl text-xs font-bold border border-[#D4AF37]/40 shadow-xs transition-all cursor-pointer animate-pulse hover:animate-none"
+                className="inline-flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 bg-[#16161A] hover:bg-stone-900 text-[#D4AF37] rounded-xl text-xs font-semibold border border-[#D4AF37]/30 shadow-xs transition-colors cursor-pointer"
                 id="btn-navbar-landing"
-                title="Conheça a plataforma Web Vitrine e adquira para sua loja"
+                title="Conheça a plataforma Web Vitrine"
               >
                 <Crown className="w-3.5 h-3.5 text-[#D4AF37]" />
-                <span className="hidden sm:inline">Adquira Sua Vitrine</span>
-                <span className="sm:hidden">Assinar</span>
+                <span className="hidden sm:inline">Plataforma</span>
               </button>
             )}
 
             {/* Search Toggle */}
             <button
               onClick={() => setShowSearch(!showSearch)}
-              className={`p-2 rounded-xl transition-colors cursor-pointer ${
+              className={`p-2 rounded-xl border transition-colors cursor-pointer ${
                 showSearch
-                  ? 'bg-stone-900 text-white'
-                  : 'text-stone-700 hover:text-stone-900 hover:bg-brand-bg-alt'
+                  ? 'bg-[#D4AF37] text-stone-950 border-[#D4AF37]'
+                  : 'bg-[#16161A] text-stone-300 hover:text-white border-[#27272A] hover:border-stone-600'
               }`}
               title="Buscar no catálogo"
               id="btn-toggle-search"
             >
-              <Search className="w-4.5 h-4.5" />
+              <Search className="w-4 h-4" />
             </button>
 
             {/* Shopping Bag (Vitrine Mode) */}
@@ -160,13 +152,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={onOpenCart}
-                className="relative p-2 bg-stone-900 text-white hover:bg-stone-800 rounded-xl transition-all shadow-sm flex items-center justify-center cursor-pointer"
+                className="relative p-2 bg-[#16161A] text-white hover:bg-stone-900 border border-[#27272A] hover:border-[#D4AF37]/60 rounded-xl transition-all shadow-sm flex items-center justify-center cursor-pointer"
                 id="btn-open-bag"
                 title="Sacola de Compras"
               >
-                <ShoppingBag className="w-4.5 h-4.5 text-brand-primary" />
+                <ShoppingBag className="w-4.5 h-4.5 text-[#D4AF37]" />
                 {cartCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-brand-primary-dark text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-xs">
+                  <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[#D4AF37] text-stone-950 text-[10px] font-extrabold rounded-full flex items-center justify-center shadow-md">
                     {cartCount}
                   </span>
                 )}
@@ -179,21 +171,21 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   type="button"
                   onClick={() => onToggleView('store')}
-                  className="flex items-center space-x-1.5 px-3.5 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
+                  className="flex items-center space-x-1.5 px-3 py-1.5 bg-[#D4AF37] hover:bg-[#C5A059] text-stone-950 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
                   id="btn-nav-store"
                 >
-                  <Store className="w-3.5 h-3.5 text-brand-primary" />
+                  <Store className="w-3.5 h-3.5" />
                   <span>Ver Vitrine</span>
                 </button>
               ) : activeView === 'store' ? (
                 <button
                   type="button"
                   onClick={() => onToggleView('admin')}
-                  className="p-2 text-stone-700 hover:text-stone-900 hover:bg-brand-bg-alt rounded-xl transition-colors cursor-pointer"
+                  className="p-2 text-stone-400 hover:text-white bg-[#16161A] border border-[#27272A] hover:border-stone-600 rounded-xl transition-colors cursor-pointer"
                   id="btn-nav-admin"
                   title="Painel do Lojista"
                 >
-                  <LayoutDashboard className="w-4.5 h-4.5" />
+                  <LayoutDashboard className="w-4 h-4" />
                 </button>
               ) : null}
             </div>
@@ -209,15 +201,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                 autoFocus
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
-                placeholder={settings.storeType === "natural" ? "Pesquisar por chás, ervas, suplementos..." : "Pesquisar por modelo, tecido, cor, tamanho..."}
-                className="w-full pl-10 pr-9 py-2 bg-white border border-brand-border-dark rounded-xl text-xs text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-brand-primary-dark/30 focus:border-brand-primary-dark shadow-2xs"
+                placeholder="Pesquisar por modelo, cor, tamanho..."
+                className="w-full pl-10 pr-9 py-2 bg-[#16161A] border border-[#27272A] rounded-xl text-xs text-white placeholder:text-stone-500 focus:outline-none focus:ring-1 focus:ring-[#D4AF37] focus:border-[#D4AF37]"
                 id="input-navbar-search"
               />
-              <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-2.5" />
+              <Search className="w-4 h-4 text-stone-500 absolute left-3.5 top-2.5" />
               {searchQuery && (
                 <button
                   onClick={() => onSearchChange('')}
-                  className="absolute right-3 top-2 text-stone-400 hover:text-stone-700"
+                  className="absolute right-3 top-2 text-stone-500 hover:text-stone-300"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -228,37 +220,31 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Categories Bar in Store Mode */}
         {activeView === 'store' && (
-          <div className="flex items-center space-x-1.5 overflow-x-auto py-2 scrollbar-none border-t border-brand-bg-alt/70">
-            <motion.button
+          <div className="flex items-center space-x-1.5 overflow-x-auto py-2.5 scrollbar-none border-t border-[#27272A]">
+            <button
               type="button"
-              whileHover={{ scale: 1.04, y: -1 }}
-              whileTap={{ scale: 0.96 }}
-              transition={{ type: 'spring', stiffness: 450, damping: 16 }}
               onClick={() => onSelectCategory('all')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                 selectedCategory === 'all'
-                  ? 'bg-stone-900 text-white shadow-2xl'
-                  : 'bg-brand-bg/80 hover:bg-brand-surface text-stone-700 border border-brand-border'
+                  ? 'bg-[#D4AF37] text-stone-950 font-bold shadow-sm'
+                  : 'bg-[#16161A] text-stone-300 hover:text-white border border-[#27272A] hover:border-stone-600'
               }`}
             >
               Todas as Peças
-            </motion.button>
+            </button>
             {categories.map((cat) => (
-              <motion.button
+              <button
                 key={cat}
                 type="button"
-                whileHover={{ scale: 1.04, y: -1 }}
-                whileTap={{ scale: 0.96 }}
-                transition={{ type: 'spring', stiffness: 450, damping: 16 }}
                 onClick={() => onSelectCategory(cat)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                   selectedCategory === cat
-                    ? 'bg-stone-900 text-white shadow-2xl'
-                    : 'bg-brand-bg/80 hover:bg-brand-surface text-stone-700 border border-brand-border'
+                    ? 'bg-[#D4AF37] text-stone-950 font-bold shadow-sm'
+                    : 'bg-[#16161A] text-stone-300 hover:text-white border border-[#27272A] hover:border-stone-600'
                 }`}
               >
                 {cat}
-              </motion.button>
+              </button>
             ))}
           </div>
         )}

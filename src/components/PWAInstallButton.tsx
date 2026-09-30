@@ -20,12 +20,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
   const [justInstalled, setJustInstalled] = useState(false);
 
   if (isInstalled || justInstalled) {
-    return (
-      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-950/70 border border-emerald-500/40 text-emerald-400 text-xs font-semibold select-none shadow-2xs">
-        <Check className="w-3.5 h-3.5 text-emerald-400" />
-        <span>Instalado</span>
-      </div>
-    );
+    return null;
   }
 
   const handleInstallClick = async (e: React.MouseEvent) => {
