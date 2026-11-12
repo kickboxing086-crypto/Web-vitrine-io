@@ -14,7 +14,11 @@ import {
   ShoppingBag,
   Layers,
   Check,
-  Phone
+  X,
+  Smartphone,
+  Tag,
+  Clock,
+  Share2
 } from 'lucide-react';
 import { StoreSettings } from '../types';
 
@@ -32,78 +36,108 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const officialPhone = '5584986113980';
   
   const whatsappBuyMessage = encodeURIComponent(
-    'Olá! Quero ativar minha vitrine de luxo agora mesmo. Como faço para liberar meu acesso imediato?'
+    'Olá! Quero ativar minha vitrine virtual agora mesmo. Como faço para liberar meu acesso imediato?'
   );
   
   const buyLink = `https://wa.me/${officialPhone}?text=${whatsappBuyMessage}`;
 
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
+  const steps = [
+    {
+      step: '01',
+      title: 'Cadastre suas peças no celular',
+      description: 'Adicione fotos direto da sua câmera ou galeria, informe preços, cores e tamanhos em menos de 1 minuto.',
+      icon: Smartphone,
+    },
+    {
+      step: '02',
+      title: 'Coloque o link na sua bio',
+      description: 'Envie o link para suas clientes no Instagram e WhatsApp. Elas navegam de forma leve e rápida, sem precisar baixar aplicativos pesados.',
+      icon: Share2,
+    },
+    {
+      step: '03',
+      title: 'Receba o pedido pronto no WhatsApp',
+      description: 'Sua cliente monta a sacola e envia a lista com endereço, peças e total calculado. Você só confere e agenda o envio.',
+      icon: MessageCircle,
+    },
+  ];
+
+  const comparisons = [
+    {
+      before: 'Enviar dezenas de fotos soltas entupindo o chat da cliente',
+      after: 'Link único e elegante com seu catálogo sempre atualizado',
+    },
+    {
+      before: 'Responder "qual o valor?" 50 vezes ao dia nos directs',
+      after: 'Preços, tamanhos e cores disponíveis de forma clara 24h por dia',
+    },
+    {
+      before: 'Anotar pedidos à mão em blocos de papel e esquecer detalhes',
+      after: 'Pedido formatado no WhatsApp com nome, endereço e total exato',
+    },
+    {
+      before: 'Cliente desistir da compra pela demora no atendimento',
+      after: 'Cliente escolhe e finaliza a compra com a agilidade de um cardápio digital',
+    },
+    {
+      before: 'Taxas altas e comissões abusivas por cada venda realizada',
+      after: 'Zero comissão. 100% do lucro das suas vendas é seu',
+    },
+  ];
+
+  const niches = [
+    { name: 'Moda Feminina & Masculina', example: 'Vestidos, conjuntos, camisas, alfaiataria' },
+    { name: 'Semijoias & Pratas', example: 'Colares, brincos, anéis e pulseiras com fotos nítidas' },
+    { name: 'Calçados & Bolsas', example: 'Numeração organizada e controle de estoque por tamanho' },
+    { name: 'Moda Praia & Lingerie', example: 'Variações de estampas, tamanhos P, M, G e GG' },
+    { name: 'Cosméticos & Perfumaria', example: 'Kits para presente, maquiagem e cuidados pessoais' },
+  ];
+
+  const singlePlan = {
+    name: 'Plano Mensal Web Vitrine',
+    price: 'R$ 29,99',
+    period: '/mês',
+    trial: '5 Dias Grátis para Testar',
+    badge: 'Plano Oficial Único',
+  };
+
   const faqs = [
     {
-      q: 'O que é a Web Vitrine?',
-      a: 'É uma vitrine virtual elegante onde sua loja expõe todo o catálogo com fotos nítidas, variações de cor, tamanhos e valores. O cliente escolhe os produtos, adiciona à sacola e o pedido chega pronto e formatado no seu WhatsApp.',
+      q: 'O que é a Web Vitrine na prática?',
+      a: 'É um catálogo digital moderno e intuitivo criado especialmente para lojistas venderem no WhatsApp. Suas clientes navegam pelas peças, selecionam tamanho e cor, e enviam a sacola finalizada diretamente no seu WhatsApp.',
     },
     {
-      q: 'Existe cobrança de comissão sobre as minhas vendas?',
-      a: 'Não. Zero comissão. Todo o valor das suas vendas fica 100% com você. Você paga apenas o valor fixo da sua assinatura.',
+      q: 'Existe cobrança de porcentagem sobre as vendas?',
+      a: 'Não. Zero taxa sobre as vendas. Todo o dinheiro das suas vendas vai direto para sua conta (via Pix, cartão ou transferência combinada). Você só paga a assinatura fixa do sistema.',
     },
     {
-      q: 'Como o cliente faz o pagamento do pedido?',
-      a: 'O cliente monta a sacola e envia a lista com endereço e forma de pagamento combinada (Pix, cartão ou dinheiro). Você recebe o valor diretamente na sua conta.',
+      q: 'Minha cliente precisa baixar algum aplicativo no celular?',
+      a: 'Não! O link abre instantaneamente no navegador do celular de qualquer cliente (iPhone ou Android). É rápido, leve e não ocupa espaço na memória do telefone.',
     },
     {
-      q: 'Consigo atualizar produtos pelo celular?',
-      a: 'Sim, o painel administrativo foi feito para ser acessado direto do smartphone com muita facilidade. Você adiciona fotos, altera preços e organiza categorias em poucos segundos.',
+      q: 'Consigo gerenciar meus produtos direto pelo celular?',
+      a: 'Sim. Você acessa o painel de lojista pelo seu próprio smartphone, tira fotos na hora, altera preços, atualiza estoque e cria cupons de desconto em poucos toques.',
     },
     {
-      q: 'Existe fidelidade ou multa para cancelar?',
-      a: 'Nenhuma fidelidade. Você utiliza enquanto fizer sentido para o seu negócio e pode cancelar a qualquer momento sem custos adicionais.',
-    }
-  ];
-
-  const plans = [
-    { name: 'Mensal', price: 'R$ 29,99', period: '/mês', highlight: false, badge: 'Mais Flexível' },
-    { name: 'Trimestral', price: 'R$ 49,99', period: '/trimestre', highlight: false, badge: 'Economia R$ 40' },
-    { name: 'Semestral', price: 'R$ 119,99', period: '/semestre', highlight: false, badge: 'Economia R$ 60' },
-    { name: 'Vitalício', price: 'R$ 250,00', period: ' Pagamento Único', highlight: true, badge: 'Acesso VIP Permanente' },
-  ];
-
-  const coreBenefits = [
-    {
-      title: 'Apresentação Sofisticada',
-      description: 'Design refinado em preto e dourado que valoriza cada peça do seu catálogo e transmite credibilidade imediata.',
-      icon: Crown,
-      image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80',
+      q: 'Como recebo os pagamentos dos pedidos?',
+      a: 'O cliente envia o pedido pronto para você no WhatsApp já com a forma de pagamento selecionada (Pix, cartão ou dinheiro). Você envia sua chave Pix ou link de pagamento da sua maquininha preferida.',
     },
     {
-      title: 'Pedidos Prontos no WhatsApp',
-      description: 'O cliente envia o pedido formatado com peças, cores, tamanhos, subtotal e endereço de entrega em 1 clique.',
-      icon: MessageCircle,
-      image: 'https://images.unsplash.com/photo-1556742049-0a670f4a4591?auto=format&fit=crop&w=800&q=80',
-    },
-    {
-      title: 'Catálogo Fácil de Navegar',
-      description: 'Organize suas coleções por categorias e tags. Rápido para o cliente encontrar exatamente o que procura.',
-      icon: Layers,
-      image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=800&q=80',
-    },
-    {
-      title: 'Painel Simples no Celular',
-      description: 'Cadastre fotos da galeria, atualize estoques e controle pedidos de qualquer lugar, direto pelo seu smartphone.',
-      icon: ShieldCheck,
-      image: 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&w=800&q=80',
+      q: 'Tem fidelidade ou contrato de permanência?',
+      a: 'Nenhuma fidelidade. Você usa pelo período contratado e pode renovar ou cancelar quando desejar, com total liberdade.',
     },
   ];
 
   return (
     <div className="min-h-screen bg-[#0D0D0F] text-stone-100 font-sans selection:bg-[#D4AF37] selection:text-stone-950 overflow-x-hidden">
-      {/* Top Banner */}
+      {/* Top Bar Announcement */}
       <div className="relative z-50 bg-[#16161A] border-b border-[#D4AF37]/30 py-2.5 px-4 text-center text-xs text-[#F3E5AB]">
         <div className="max-w-7xl mx-auto flex items-center justify-center gap-2">
-          <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
+          <Sparkles className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
           <span>
-            Ative sua vitrine virtual por apenas <strong className="text-white font-bold">R$ 29,99/mês</strong> — Pronta para vender no WhatsApp hoje mesmo.
+            Tenha seu catálogo virtual funcionando hoje por apenas <strong className="text-white font-bold">R$ 29,99/mês</strong>. Sem comissões por venda.
           </span>
           <a
             href={buyLink}
@@ -111,13 +145,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             rel="noopener noreferrer"
             className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-[#D4AF37] hover:underline ml-2"
           >
-            Falar Conosco <ArrowRight className="w-3 h-3" />
+            Ativar Agora <ArrowRight className="w-3 h-3" />
           </a>
         </div>
       </div>
 
       {/* Header Navbar */}
-      <header className="sticky top-0 z-40 bg-[#0D0D0F]/95 backdrop-blur-md border-b border-stone-800">
+      <header className="sticky top-0 z-40 bg-[#0D0D0F]/95 backdrop-blur-md border-b border-[#27272A]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-2xl bg-[#D4AF37] p-0.5 shadow-md">
@@ -138,7 +172,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="flex items-center space-x-2 sm:space-x-3">
             <button
               onClick={onAdminLogin}
-              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-stone-900 hover:bg-stone-800 border border-stone-700 text-stone-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#16161A] hover:bg-stone-800 border border-[#27272A] text-stone-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
               id="btn-landing-login"
             >
               <Lock className="w-3.5 h-3.5 text-[#D4AF37]" />
@@ -153,32 +187,32 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               id="btn-landing-cta-header"
             >
               <MessageCircle className="w-4 h-4 fill-stone-950 text-stone-950" />
-              <span>Ativar Vitrine</span>
+              <span>Ativar no WhatsApp</span>
             </a>
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="relative z-10 pt-16 pb-20 sm:pt-24 sm:pb-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <section className="relative z-10 pt-14 pb-20 sm:pt-20 sm:pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          {/* Left Text */}
+          {/* Left Hero Content */}
           <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-stone-900 border border-[#D4AF37]/30 text-[#F3E5AB] text-xs font-medium">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#16161A] border border-[#D4AF37]/30 text-[#F3E5AB] text-xs font-medium">
               <Crown className="w-3.5 h-3.5 text-[#D4AF37]" />
-              <span>Apresentação Profissional para a Sua Marca</span>
+              <span>Para Lojistas, Boutiques & Empreendedores</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif-luxury font-bold text-white leading-tight tracking-tight">
-              Sua Loja com o <br />
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif-luxury font-bold text-white leading-tight tracking-tight">
+              Pare de perder vendas no WhatsApp. <br />
               <span className="text-[#D4AF37]">
-                Visual de Luxo
+                Seu catálogo digital
               </span>{' '}
-              que Ela Merece.
+              prático e profissional.
             </h1>
 
             <p className="text-stone-300 text-base sm:text-lg max-w-2xl mx-auto lg:mx-0 leading-relaxed font-normal">
-              Apresente suas peças em um catálogo digital elegante. O cliente escolhe tamanhos e cores, coloca na sacola e envia o pedido formatado direto no seu WhatsApp. <strong>Sem comissões por venda.</strong>
+              Sua cliente navega como em um cardápio digital, escolhe as peças com tamanhos e cores, e envia o pedido 100% pronto e calculado para você no WhatsApp.
             </p>
 
             {/* CTAs */}
@@ -198,70 +232,79 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <button
                 onClick={() => onEnterStore('teste@123')}
                 type="button"
-                className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-6 py-3.5 bg-stone-900 hover:bg-stone-800 border border-stone-700 text-stone-100 rounded-xl text-sm font-semibold transition-all cursor-pointer"
+                className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-6 py-3.5 bg-[#16161A] hover:bg-stone-800 border border-[#27272A] text-stone-100 rounded-xl text-sm font-semibold transition-all cursor-pointer"
                 id="btn-hero-demo-store"
               >
                 <Store className="w-4 h-4 text-[#D4AF37]" />
-                <span>Ver Demonstração Ao Vivo</span>
+                <span>Ver Vitrine de Demonstração</span>
               </button>
             </div>
 
-            {/* Natural Highlights */}
-            <div className="pt-6 flex flex-wrap items-center justify-center lg:justify-start gap-6 text-xs text-stone-400 border-t border-stone-800">
+            {/* Quick Human Guarantees */}
+            <div className="pt-6 flex flex-wrap items-center justify-center lg:justify-start gap-6 text-xs text-stone-400 border-t border-[#27272A]">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-[#D4AF37]" />
-                <span>Lucro 100% Seu</span>
+                <span>100% do lucro é seu</span>
               </div>
               <div className="flex items-center gap-2">
                 <Layers className="w-4 h-4 text-[#D4AF37]" />
-                <span>Catálogo Ilimitado</span>
+                <span>Sem limite de produtos</span>
               </div>
               <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-[#D4AF37]" />
-                <span>Ativação Rápida</span>
+                <Smartphone className="w-4 h-4 text-[#D4AF37]" />
+                <span>Fácil de mexer pelo celular</span>
               </div>
             </div>
           </div>
 
-          {/* Right Showcase Image */}
+          {/* Right Live Visual Simulation */}
           <div className="lg:col-span-5 relative">
             <div className="relative mx-auto max-w-md lg:max-w-none">
-              <div className="relative rounded-3xl bg-stone-900 border border-stone-800 p-3 shadow-2xl overflow-hidden">
-                <div className="relative h-[400px] rounded-2xl overflow-hidden group">
+              <div className="relative rounded-3xl bg-[#141417] border border-[#27272A] p-3 shadow-2xl overflow-hidden">
+                <div className="relative h-[380px] rounded-2xl overflow-hidden group bg-stone-900">
                   <img
                     src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1000&q=80"
-                    alt="Vitrine de Luxo"
+                    alt="Exemplo de Vitrine Virtual de Luxo"
                     className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/30 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/20 to-transparent" />
 
-                  {/* Clean Order Badge */}
-                  <div className="absolute top-4 left-4 bg-stone-950/90 border border-stone-800 px-3.5 py-2 rounded-xl text-xs backdrop-blur-md shadow-lg flex items-center gap-2.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                    <div>
-                      <span className="block text-[10px] text-stone-400 font-medium">Pedido no WhatsApp</span>
-                      <span className="font-bold text-white">Vestido Seda Gold • R$ 380,00</span>
+                  {/* Simulated WhatsApp Order Bubble */}
+                  <div className="absolute top-4 left-4 right-4 bg-stone-950/95 border border-[#27272A] p-3 rounded-2xl text-xs backdrop-blur-md shadow-2xl">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <div className="w-2.5 h-2.5 rounded-full bg-[#25D366] animate-pulse" />
+                      <span className="text-[10px] uppercase font-bold text-[#D4AF37] tracking-wider">
+                        Novo Pedido Recebido no WhatsApp
+                      </span>
+                    </div>
+                    <p className="text-white font-semibold text-xs leading-snug">
+                      &quot;Olá! Quero fechar meu pedido: 1x Vestido Seda Gold (Tamanho M) + 1x Conjunto Alfaiataria (Preto)&quot;
+                    </p>
+                    <div className="mt-2 flex items-center justify-between text-[11px] pt-1.5 border-t border-stone-800 text-stone-400">
+                      <span>Total: <strong className="text-white font-bold">R$ 560,00</strong></span>
+                      <span className="text-emerald-400 font-semibold">Pronto para entrega</span>
                     </div>
                   </div>
 
-                  <div className="absolute bottom-4 right-4 bg-stone-950/90 border border-[#D4AF37]/30 px-3.5 py-2 rounded-xl text-xs backdrop-blur-md shadow-lg flex items-center gap-2">
-                    <Crown className="w-4 h-4 text-[#D4AF37]" />
-                    <span className="font-semibold text-[#F3E5AB]">Sua Loja Profissional</span>
+                  {/* Bottom Store Brand Card */}
+                  <div className="absolute bottom-4 left-4 right-4 bg-stone-950/90 border border-[#D4AF37]/40 p-2.5 rounded-xl text-xs backdrop-blur-md shadow-lg flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-[#D4AF37] text-stone-950 flex items-center justify-center font-bold text-xs">
+                        V
+                      </div>
+                      <div>
+                        <span className="font-bold text-white block leading-tight">Sua Marca & Catálogo</span>
+                        <span className="text-[10px] text-stone-400">visual limpo em preto e dourado</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => onEnterStore('teste@123')}
+                      className="px-2.5 py-1 bg-[#D4AF37] text-stone-950 font-bold text-[11px] rounded-lg hover:bg-[#E5C378] transition-colors cursor-pointer"
+                    >
+                      Testar Loja
+                    </button>
                   </div>
-                </div>
-
-                <div className="p-3 bg-stone-950 rounded-xl mt-3 flex items-center justify-between border border-stone-800/80">
-                  <div className="flex items-center gap-2">
-                    <ShoppingBag className="w-4 h-4 text-[#D4AF37]" />
-                    <span className="text-xs font-medium text-stone-300">Catálogo Completo com Sacola</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => onEnterStore('teste@123')}
-                    className="px-3 py-1.5 rounded-lg bg-[#D4AF37] text-stone-950 font-bold text-xs hover:bg-[#C5A059] cursor-pointer transition-colors"
-                  >
-                    Testar Loja
-                  </button>
                 </div>
               </div>
             </div>
@@ -269,53 +312,44 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </section>
 
-      {/* Core Benefits */}
-      <section className="py-20 relative z-10 bg-[#121215] border-y border-stone-800">
+      {/* How it Works in Practice (3 Steps) */}
+      <section className="py-20 relative z-10 bg-[#141417] border-y border-[#27272A]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto space-y-3 mb-14">
             <span className="text-xs font-bold uppercase tracking-wider text-[#D4AF37]">
-              Benefícios para sua Loja
+              Simples de usar
             </span>
             <h2 className="text-2xl sm:text-4xl font-serif-luxury font-bold text-white tracking-tight">
-              Tudo pronto para você vender todos os dias
+              Como funciona na prática para o seu dia a dia
             </h2>
             <p className="text-stone-400 text-sm leading-relaxed">
-              Sem sistemas complicados. Uma experiência prática e direta para você e seus clientes.
+              Você não precisa entender de tecnologia. Em 3 passos rápidos sua loja já está pronta para receber pedidos.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {coreBenefits.map((feat, idx) => {
-              const IconComp = feat.icon;
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {steps.map((s, idx) => {
+              const IconComp = s.icon;
               return (
                 <div
                   key={idx}
-                  className="rounded-2xl bg-stone-900 border border-stone-800 hover:border-[#D4AF37]/40 p-5 transition-all duration-200 flex flex-col justify-between shadow-sm"
+                  className="relative p-6 sm:p-7 rounded-2xl bg-[#16161A] border border-[#27272A] hover:border-[#D4AF37]/50 transition-all duration-200 flex flex-col justify-between shadow-sm"
                 >
                   <div>
-                    <div className="relative h-40 rounded-xl overflow-hidden mb-4">
-                      <img
-                        src={feat.image}
-                        alt={feat.title}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-transparent to-transparent" />
-                      <div className="absolute top-2.5 left-2.5 w-8 h-8 rounded-lg bg-stone-950/90 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
-                        <IconComp className="w-4 h-4" />
+                    <div className="flex items-center justify-between mb-5">
+                      <span className="text-2xl font-serif-luxury font-bold text-[#D4AF37]">
+                        {s.step}
+                      </span>
+                      <div className="w-10 h-10 rounded-xl bg-[#0D0D0F] border border-[#27272A] flex items-center justify-center text-[#D4AF37]">
+                        <IconComp className="w-5 h-5" />
                       </div>
                     </div>
-
-                    <h3 className="text-base font-serif-luxury font-bold text-white mb-2">
-                      {feat.title}
+                    <h3 className="text-lg font-serif-luxury font-bold text-white mb-2">
+                      {s.title}
                     </h3>
-                    <p className="text-stone-400 text-xs leading-relaxed">
-                      {feat.description}
+                    <p className="text-stone-400 text-xs sm:text-sm leading-relaxed">
+                      {s.description}
                     </p>
-                  </div>
-
-                  <div className="pt-4 mt-4 border-t border-stone-800 flex items-center justify-between text-xs font-medium text-[#D4AF37]">
-                    <span>Incluso</span>
-                    <Check className="w-4 h-4 text-emerald-400" />
                   </div>
                 </div>
               );
@@ -324,102 +358,200 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </section>
 
-      {/* Honest Pricing */}
+      {/* Before vs After Comparison */}
       <section className="py-20 relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center space-y-3 mb-14 max-w-xl mx-auto">
+        <div className="text-center max-w-2xl mx-auto space-y-3 mb-14">
           <span className="text-xs font-bold uppercase tracking-wider text-[#D4AF37]">
-            Planos Transparentes
+            Comparação Real
           </span>
-          <h2 className="text-2xl sm:text-4xl font-serif-luxury font-bold text-white">
-            Escolha o Plano Ideal para seu Negócio
+          <h2 className="text-2xl sm:text-4xl font-serif-luxury font-bold text-white tracking-tight">
+            Veja a diferença na sua rotina de vendas
           </h2>
           <p className="text-stone-400 text-sm">
-            Sem taxas escondidas. Você não paga porcentagem por venda.
+            Menos tempo respondendo mensagens repetidas e muito mais pedidos fechados.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {plans.map((plan, idx) => {
-            const planMessage = encodeURIComponent(`Olá! Gostaria de abrir minha vitrine e ativar o Plano ${plan.name} (${plan.price}). Como faço para liberar meu acesso?`);
-            const planLink = `https://wa.me/${officialPhone}?text=${planMessage}`;
-            return (
-              <div
-                key={idx}
-                className={`p-6 rounded-2xl flex flex-col justify-between border transition-all duration-200 relative ${
-                  plan.highlight
-                    ? 'bg-stone-900 border-[#D4AF37] shadow-xl'
-                    : 'bg-stone-900/70 border-stone-800 text-stone-100'
-                }`}
-              >
-                {plan.badge && (
-                  <div className={`absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                    plan.highlight ? 'bg-[#D4AF37] text-stone-950' : 'bg-stone-800 text-[#F3E5AB] border border-stone-700'
-                  }`}>
-                    {plan.badge}
-                  </div>
-                )}
-
-                <div>
-                  <h3 className="text-sm font-serif-luxury font-bold text-white uppercase tracking-wider mb-2 mt-1">
-                    {plan.name}
-                  </h3>
-
-                  <div className="flex items-baseline gap-1 mb-5">
-                    <span className="text-3xl font-extrabold text-white">
-                      {plan.price}
-                    </span>
-                    <span className="text-xs text-stone-400">
-                      {plan.period}
-                    </span>
-                  </div>
-
-                  <ul className="space-y-2.5 mb-6 text-xs text-stone-300">
-                    <li className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-[#D4AF37] shrink-0" />
-                      <span>Catálogo & Peças Ilimitadas</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-[#D4AF37] shrink-0" />
-                      <span>Sacola Formatada no WhatsApp</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-[#D4AF37] shrink-0" />
-                      <span>Painel de Gestão no Celular</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-[#D4AF37] shrink-0" />
-                      <span>Suporte Humanizado</span>
-                    </li>
-                  </ul>
+        <div className="max-w-4xl mx-auto bg-[#141417] border border-[#27272A] rounded-3xl overflow-hidden shadow-xl">
+          <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[#27272A]">
+            {/* Antes */}
+            <div className="p-6 sm:p-8 bg-[#111114]">
+              <div className="flex items-center gap-2 mb-6 pb-4 border-b border-[#27272A]">
+                <div className="w-6 h-6 rounded-full bg-red-950/60 border border-red-800/60 flex items-center justify-center text-red-400">
+                  <X className="w-3.5 h-3.5" />
                 </div>
-
-                <a
-                  href={planLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`w-full py-3 rounded-xl text-xs font-bold text-center transition-colors cursor-pointer ${
-                    plan.highlight
-                      ? 'bg-[#D4AF37] text-stone-950 hover:bg-[#C5A059]'
-                      : 'bg-stone-800 hover:bg-stone-700 text-stone-100 border border-stone-700'
-                  }`}
-                >
-                  Ativar no WhatsApp
-                </a>
+                <h3 className="font-serif-luxury font-bold text-sm text-stone-300 uppercase tracking-wider">
+                  Antes (Sem o Web Vitrine)
+                </h3>
               </div>
-            );
-          })}
+              <ul className="space-y-4">
+                {comparisons.map((c, i) => (
+                  <li key={i} className="flex items-start gap-3 text-xs sm:text-sm text-stone-400">
+                    <span className="text-red-500 font-bold shrink-0 mt-0.5">✕</span>
+                    <span>{c.before}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Depois */}
+            <div className="p-6 sm:p-8 bg-[#16161A]">
+              <div className="flex items-center gap-2 mb-6 pb-4 border-b border-[#27272A]">
+                <div className="w-6 h-6 rounded-full bg-emerald-950/60 border border-emerald-800/60 flex items-center justify-center text-emerald-400">
+                  <Check className="w-3.5 h-3.5" />
+                </div>
+                <h3 className="font-serif-luxury font-bold text-sm text-[#D4AF37] uppercase tracking-wider">
+                  Depois (Com o Web Vitrine)
+                </h3>
+              </div>
+              <ul className="space-y-4">
+                {comparisons.map((c, i) => (
+                  <li key={i} className="flex items-start gap-3 text-xs sm:text-sm text-stone-200">
+                    <span className="text-[#D4AF37] font-bold shrink-0 mt-0.5">✓</span>
+                    <span>{c.after}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="py-20 relative z-10 bg-[#121215] border-t border-stone-800">
+      {/* Ideal for your niche */}
+      <section className="py-20 relative z-10 bg-[#121215] border-t border-[#27272A]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto space-y-3 mb-12">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#D4AF37]">
+              Segmentos
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-serif-luxury font-bold text-white">
+              Feito sob medida para o seu tipo de produto
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
+            {niches.map((n, i) => (
+              <div
+                key={i}
+                className="p-5 rounded-2xl bg-[#16161A] border border-[#27272A] flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <Tag className="w-4 h-4 text-[#D4AF37]" />
+                    <h3 className="font-serif-luxury font-bold text-sm text-white">{n.name}</h3>
+                  </div>
+                  <p className="text-xs text-stone-400">{n.example}</p>
+                </div>
+              </div>
+            ))}
+            <div className="p-5 rounded-2xl bg-[#16161A] border border-[#D4AF37]/30 flex flex-col justify-center text-center">
+              <span className="text-xs font-semibold text-[#D4AF37]">Qualquer outro produto físico</span>
+              <span className="text-[11px] text-stone-400 mt-0.5">Adapta-se ao catálogo da sua loja</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Single Transparent Pricing Plan */}
+      <section className="py-20 relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center space-y-3 mb-12 max-w-xl mx-auto">
+          <span className="text-xs font-bold uppercase tracking-wider text-[#D4AF37]">
+            Plano Único Oficial
+          </span>
+          <h2 className="text-2xl sm:text-4xl font-serif-luxury font-bold text-white">
+            Simples, Transparente e Sem Pegadinhas
+          </h2>
+          <p className="text-stone-400 text-sm">
+            Acesso completo com <strong>5 dias totalmente grátis</strong> para você testar e aprovar. Renovação automática e segura via Mercado Pago.
+          </p>
+        </div>
+
+        <div className="max-w-xl mx-auto">
+          <div className="p-8 sm:p-10 rounded-3xl bg-[#16161A] border-2 border-[#D4AF37] shadow-2xl relative overflow-hidden">
+            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-[#D4AF37] text-stone-950 shadow-md whitespace-nowrap">
+              {singlePlan.trial}
+            </div>
+
+            <div className="text-center mb-6 pt-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#D4AF37] block mb-1">
+                Assinatura Mensal
+              </span>
+              <h3 className="text-2xl sm:text-3xl font-serif-luxury font-bold text-white">
+                {singlePlan.name}
+              </h3>
+
+              <div className="mt-4 flex items-baseline justify-center gap-1.5">
+                <span className="text-4xl sm:text-5xl font-black text-white">
+                  {singlePlan.price}
+                </span>
+                <span className="text-sm text-stone-400 font-semibold">
+                  {singlePlan.period}
+                </span>
+              </div>
+              <p className="text-xs text-emerald-400 mt-2 font-semibold">
+                Primeiros 5 dias 100% gratuitos • Cancele quando quiser
+              </p>
+            </div>
+
+            <ul className="space-y-3 mb-8 text-xs sm:text-sm text-stone-300 max-w-md mx-auto">
+              <li className="flex items-center gap-2.5">
+                <Check className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                <span><strong>5 dias de teste grátis</strong> sem compromisso</span>
+              </li>
+              <li className="flex items-center gap-2.5">
+                <Check className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                <span>Catálogo de produtos e fotos ilimitados</span>
+              </li>
+              <li className="flex items-center gap-2.5">
+                <Check className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                <span>Sacola formatada e somada direto no WhatsApp</span>
+              </li>
+              <li className="flex items-center gap-2.5">
+                <Check className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                <span>Painel de controle ágil no celular</span>
+              </li>
+              <li className="flex items-center gap-2.5">
+                <Check className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                <span>Zero comissão por venda (100% do lucro é seu)</span>
+              </li>
+              <li className="flex items-center gap-2.5">
+                <Check className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                <span>Renovação descomplicada via Mercado Pago (Pix ou Cartão)</span>
+              </li>
+            </ul>
+
+            <div className="space-y-3">
+              <a
+                href={`https://wa.me/${officialPhone}?text=${encodeURIComponent('Olá! Quero ativar meus 5 dias grátis na Web Vitrine por R$ 29,99/mês. Como faço para liberar meu acesso agora?')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-4 bg-[#D4AF37] hover:bg-[#E5C378] text-stone-950 font-extrabold rounded-2xl text-sm transition-all shadow-xl flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.01] active:scale-[0.99] text-center"
+              >
+                <span>Ativar Meus 5 Dias Grátis Agora</span>
+                <ArrowRight className="w-4 h-4" />
+              </a>
+
+              <button
+                type="button"
+                onClick={() => onEnterStore('teste@123')}
+                className="w-full py-3 bg-[#1C1C22] hover:bg-[#25252E] text-stone-300 hover:text-white rounded-xl text-xs font-semibold border border-[#27272A] transition-colors cursor-pointer"
+              >
+                Testar Vitrine Demonstrativa Ao Vivo
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20 relative z-10 bg-[#121215] border-t border-[#27272A]">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center space-y-2 mb-10">
             <span className="text-xs font-bold uppercase tracking-wider text-[#D4AF37]">
-              Tire Suas Dúvidas
+              Dúvidas Frequentes
             </span>
             <h2 className="text-2xl sm:text-3xl font-serif-luxury font-bold text-white">
-              Perguntas Frequentes
+              Tudo o que você precisa saber
             </h2>
           </div>
 
@@ -427,9 +559,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             {faqs.map((faq, idx) => (
               <div
                 key={idx}
-                className="border border-stone-800 rounded-xl overflow-hidden bg-stone-900/80 transition-colors"
+                className="border border-[#27272A] rounded-xl overflow-hidden bg-[#16161A] transition-colors"
               >
                 <button
+                  type="button"
                   onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
                   className="w-full text-left px-5 py-4 flex items-center justify-between focus:outline-none cursor-pointer"
                 >
@@ -448,7 +581,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       exit={{ height: 0, opacity: 0 }}
                       className="overflow-hidden"
                     >
-                      <div className="px-5 pb-4 text-stone-400 text-xs leading-relaxed border-t border-stone-800/60 pt-3">
+                      <div className="px-5 pb-4 text-stone-400 text-xs leading-relaxed border-t border-[#222228] pt-3">
                         {faq.a}
                       </div>
                     </motion.div>
@@ -460,8 +593,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </section>
 
-      {/* Natural Footer with SF TECNOLOGIA */}
-      <footer className="relative z-10 bg-[#09090A] border-t border-stone-800/80 py-14 text-center text-stone-400">
+      {/* Footer with Mandatory Attribution */}
+      <footer className="relative z-10 bg-[#09090A] border-t border-[#222228] py-14 text-center text-stone-400">
         <div className="max-w-4xl mx-auto px-4 space-y-6">
           <div className="inline-flex items-center space-x-2.5 justify-center">
             <div className="w-8 h-8 rounded-xl bg-[#D4AF37] flex items-center justify-center text-stone-950 font-serif-luxury font-bold text-sm">
@@ -488,12 +621,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </a>
           </div>
 
-          {/* Credits & SF TECNOLOGIA attribution */}
-          <div className="pt-6 border-t border-stone-800/60 flex flex-col sm:flex-row items-center justify-between text-xs text-stone-500 gap-2">
+          {/* Credits & Mandatory SF TECNOLOGIA attribution */}
+          <div className="pt-6 border-t border-[#222228] flex flex-col sm:flex-row items-center justify-between text-xs text-stone-500 gap-2">
             <p>
               &copy; {new Date().getFullYear()} Web Vitrine. Todos os direitos reservados.
             </p>
-            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-stone-900 border border-stone-800 text-[11px] text-stone-300">
+            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-[#16161A] border border-[#27272A] text-[11px] text-stone-300">
               <span className="text-stone-400">desenvolvido por:</span>
               <strong className="text-[#D4AF37] font-bold tracking-wide">SF TECNOLOGIA</strong>
             </div>

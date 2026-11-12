@@ -24,6 +24,8 @@ interface NavbarProps {
   selectedCategory: string;
   onSelectCategory: (cat: string) => void;
   categories: string[];
+  categoryCounts?: Record<string, number>;
+  totalProductsCount?: number;
   onOpenStoreSetup: () => void;
   onOpenStoreHours?: () => void;
   onOpenLandingHero?: () => void;
@@ -41,6 +43,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   selectedCategory,
   onSelectCategory,
   categories,
+  categoryCounts,
+  totalProductsCount,
   onOpenStoreHours,
   onOpenLandingHero,
   isOfficialStore = false,
@@ -224,28 +228,45 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={() => onSelectCategory('all')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5 ${
                 selectedCategory === 'all'
                   ? 'bg-[#D4AF37] text-stone-950 font-bold shadow-sm'
                   : 'bg-[#16161A] text-stone-300 hover:text-white border border-[#27272A] hover:border-stone-600'
               }`}
             >
-              Todas as Peças
+              <span>Todas as Peças</span>
+              {totalProductsCount !== undefined && (
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                  selectedCategory === 'all' ? 'bg-stone-950/20 text-stone-950' : 'bg-[#22222A] text-stone-400'
+                }`}>
+                  {totalProductsCount}
+                </span>
+              )}
             </button>
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => onSelectCategory(cat)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-                  selectedCategory === cat
-                    ? 'bg-[#D4AF37] text-stone-950 font-bold shadow-sm'
-                    : 'bg-[#16161A] text-stone-300 hover:text-white border border-[#27272A] hover:border-stone-600'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
+            {categories.map((cat) => {
+              const count = categoryCounts ? categoryCounts[cat] : undefined;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => onSelectCategory(cat)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5 ${
+                    selectedCategory === cat
+                      ? 'bg-[#D4AF37] text-stone-950 font-bold shadow-sm'
+                      : 'bg-[#16161A] text-stone-300 hover:text-white border border-[#27272A] hover:border-stone-600'
+                  }`}
+                >
+                  <span>{cat}</span>
+                  {count !== undefined && (
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                      selectedCategory === cat ? 'bg-stone-950/20 text-stone-950' : 'bg-[#22222A] text-stone-400'
+                    }`}>
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>

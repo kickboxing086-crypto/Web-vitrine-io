@@ -73,7 +73,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
     username: '',
     password: '',
     planPrice: 29.99,
-    dueDate: getDefaultDueDate(30),
+    dueDate: getDefaultDueDate(5),
     
     phoneWhatsapp: '',
     notes: '',
@@ -96,7 +96,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
     setTimeout(() => setFeedbackToast(null), 3000);
   }
 
-  function getDefaultDueDate(daysAhead: number = 30): string {
+  function getDefaultDueDate(daysAhead: number = 5): string {
     const d = new Date();
     d.setDate(d.getDate() + daysAhead);
     return d.toISOString().split('T')[0];
@@ -239,7 +239,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
       username: '',
       password: generateRandomPassword(),
       planPrice: 29.99,
-      dueDate: getDefaultDueDate(30),
+      dueDate: getDefaultDueDate(5),
       
       phoneWhatsapp: '',
       notes: '',
@@ -256,7 +256,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
       username: client.username || '',
       password: client.password || '',
       planPrice: client.planPrice !== undefined ? client.planPrice : 29.99,
-      dueDate: client.dueDate || getDefaultDueDate(30),
+      dueDate: client.dueDate || getDefaultDueDate(5),
       
       phoneWhatsapp: client.phoneWhatsapp || '',
       notes: client.notes || '',
@@ -279,7 +279,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
       storeSlug: cleanUsername,
       password: formData.password.trim(),
       planPrice: isNaN(priceNum) ? 29.99 : priceNum,
-      dueDate: formData.dueDate || getDefaultDueDate(30),
+      dueDate: formData.dueDate || getDefaultDueDate(5),
       storeType: 'clothing',
       
       phoneWhatsapp: formData.phoneWhatsapp.trim(),

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Product, StoreSettings } from '../types';
 import { formatCurrency, generateWhatsappDirectProductMessage, cleanPhoneForWhatsapp } from '../lib/formatters';
-import { MessageCircle, Eye, ShoppingBag, Share2 } from 'lucide-react';
+import { MessageCircle, Eye, ShoppingBag, Share2, Check } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface ProductCardProps {
@@ -10,6 +10,7 @@ interface ProductCardProps {
   onOpenDetails: (product: Product) => void;
   onQuickAddToCart: (product: Product) => void;
   onShareProduct?: (product: Product) => void;
+  cartQuantity?: number;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -18,6 +19,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onOpenDetails,
   onQuickAddToCart,
   onShareProduct,
+  cartQuantity = 0,
 }) => {
   const [selectedColorIndex, setSelectedColorIndex] = React.useState<number>(0);
 
@@ -103,8 +105,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           )}
         </div>
 
-        {/* Top Right: Share Button */}
-        <div className="absolute top-2.5 right-2.5 z-10">
+        {/* Top Right: Cart Count Badge & Share Button */}
+        <div className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1.5">
+          {cartQuantity > 0 && (
+            <span className="px-2 py-0.5 bg-[#D4AF37] text-stone-950 font-bold text-[10px] rounded-full shadow-md flex items-center gap-1 border border-stone-950 animate-in fade-in zoom-in duration-200">
+              <Check className="w-3 h-3 stroke-[3]" />
+              <span>{cartQuantity} no pedido</span>
+            </span>
+          )}
           <button
             type="button"
             onClick={handleShareClick}
@@ -242,14 +250,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                   onQuickAddToCart(product);
                 }
               }}
-              className={`p-2 rounded-xl transition-colors ${
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                 product.stock === 0
                   ? 'bg-stone-900 text-stone-600 cursor-not-allowed border border-stone-800'
-                  : 'bg-[#1C1C22] hover:bg-[#D4AF37] text-stone-300 hover:text-stone-950 border border-[#2B2B33] hover:border-[#D4AF37] cursor-pointer'
+                  : cartQuantity > 0
+                  ? 'bg-[#D4AF37] text-stone-950 border border-[#D4AF37] shadow-md hover:bg-[#E5C378] active:scale-95'
+                  : 'bg-[#1C1C22] hover:bg-[#D4AF37] text-stone-300 hover:text-stone-950 border border-[#2B2B33] hover:border-[#D4AF37] cursor-pointer active:scale-95'
               }`}
-              title={product.stock === 0 ? 'Sem estoque' : 'Adicionar à Sacola'}
+              title={product.stock === 0 ? 'Sem estoque' : cartQuantity > 0 ? `Adicionar mais um (Já possui ${cartQuantity})` : 'Adicionar ao pedido'}
+              id={`btn-quick-add-${product.id}`}
             >
-              <ShoppingBag className="w-4 h-4" />
+              <ShoppingBag className="w-4 h-4 shrink-0" />
+              {cartQuantity > 0 ? (
+                <span className="font-extrabold text-[11px]">{cartQuantity}</span>
+              ) : (
+                <span className="hidden sm:inline text-[11px] font-semibold">Pedir</span>
+              )}
             </button>
           </div>
         </div>

@@ -4,7 +4,11 @@ import { PWAInstallButton } from './PWAInstallButton';
 import { Download, X, Smartphone, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-export const InstallFloatingBar: React.FC = () => {
+interface InstallFloatingBarProps {
+  hide?: boolean;
+}
+
+export const InstallFloatingBar: React.FC<InstallFloatingBarProps> = ({ hide = false }) => {
   const { isInstalled } = usePWAInstall();
   const [dismissed, setDismissed] = useState(false);
 
@@ -15,7 +19,7 @@ export const InstallFloatingBar: React.FC = () => {
     }
   }, []);
 
-  if (isInstalled || dismissed) {
+  if (isInstalled || dismissed || hide) {
     return null;
   }
 

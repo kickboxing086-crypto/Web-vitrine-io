@@ -66,6 +66,7 @@ import { ShareProductModal } from './components/ShareProductModal';
 import { PaymentSuccessModal } from './components/PaymentSuccessModal';
 import { AppEntranceAnimation } from './components/AppEntranceAnimation';
 import { InstallFloatingBar } from './components/InstallFloatingBar';
+import { CartFloatingBar } from './components/CartFloatingBar';
 import { SlidersHorizontal, AlertCircle, Tag as TagIcon, ShoppingBag, ArrowLeft, MessageCircle, ChevronDown, Check, Instagram, MapPin, Clock, ExternalLink } from 'lucide-react';
 import { getFontFamilyCss, checkStoreHoursStatus, applyStoreTheme } from './lib/themeUtils';
 import { formatCurrency, cleanPhoneForWhatsapp } from './lib/formatters';
@@ -236,6 +237,7 @@ export default function App() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isStoreSetupOpen, setIsStoreSetupOpen] = useState(false);
   const [isFirstOnboarding, setIsFirstOnboarding] = useState(false);
+  const [addedItemToast, setAddedItemToast] = useState<{ name: string; timestamp: number } | null>(null);
 
   // Smart Checkout Validation Animations
   const [shakeName, setShakeName] = useState(false);
@@ -714,7 +716,15 @@ export default function App() {
       product.colors[0] || { name: 'Padrão', hex: '#111111' },
       1
     );
-    setIsCartOpen(true);
+    setAddedItemToast({ name: product.name, timestamp: Date.now() });
+    setTimeout(() => {
+      setAddedItemToast((current) => {
+        if (current && Date.now() - current.timestamp >= 2400) {
+          return null;
+        }
+        return current;
+      });
+    }, 2500);
   };
 
   const handleUpdateCartQuantity = (index: number, delta: number) => {
@@ -808,6 +818,16 @@ export default function App() {
   const categoryNames = Array.from(new Set(categories.map((c) => c.name).filter(Boolean)));
   const tagNames = Array.from(new Set(tags.map((t) => t.name).filter(Boolean)));
 
+  const categoryCounts = React.useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const p of products) {
+      if (p.category) {
+        counts[p.category] = (counts[p.category] || 0) + 1;
+      }
+    }
+    return counts;
+  }, [products]);
+
 
   const activeStoreType = currentClient?.storeType || settings.storeType || 'clothing';
 
@@ -898,6 +918,8 @@ export default function App() {
         selectedCategory={selectedCategory}
         onSelectCategory={setSelectedCategory}
         categories={categoryNames}
+        categoryCounts={categoryCounts}
+        totalProductsCount={products.length}
         onOpenStoreSetup={() => setIsStoreSetupOpen(true)}
         onOpenStoreHours={() => setIsStoreHoursModalOpen(true)}
         onOpenLandingHero={() => setActiveView('landing')}
@@ -1171,6 +1193,9 @@ export default function App() {
                     onOpenDetails={handleOpenProductDetails}
                     onQuickAddToCart={handleQuickAddToCart}
                     onShareProduct={handleShareProduct}
+                    cartQuantity={cart
+                      .filter((item) => item.product.id === product.id)
+                      .reduce((sum, item) => sum + item.quantity, 0)}
                   />
                 ))}
               </div>
@@ -1245,6 +1270,15 @@ export default function App() {
         onClose={() => setIsProductModalOpen(false)}
         onAddToCart={(prod, sz, col, qty) => {
           handleAddToCart(prod, sz, col, qty);
+          setAddedItemToast({ name: `${qty > 1 ? `${qty}x ` : ''}${prod.name}`, timestamp: Date.now() });
+          setTimeout(() => {
+            setAddedItemToast((current) => {
+              if (current && Date.now() - current.timestamp >= 2400) {
+                return null;
+              }
+              return current;
+            });
+          }, 2500);
         }}
         onOpenCart={() => {
           setIsProductModalOpen(false);
@@ -1390,8 +1424,38 @@ export default function App() {
         />
       )}
 
-      {/* Floating Install Bar */}
-      <InstallFloatingBar />
+      {/* Floating Install Bar (hidden when order items exist to give full priority to the order bar) */}
+      <InstallFloatingBar hide={cart.length > 0} />
+
+      {/* Digital Menu Persistent Floating Order Bar (Cardápio Digital UI/UX) */}
+      {activeView === 'store' && (
+        <CartFloatingBar
+          cart={cart}
+          onOpenCart={() => setIsCartOpen(true)}
+        />
+      )}
+
+      {/* Instant Feedback Toast when an item is added to cart */}
+      <AnimatePresence>
+        {addedItemToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="fixed top-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
+          >
+            <div className="bg-[#16161A]/95 border-2 border-[#D4AF37] text-white px-4 py-2.5 rounded-2xl shadow-2xl backdrop-blur-xl flex items-center gap-2.5 text-xs font-semibold">
+              <span className="w-5 h-5 rounded-full bg-[#D4AF37] text-stone-950 flex items-center justify-center font-extrabold text-[11px] shrink-0 shadow-sm">
+                ✓
+              </span>
+              <span>
+                <strong className="text-white font-bold">{addedItemToast.name}</strong> adicionado ao pedido!
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

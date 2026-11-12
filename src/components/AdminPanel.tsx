@@ -80,6 +80,9 @@ import {
 } from 'recharts';
 
 import { SubscriptionManager } from './SubscriptionManager';
+import { ExpiredStoreBlockModal } from './ExpiredStoreBlockModal';
+import { MercadoPagoRenewalModal } from './MercadoPagoRenewalModal';
+import { getSubscriptionStatus } from '../lib/mercadoPagoService';
 
 interface AdminPanelProps {
   currentClient?: any;
@@ -135,6 +138,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [activeTab, setActiveTab] = useState<
     'dashboard' | 'products' | 'orders' | 'tags' | 'coupons' | 'settings' | 'stock' | 'plan'
   >('dashboard');
+
+  const [isRenewalModalOpen, setIsRenewalModalOpen] = useState(false);
+  const subStatus = getSubscriptionStatus(currentClient);
 
   const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
   const [refreshSuccessMsg, setRefreshSuccessMsg] = useState(false);
@@ -480,6 +486,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setTimeout(() => setCopiedLink(false), 2500);
   };
 
+  if (subStatus.isExpired) {
+    return (
+      <ExpiredStoreBlockModal
+        currentClient={currentClient}
+        storeName={settings.storeName}
+        onLogout={onLogout}
+        onRenewalSuccess={() => {
+          window.location.reload();
+        }}
+      />
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
       <AnimatePresence>
@@ -685,12 +704,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                   
                   return (
-                    <span className="flex items-center gap-1">
+                    <span className="flex flex-wrap items-center gap-2 mt-1">
                       <span>• Vencimento:</span>
                       <strong className="text-emerald-700">{new Date(currentClient.dueDate + 'T00:00:00').toLocaleDateString('pt-BR')}</strong>
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${diffDays <= 5 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`}>
                         {diffDays < 0 ? `Vencido há ${Math.abs(diffDays)} dias` : diffDays === 0 ? 'Vence hoje!' : `Faltam ${diffDays} dias`}
                       </span>
+                      <button
+                        type="button"
+                        onClick={() => setIsRenewalModalOpen(true)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#D4AF37] hover:bg-[#E5C378] text-stone-950 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+                        id="btn-admin-header-renew-mp"
+                      >
+                        <Sparkles className="w-3 h-3 fill-stone-950" />
+                        <span>Renovar Plano via Mercado Pago (R$ 29,99)</span>
+                      </button>
                     </span>
                   );
                 })()}
@@ -3432,6 +3460,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       {activeTab === 'plan' && (
         <SubscriptionManager settings={settings} currentClient={currentClient} />
       )}
+
+      {/* Mercado Pago Renewal Modal */}
+      <MercadoPagoRenewalModal
+        isOpen={isRenewalModalOpen}
+        onClose={() => setIsRenewalModalOpen(false)}
+        currentClient={currentClient}
+        storeName={settings.storeName}
+        onRenewalSuccess={() => {
+          setIsRenewalModalOpen(false);
+          window.location.reload();
+        }}
+      />
     </div>
   );
 };
