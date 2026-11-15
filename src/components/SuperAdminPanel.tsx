@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { StoreClient } from '../types';
 import { getClients, saveClient, deleteClient } from '../lib/firestoreService';
+import { CredentialChecklist } from './CredentialChecklist';
 
 interface SuperAdminPanelProps {
   onLogout: () => void;
@@ -408,7 +409,18 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
   };
 
   function generateRandomPassword(): string {
-    return Math.floor(10000000 + Math.random() * 90000000).toString().substring(0, 8);
+    const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+    const lower = 'abcdefghijkmnpqrstuvwxyz';
+    const numbers = '23456789';
+    let res = '';
+    res += upper[Math.floor(Math.random() * upper.length)];
+    res += lower[Math.floor(Math.random() * lower.length)];
+    res += numbers[Math.floor(Math.random() * numbers.length)];
+    const allChars = upper + lower + numbers;
+    while (res.length < 8) {
+      res += allChars[Math.floor(Math.random() * allChars.length)];
+    }
+    return res;
   }
 
   function formatDateBr(dateStr?: string): string {
@@ -999,28 +1011,30 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                   {/* Nome de Usuário */}
                   <div>
                     <label className="block text-xs font-bold text-stone-600 uppercase tracking-wider mb-1.5">
-                      Nome de Usuário (Login) *
+                      Nome de Usuário (Login - Máx 8) *
                     </label>
                     <div className="relative">
                       <User className="w-4 h-4 text-stone-400 absolute left-3.5 top-3" />
                       <input
                         type="text"
                         required
+                        maxLength={8}
                         value={formData.username}
-                        onChange={(e) => setFormData({ ...formData, username: e.target.value.toLowerCase().replace(/[^a-z0-9_.-]/g, '') })}
-                        placeholder="Ex: boutique_elegance"
+                        onChange={(e) => setFormData({ ...formData, username: e.target.value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9_.-]/g, '') })}
+                        placeholder="Ex: minha_lo"
                         className="w-full pl-10 pr-4 py-2.5 bg-stone-50 hover:bg-stone-100/50 focus:bg-white border border-stone-200 rounded-xl text-sm text-stone-900 font-mono focus:outline-none focus:border-stone-900 transition-all"
                         id="input-form-username"
                       />
                     </div>
-                    <p className="text-[11px] text-stone-400 mt-1">Será usado no link da loja: <code>/?loja={formData.username || 'nome'}</code></p>
+                    <CredentialChecklist value={formData.username} label="Requisitos do Usuário" />
+                    <p className="text-[11px] text-stone-400 mt-1">Link da loja: <code>/?loja={formData.username || 'nome'}</code></p>
                   </div>
 
                   {/* Senha */}
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
                       <label className="block text-xs font-bold text-stone-600 uppercase tracking-wider">
-                        Senha de Acesso (Máx 8 dígitos) *
+                        Senha de Acesso (Máx 8 caracteres) *
                       </label>
                       <button
                         type="button"
@@ -1037,12 +1051,13 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                         required
                         maxLength={8}
                         value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        placeholder="Ex: 12345678"
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value.normalize('NFD').replace(/[\u0300-\u036f]/g, '') })}
+                        placeholder="Ex: Abc12345"
                         className="w-full pl-10 pr-4 py-2.5 bg-stone-50 hover:bg-stone-100/50 focus:bg-white border border-stone-200 rounded-xl text-sm text-stone-900 font-mono focus:outline-none focus:border-stone-900 transition-all"
                         id="input-form-password"
                       />
                     </div>
+                    <CredentialChecklist value={formData.password} label="Requisitos da Senha" />
                   </div>
 
                   {/* Plano Contratado (Com Animação Interativa de Alto Padrão) */}

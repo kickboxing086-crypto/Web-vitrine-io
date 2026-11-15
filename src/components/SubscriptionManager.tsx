@@ -7,7 +7,6 @@ import {
   AlertCircle,
   Clock,
   ShieldCheck,
-  CreditCard,
   QrCode,
   Sparkles,
   ArrowRight,
@@ -16,7 +15,7 @@ import {
   SINGLE_PLAN_CONFIG,
   getSubscriptionStatus,
 } from '../lib/mercadoPagoService';
-import { MercadoPagoRenewalModal } from './MercadoPagoRenewalModal';
+import { PixRenewalModal } from './PixRenewalModal';
 
 interface SubscriptionManagerProps {
   settings: StoreSettings;
@@ -45,13 +44,13 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
           <div className="space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1C1C22] border border-[#27272A] text-stone-300 text-xs font-bold uppercase tracking-wider">
               <ShieldCheck className="w-3.5 h-3.5 text-[#D4AF37]" />
-              Gestão de Assinatura • Mercado Pago
+              Gestão de Assinatura • Pagamento via Pix
             </div>
             <h2 className="text-2xl sm:text-3xl font-serif-luxury font-bold text-white">
               Status da sua Vitrine Virtual
             </h2>
             <p className="text-stone-400 text-xs sm:text-sm max-w-xl leading-relaxed">
-              Sua vitrine virtual conta com <strong>5 dias de teste grátis</strong> e renovação simplificada direta pelo Mercado Pago por apenas <strong>R$ 29,99/mês</strong>. Sem taxas por venda.
+              Sua vitrine virtual conta com <strong>5 dias de teste grátis</strong> e renovação instantânea via Pix por apenas <strong>R$ 29,99/mês</strong>. Sem taxas por venda.
             </p>
           </div>
 
@@ -164,7 +163,7 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
               <div className="w-5 h-5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] flex items-center justify-center shrink-0">
                 <Check className="w-3.5 h-3.5" />
               </div>
-              <span>Renovação direta via Mercado Pago</span>
+              <span>Renovação instantânea via Pix com QR Code</span>
             </div>
           </div>
 
@@ -174,30 +173,23 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
               type="button"
               onClick={() => setIsRenewalModalOpen(true)}
               className="w-full sm:w-auto px-8 py-4 bg-[#D4AF37] hover:bg-[#E5C378] text-stone-950 font-extrabold rounded-2xl text-sm transition-all shadow-xl flex items-center justify-center gap-2.5 cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
-              id="btn-submanager-renew-mp"
+              id="btn-submanager-renew-pix"
             >
               <Sparkles className="w-4 h-4 fill-stone-950 text-stone-950" />
-              <span>Renovar Plano via Mercado Pago (R$ 29,99)</span>
+              <span>Renovar Plano via Pix (R$ 29,99)</span>
               <ArrowRight className="w-4 h-4" />
             </button>
 
-            <div className="flex items-center gap-3 text-xs text-stone-400">
-              <span className="flex items-center gap-1">
-                <QrCode className="w-4 h-4 text-[#D4AF37]" />
-                Pix Imediato
-              </span>
-              <span>•</span>
-              <span className="flex items-center gap-1">
-                <CreditCard className="w-4 h-4 text-[#D4AF37]" />
-                Cartão de Crédito
-              </span>
+            <div className="flex items-center gap-2 text-xs text-stone-400">
+              <QrCode className="w-4 h-4 text-[#D4AF37]" />
+              <span>Pix com QR Code e validade de 5 minutos</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Renewal Modal */}
-      <MercadoPagoRenewalModal
+      {/* Pix Renewal Modal */}
+      <PixRenewalModal
         isOpen={isRenewalModalOpen}
         onClose={() => setIsRenewalModalOpen(false)}
         currentClient={currentClient}

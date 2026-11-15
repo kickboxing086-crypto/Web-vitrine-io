@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Lock, Sparkles, Check, ArrowRight, LogOut, ShieldAlert } from 'lucide-react';
-import { MercadoPagoRenewalModal } from './MercadoPagoRenewalModal';
+import { PixRenewalModal } from './PixRenewalModal';
 import { SINGLE_PLAN_CONFIG } from '../lib/mercadoPagoService';
 
 interface ExpiredStoreBlockModalProps {
@@ -77,7 +77,7 @@ export const ExpiredStoreBlockModal: React.FC<ExpiredStoreBlockModalProps> = ({
                   {SINGLE_PLAN_CONFIG.title}
                 </h4>
                 <span className="text-[11px] text-stone-400">
-                  Renovação direta via Mercado Pago (Pix ou Cartão)
+                  Renovação rápida via Pix com QR Code
                 </span>
               </div>
               <div className="text-right">
@@ -94,10 +94,10 @@ export const ExpiredStoreBlockModal: React.FC<ExpiredStoreBlockModalProps> = ({
                 type="button"
                 onClick={() => setIsRenewalModalOpen(true)}
                 className="w-full py-3.5 px-4 bg-[#D4AF37] hover:bg-[#E5C378] text-stone-950 font-extrabold rounded-xl text-sm transition-all flex items-center justify-center gap-2 shadow-xl cursor-pointer"
-                id="btn-educational-renew-mercadopago"
+                id="btn-educational-renew-pix"
               >
                 <Sparkles className="w-4 h-4 fill-stone-950" />
-                <span>Renovar Meu Acesso por R$ 29,99 via Mercado Pago</span>
+                <span>Renovar Meu Acesso por R$ 29,99 via Pix</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
@@ -116,8 +116,8 @@ export const ExpiredStoreBlockModal: React.FC<ExpiredStoreBlockModalProps> = ({
         </motion.div>
       </div>
 
-      {/* Mercado Pago Renewal Modal */}
-      <MercadoPagoRenewalModal
+      {/* Pix Renewal Modal */}
+      <PixRenewalModal
         isOpen={isRenewalModalOpen}
         onClose={() => setIsRenewalModalOpen(false)}
         currentClient={currentClient}

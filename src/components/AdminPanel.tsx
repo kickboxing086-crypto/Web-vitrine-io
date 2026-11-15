@@ -81,7 +81,7 @@ import {
 
 import { SubscriptionManager } from './SubscriptionManager';
 import { ExpiredStoreBlockModal } from './ExpiredStoreBlockModal';
-import { MercadoPagoRenewalModal } from './MercadoPagoRenewalModal';
+import { PixRenewalModal } from './PixRenewalModal';
 import { getSubscriptionStatus } from '../lib/mercadoPagoService';
 
 interface AdminPanelProps {
@@ -714,10 +714,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         type="button"
                         onClick={() => setIsRenewalModalOpen(true)}
                         className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#D4AF37] hover:bg-[#E5C378] text-stone-950 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
-                        id="btn-admin-header-renew-mp"
+                        id="btn-admin-header-renew-pix"
                       >
                         <Sparkles className="w-3 h-3 fill-stone-950" />
-                        <span>Renovar Plano via Mercado Pago (R$ 29,99)</span>
+                        <span>Renovar Plano via Pix (R$ 29,99)</span>
                       </button>
                     </span>
                   );
@@ -3461,8 +3461,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         <SubscriptionManager settings={settings} currentClient={currentClient} />
       )}
 
-      {/* Mercado Pago Renewal Modal */}
-      <MercadoPagoRenewalModal
+      {/* Pix Renewal Modal */}
+      <PixRenewalModal
         isOpen={isRenewalModalOpen}
         onClose={() => setIsRenewalModalOpen(false)}
         currentClient={currentClient}
