@@ -80,7 +80,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         />
 
         {/* Esgotado Overlay */}
-        {(product.stock === 0 || product.stock === undefined) && (
+        {product.stock === 0 && (
           <div className="absolute inset-0 bg-black/60 backdrop-blur-2xs flex items-center justify-center z-10">
             <span className="px-3.5 py-1.5 bg-stone-900 text-stone-200 font-bold text-xs uppercase tracking-wider rounded-xl border border-stone-700 shadow-md">
               Esgotado
@@ -246,7 +246,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               disabled={product.stock === 0}
               onClick={(e) => {
                 e.stopPropagation();
-                if (product.stock > 0) {
+                if (product.stock !== 0) {
                   onQuickAddToCart(product);
                 }
               }}

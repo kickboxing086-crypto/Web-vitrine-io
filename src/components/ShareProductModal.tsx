@@ -48,7 +48,8 @@ export const ShareProductModal: React.FC<ShareProductModalProps> = ({
     ? `${origin}${pathname}?loja=${encodeURIComponent(loja)}&produto=${encodeURIComponent(product.id)}`
     : `${origin}${pathname}?produto=${encodeURIComponent(product.id)}`;
 
-  const shareMessage = `Olha que peça linda que encontrei na ${settings.storeName} ✨\n\n👗 *${product.name}*\n💰 Por apenas *${formatCurrency(currentPrice)}*\n\n👉 Veja todos os detalhes e fotos aqui:\n${shareUrl}`;
+  const productImg = product.images?.[0] || '';
+  const shareMessage = `*${settings.storeName.toUpperCase()}* ✨\n\n👗 *${product.name}*\n💰 Por apenas *${formatCurrency(currentPrice)}*\n${productImg ? `📸 Foto da Peça:\n${productImg}\n` : ''}\n👉 Veja todos os detalhes e faça seu pedido aqui:\n${shareUrl}`;
 
   const handleCopyLink = async () => {
     try {

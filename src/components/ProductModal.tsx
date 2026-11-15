@@ -48,6 +48,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   const [showSizeGuide, setShowSizeGuide] = useState(false);
   const [addedAnimation, setAddedAnimation] = useState(false);
 
+  const stockVal = product.stock !== undefined ? product.stock : 10;
   const hasColorVariants = product.hasColors !== false && Array.isArray(product.colors) && product.colors.length > 0;
   const allImages = Array.from(
     new Set([
@@ -351,7 +352,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 )}
 
                 {/* Quantity */}
-                {product.stock > 0 ? (
+                {stockVal > 0 ? (
                   <div className="pt-2 flex items-center justify-between">
                     <span className="text-xs font-bold text-stone-200 uppercase tracking-wider">
                       Quantidade
@@ -370,7 +371,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                       <button
                         type="button"
                         onClick={() => setQuantity((q) => {
-                          const maxStock = product.stock || 1;
+                          const maxStock = stockVal || 1;
                           return q >= maxStock ? maxStock : q + 1;
                         })}
                         className="px-3 py-1.5 text-stone-400 hover:text-white font-bold"
@@ -391,12 +392,12 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 {/* Stock info */}
                 <div className="flex items-center space-x-2 text-xs pt-1">
                   <Tag className="w-3.5 h-3.5 text-[#D4AF37]" />
-                  <span className={product.stock === 0 ? "text-red-400 font-semibold" : product.stock <= 3 ? "text-amber-400 font-semibold" : "text-stone-400"}>
-                    {product.stock === 0
+                  <span className={stockVal === 0 ? "text-red-400 font-semibold" : stockVal <= 3 ? "text-amber-400 font-semibold" : "text-stone-400"}>
+                    {stockVal === 0
                       ? 'Produto esgotado no momento'
-                      : product.stock <= 3
-                      ? `Últimas peças! Apenas ${product.stock} disponíveis`
-                      : `${product.stock} peças disponíveis no estoque`}
+                      : stockVal <= 3
+                      ? `Últimas peças! Apenas ${stockVal} disponíveis`
+                      : `${stockVal} peças disponíveis no estoque`}
                   </span>
                 </div>
 
@@ -457,10 +458,10 @@ export const ProductModal: React.FC<ProductModalProps> = ({
 
                   <button
                     type="button"
-                    disabled={product.stock === 0}
+                    disabled={stockVal === 0}
                     onClick={handleAddBag}
                     className={`w-full flex items-center justify-center space-x-2 py-3 rounded-xl font-bold text-xs transition-all shadow-md ${
-                      product.stock === 0
+                      stockVal === 0
                         ? 'bg-stone-900 text-stone-600 cursor-not-allowed border border-stone-800'
                         : 'bg-[#D4AF37] hover:bg-[#C5A059] text-stone-950 cursor-pointer shadow-amber-500/10'
                     }`}
@@ -468,7 +469,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                   >
                     <ShoppingBag className="w-4 h-4 text-stone-950" />
                     <span>
-                      {product.stock === 0
+                      {stockVal === 0
                         ? 'Indisponível'
                         : `Adicionar à Sacola • ${formatCurrency(currentPrice * quantity)}`}
                     </span>

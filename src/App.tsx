@@ -272,19 +272,45 @@ export default function App() {
     onConfirm: () => {},
   });
 
-  // Dynamic document title, meta tags, fonts and primary colors update
+  // Dynamic document title, meta tags, OpenGraph share metadata, fonts and primary colors update
   useEffect(() => {
-    if (settings.storeName) {
+    if (selectedProduct) {
+      const priceStr = formatCurrency(selectedProduct.isOnSale && selectedProduct.promotionalPrice ? selectedProduct.promotionalPrice : selectedProduct.price);
+      document.title = `${selectedProduct.name} - ${settings.storeName} (${priceStr})`;
+      const metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) metaDesc.setAttribute('content', `${selectedProduct.name} por ${priceStr} na ${settings.storeName}. ${selectedProduct.description || ''}`);
+
+      const ogTitle = document.querySelector('meta[property="og:title"]');
+      if (ogTitle) ogTitle.setAttribute('content', `${selectedProduct.name} - ${settings.storeName}`);
+
+      const ogDesc = document.querySelector('meta[property="og:description"]');
+      if (ogDesc) ogDesc.setAttribute('content', `Por apenas ${priceStr}. Confira os detalhes e fotos exclusivas!`);
+
+      const ogImage = document.querySelector('meta[property="og:image"]');
+      if (ogImage && selectedProduct.images?.[0]) {
+        ogImage.setAttribute('content', selectedProduct.images[0]);
+      }
+    } else if (settings.storeName) {
       document.title = `${settings.storeName} | Vitrine Virtual`;
       const metaDescription = document.querySelector('meta[name="description"]');
       if (metaDescription) {
         metaDescription.setAttribute('content', settings.description || `Vitrine virtual e catálogo exclusivo da ${settings.storeName}.`);
       }
+      const ogTitle = document.querySelector('meta[property="og:title"]');
+      if (ogTitle) ogTitle.setAttribute('content', settings.storeName);
+
+      const ogDesc = document.querySelector('meta[property="og:description"]');
+      if (ogDesc) ogDesc.setAttribute('content', settings.description || 'Explore nosso catálogo exclusivo de produtos e faça seus pedidos.');
+
+      const ogImage = document.querySelector('meta[property="og:image"]');
+      if (ogImage && settings.logoUrl) {
+        ogImage.setAttribute('content', settings.logoUrl);
+      }
     }
 
     // Apply custom dynamic store font and primary color to root document
     applyStoreTheme(settings);
-  }, [settings.storeName, settings.description, settings.fontFamily, settings.primaryColor]);
+  }, [settings, selectedProduct]);
 
   // Check first access and URL params for admin login and tenant stores
   useEffect(() => {
