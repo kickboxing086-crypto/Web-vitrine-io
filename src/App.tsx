@@ -159,6 +159,12 @@ export default function App() {
   const handleLoginSuccess = (type?: 'super_admin' | 'store_admin' | 'vulnerability_admin', client?: any) => {
     setIsAdminAuthenticated(true);
     saveAuthSession(true);
+    setProducts([]);
+    setCategories([]);
+    setTags([]);
+    setCoupons([]);
+    setOrders([]);
+    setFinance([]);
     if (client) {
       const isOfficial = client.username !== 'teste@123' && client.id !== 'client-test-natural' && client.isOfficial !== false;
       const enrichedClient = {
@@ -188,6 +194,12 @@ export default function App() {
   const handleRegisterSuccess = (newClient: any) => {
     setIsAdminAuthenticated(true);
     saveAuthSession(true);
+    setProducts([]);
+    setCategories([]);
+    setTags([]);
+    setCoupons([]);
+    setOrders([]);
+    setFinance([]);
     const enrichedClient = {
       ...newClient,
       isOfficial: true,
@@ -204,6 +216,7 @@ export default function App() {
       }));
     }
     setActiveView('admin');
+    setIsStoreSetupOpen(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -212,7 +225,13 @@ export default function App() {
     setCurrentClient(null);
     localStorage.removeItem('store_current_client');
     saveAuthSession(false);
-    setActiveView('store');
+    setProducts([]);
+    setCategories([]);
+    setTags([]);
+    setCoupons([]);
+    setOrders([]);
+    setFinance([]);
+    setActiveView('landing');
   };
 
   const handleEnterStore = async (slug?: string | any) => {
