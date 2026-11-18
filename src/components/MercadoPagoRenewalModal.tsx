@@ -476,20 +476,12 @@ export const MercadoPagoRenewalModal: React.FC<MercadoPagoRenewalModalProps> = (
                 </div>
               )}
 
-              {/* Quick simulation helper for instant developer test */}
-              <div className="pt-2 border-t border-[#222228] flex items-center justify-between text-[11px] text-stone-500">
+              {/* Security info */}
+              <div className="pt-2 border-t border-[#222228] flex items-center justify-center text-[11px] text-stone-500">
                 <span className="flex items-center gap-1">
                   <ShieldCheck className="w-3.5 h-3.5 text-[#D4AF37]" />
                   Transação 100% Criptografada
                 </span>
-                <button
-                  type="button"
-                  onClick={completeRenewal}
-                  className="text-stone-500 hover:text-[#D4AF37] text-[10px] underline cursor-pointer"
-                  title="Simula a confirmação do pagamento para testes imediatos"
-                >
-                  Simular Aprovação (Teste)
-                </button>
               </div>
             </div>
           )}
