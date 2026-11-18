@@ -100,7 +100,7 @@ export async function createMercadoPagoPixPayment(clientInfo: {
   // Fallback robust Pix generator with valid EMV format and CRC16 checksum
   const mockPaymentId = 'pix-instant-' + Date.now();
   const validPixCopiaECola = generatePixPayload(
-    'samuellsilvva02@gmail.com',
+    'a8d6dde8-33ae-45c8-b88a-5023cc204a55',
     SINGLE_PLAN_CONFIG.price,
     'SF TECNOLOGIA',
     'SAO PAULO',
