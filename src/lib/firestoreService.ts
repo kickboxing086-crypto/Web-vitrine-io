@@ -769,26 +769,8 @@ export const saveClient = async (clientData: any) => {
         announcementBannerText: `💎 Bem-vindo à vitrine oficial da ${normalizedClient.storeName}! Explore o catálogo e faça seu pedido direto pelo WhatsApp.`,
       };
       await setDoc(tenantSettingsRef, initialTenantSettings, { merge: true });
-
-      // Pre-seed starter categories for this tenant if empty
-      const tenantCatCol = getCollectionRef(COLLECTIONS.CATEGORIES, clientId);
-      const catSnap = await getDocs(tenantCatCol);
-      if (catSnap.empty) {
-        for (const cat of initialCategories) {
-          await setDoc(doc(tenantCatCol, cat.id), cat);
-        }
-      }
-
-      // Pre-seed starter tags for this tenant if empty
-      const tenantTagsCol = getCollectionRef(COLLECTIONS.TAGS, clientId);
-      const tagsSnap = await getDocs(tenantTagsCol);
-      if (tagsSnap.empty) {
-        for (const tag of initialTags) {
-          await setDoc(doc(tenantTagsCol, tag.id), tag);
-        }
-      }
     } catch (tenantErr) {
-      console.warn('Could not pre-seed tenant settings/categories:', tenantErr);
+      console.warn('Could not initialize tenant settings:', tenantErr);
     }
   } catch (error) {
     console.error('Error saving client:', error);
