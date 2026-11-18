@@ -22,6 +22,7 @@ interface LandingHeroModalProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenLogin: () => void;
+  onOpenRegister?: () => void;
   onEnterStore: (slug?: string) => void;
 }
 
@@ -29,15 +30,10 @@ export const LandingHeroModal: React.FC<LandingHeroModalProps> = ({
   isOpen,
   onClose,
   onOpenLogin,
+  onOpenRegister,
   onEnterStore,
 }) => {
   if (!isOpen) return null;
-
-  const handleAcquireWhatsapp = () => {
-    const phone = '5584986113980';
-    const message = encodeURIComponent('Olá! Gostaria de adquirir o sistema da Web Vitrine por R$ 29,99/mês.');
-    window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
-  };
 
   return (
     <AnimatePresence>
@@ -171,12 +167,14 @@ export const LandingHeroModal: React.FC<LandingHeroModalProps> = ({
               <div className="space-y-3 pt-2">
                 <button
                   type="button"
-                  onClick={handleAcquireWhatsapp}
-                  className="w-full py-3.5 px-6 bg-gradient-to-r from-[#25D366] to-[#1EBE5D] hover:from-[#20bd5a] hover:to-[#19a750] text-white rounded-2xl font-bold text-sm shadow-xl flex items-center justify-center space-x-2.5 transition-all transform hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+                  onClick={() => {
+                    onClose();
+                    if (onOpenRegister) onOpenRegister();
+                  }}
+                  className="w-full py-3.5 px-6 bg-[#D4AF37] hover:bg-[#E5C378] text-stone-950 rounded-2xl font-bold text-sm shadow-xl flex items-center justify-center space-x-2.5 transition-all transform hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
                   id="btn-adquira-aqui-landing"
                 >
-                  <MessageCircle className="w-5 h-5 fill-white" />
-                  <span>Adquira Aqui • R$ 29,99/mês no WhatsApp</span>
+                  <span>Criar Minha Loja Grátis (5 Dias de Acesso)</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
 
@@ -203,11 +201,10 @@ export const LandingHeroModal: React.FC<LandingHeroModalProps> = ({
                       onClose();
                       onOpenLogin();
                     }}
-                    className="inline-flex items-center space-x-1.5 px-4 py-2 bg-stone-800 hover:bg-stone-700 text-stone-200 hover:text-white rounded-xl text-xs font-semibold border border-stone-700 transition-colors cursor-pointer"
+                    className="inline-flex items-center px-4 py-2 bg-stone-800 hover:bg-stone-700 text-stone-200 hover:text-white rounded-xl text-xs font-semibold border border-stone-700 transition-colors cursor-pointer"
                     id="btn-login-from-landing"
                   >
-                    <Lock className="w-3.5 h-3.5 text-[#D4AF37]" />
-                    <span>Acessar Painel (Login & Senha)</span>
+                    <span>Acessar</span>
                   </button>
                 </div>
               </div>

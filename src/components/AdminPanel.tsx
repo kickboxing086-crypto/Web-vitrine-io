@@ -182,6 +182,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   // Product Form Modal state
   const [isEditingProduct, setIsEditingProduct] = useState(false);
+  const [productModalTab, setProductModalTab] = useState<'basic' | 'stock_sizes' | 'photos_colors' | 'details'>('basic');
+  const [costPriceInput, setCostPriceInput] = useState<number | ''>('');
   const [productForm, setProductForm] = useState<Partial<Product>>({});
   const [newColorName, setNewColorName] = useState('');
   const [newColorHex, setNewColorHex] = useState('#F472B6');
@@ -276,21 +278,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       isNew: true,
       isAvailable: true,
       images: [],
-      sizes: [],
+      sizes: ['P', 'M', 'G'],
       colors: [],
-      stock: 0,
-      tags: [],
+      stock: 10, // Stock defaults to 10 so it never shows as Esgotado if CEO forgets!
+      tags: ['Lançamento'],
       fabricDetails: '',
       careInstructions: '',
       viewsCount: 0,
       ordersCount: 0,
       createdAt: new Date().toISOString(),
     });
+    setCostPriceInput('');
+    setProductModalTab('basic');
     setIsEditingProduct(true);
   };
 
   const handleOpenProductEdit = (product: Product) => {
-    setProductForm({ ...product });
+    setProductForm({
+      ...product,
+      stock: product.stock !== undefined ? product.stock : 10,
+    });
+    setCostPriceInput('');
+    setProductModalTab('basic');
     setIsEditingProduct(true);
   };
 
@@ -346,7 +355,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const handleSaveProductForm = (e: React.FormEvent) => {
     e.preventDefault();
     if (!productForm.name || !productForm.price) return;
-    onSaveProduct(productForm as Product);
+    const finalStock = (productForm.stock !== undefined && !isNaN(productForm.stock) && productForm.stock !== null)
+      ? Number(productForm.stock)
+      : 10;
+    const finalProduct: Product = {
+      ...(productForm as Product),
+      stock: finalStock,
+      sizes: productForm.sizes && productForm.sizes.length > 0 ? productForm.sizes : ['M'],
+      images: productForm.images && productForm.images.length > 0 ? productForm.images : ['https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80'],
+      isAvailable: productForm.isAvailable !== false,
+    };
+    onSaveProduct(finalProduct);
     setIsEditingProduct(false);
   };
 
@@ -1651,777 +1670,1037 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         </div>
       )}
 
-      {/* Product Edit / Create Modal with Base64 Photos & Max 10 Photos */}
+      {/* Product Edit / Create Modal with Detailed Sections & Smart Stock */}
       {isEditingProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/70 backdrop-blur-xs overflow-y-auto">
-          <div className="relative w-full max-w-2xl bg-stone-50 rounded-3xl border border-[#E3D7CA] shadow-2xl p-6 sm:p-8 my-auto max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-4 border-b border-stone-200 mb-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-xs overflow-y-auto">
+          <div className="relative w-full max-w-3xl bg-stone-50 rounded-3xl border border-[#E3D7CA] shadow-2xl p-5 sm:p-7 my-auto max-h-[92vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-stone-200 mb-4">
               <div>
-                <h3 className="font-serif-luxury text-xl font-bold text-stone-900">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="px-2.5 py-0.5 rounded-full bg-stone-900 text-brand-primary text-[10px] font-extrabold uppercase tracking-wider">
+                    {productForm.id?.startsWith('prod-') && !products.find((p) => p.id === productForm.id)
+                      ? 'Nova Publicação'
+                      : 'Edição de Peça'}
+                  </span>
+                  <span className="text-xs text-stone-500">
+                    Estoque padrão de 10 unidades ativo
+                  </span>
+                </div>
+                <h3 className="font-serif-luxury text-xl sm:text-2xl font-bold text-stone-900">
                   {productForm.id?.startsWith('prod-') && !products.find((p) => p.id === productForm.id)
-                    ? 'Cadastrar Nova Peça'
-                    : 'Editar Peça'}
+                    ? 'Publicar Nova Peça'
+                    : 'Editar Peça do Catálogo'}
                 </h3>
-                <p className="text-xs text-stone-500">
-                  Adicione até 10 fotos em Base64, organize tamanhos, tags e valores
-                </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsEditingProduct(false)}
-                className="p-2 text-stone-400 hover:text-stone-700 rounded-full cursor-pointer"
+                className="p-2 text-stone-400 hover:text-stone-700 rounded-full cursor-pointer hover:bg-stone-200 transition-colors"
+                title="Fechar"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveProductForm} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">
-                  Nome da Peça *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={productForm.name || ''}
-                  onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
-                  placeholder="Ex: Blazer Alfaiataria Italiano"
-                  className="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-xs text-stone-900 font-medium"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="relative">
-                  <label className="block text-xs font-semibold text-stone-700 mb-1">
-                    Categoria *
-                  </label>
+            {/* Tab Navigation */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1.5 bg-stone-200/80 rounded-2xl mb-5">
+              {[
+                { id: 'basic', label: '1. Geral & Preços', icon: TagIcon },
+                { id: 'stock_sizes', label: '2. Estoque & Tamanhos', icon: Package },
+                { id: 'photos_colors', label: '3. Fotos & Cores', icon: ImageIcon },
+                { id: 'details', label: '4. Ficha & Cuidados', icon: Edit3 },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                const isActive = productModalTab === tab.id;
+                return (
                   <button
+                    key={tab.id}
                     type="button"
-                    onClick={() => setIsProductCategoryOpen(!isProductCategoryOpen)}
-                    className="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-xs text-stone-900 font-medium flex items-center justify-between shadow-2xs cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all"
+                    onClick={() => setProductModalTab(tab.id as any)}
+                    className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      isActive
+                        ? 'bg-stone-900 text-[#D4AF37] shadow-sm'
+                        : 'text-stone-700 hover:text-stone-900 hover:bg-stone-300/60'
+                    }`}
                   >
-                    <span>{productForm.category || categories[0]?.name || 'Selecione a Categoria'}</span>
-                    <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+                    <Icon className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">{tab.label}</span>
                   </button>
+                );
+              })}
+            </div>
 
-                  <AnimatePresence>
-                    {isProductCategoryOpen && (
-                      <>
-                        <div
-                          className="fixed inset-0 z-40"
-                          onClick={() => setIsProductCategoryOpen(false)}
-                        />
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.95, y: 5 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.95, y: 5 }}
-                          transition={{ duration: 0.12, ease: "easeOut" }}
-                          className="absolute left-0 right-0 top-full mt-2 max-h-60 overflow-y-auto bg-stone-900 border border-stone-300 shadow-xl rounded-2xl p-2 z-50 space-y-1"
-                        >
-                          {categories.map((c) => {
-                            const isSelected = (productForm.category || categories[0]?.name) === c.name;
-                            return (
-                              <button
-                                key={c.id}
-                                type="button"
-                                onClick={() => {
-                                  setProductForm({ ...productForm, category: c.name });
-                                  setIsProductCategoryOpen(false);
-                                }}
-                                className={`w-full text-left px-3 py-2 text-xs rounded-xl transition-all flex items-center justify-between cursor-pointer ${
-                                  isSelected
-                                    ? 'bg-stone-800 text-brand-primary font-bold shadow-xs'
-                                    : 'text-stone-300 hover:bg-stone-800/60 hover:text-white'
-                                }`}
-                              >
-                                <span>{c.name}</span>
-                                {isSelected && (
-                                  <Check className="w-3.5 h-3.5 text-brand-primary" />
-                                )}
-                              </button>
-                            );
-                          })}
-                        </motion.div>
-                      </>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 mb-1">
-                    Estoque (Unidades)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={productForm.stock ?? 10}
-                    onChange={(e) =>
-                      setProductForm({ ...productForm, stock: parseInt(e.target.value) || 0 })
-                    }
-                    className="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-xs text-stone-900 font-medium"
-                  />
-                </div>
-              </div>
-
-              {/* Pricing & Promo */}
-              <div className="p-4 bg-white rounded-2xl border border-stone-200 space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <form onSubmit={handleSaveProductForm} className="space-y-5">
+              {/* TAB 1: GERAL & PREÇOS */}
+              {productModalTab === 'basic' && (
+                <div className="space-y-4">
+                  {/* Name */}
                   <div>
-                    <label className="block text-xs font-semibold text-stone-700 mb-1">
-                      Preço Original (R$) *
+                    <label className="block text-xs font-bold text-stone-800 mb-1">
+                      Nome da Peça *
                     </label>
                     <input
-                      type="number"
-                      step="0.01"
+                      type="text"
                       required
-                      value={productForm.price || ''}
-                      onChange={(e) =>
-                        setProductForm({ ...productForm, price: parseFloat(e.target.value) || 0 })
-                      }
-                      className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs text-stone-900 font-bold"
+                      value={productForm.name || ''}
+                      onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
+                      placeholder="Ex: Vestido Midi Linho Puro Italiano"
+                      className="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-xs text-stone-900 font-semibold focus:outline-none focus:ring-2 focus:ring-stone-800"
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-stone-700 mb-1">
-                      Preço Promocional (R$)
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={productForm.promotionalPrice || ''}
-                      onChange={(e) => {
-                        const val = parseFloat(e.target.value);
-                        setProductForm({
-                          ...productForm,
-                          promotionalPrice: val > 0 ? val : undefined,
-                          isOnSale: val > 0,
-                        });
-                      }}
-                      placeholder="Deixe vazio se sem promoção"
-                      className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs text-stone-900 font-bold text-red-700"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-6 pt-2 text-xs">
-                  <label className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={productForm.isAvailable !== false}
-                      onChange={(e) =>
-                        setProductForm({ ...productForm, isAvailable: e.target.checked })
-                      }
-                      className="rounded text-stone-900 focus:ring-stone-900"
-                    />
-                    <span className="font-semibold text-stone-900">Exibir na Vitrine Pública</span>
-                  </label>
-
-                  <label className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={productForm.isOnSale || false}
-                      onChange={(e) =>
-                        setProductForm({ ...productForm, isOnSale: e.target.checked })
-                      }
-                      className="rounded text-stone-900 focus:ring-stone-900"
-                    />
-                    <span className="font-medium text-stone-800">Em Promoção</span>
-                  </label>
-
-                  <label className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={productForm.isNew || false}
-                      onChange={(e) =>
-                        setProductForm({ ...productForm, isNew: e.target.checked })
-                      }
-                      className="rounded text-stone-900 focus:ring-stone-900"
-                    />
-                    <span className="font-medium text-stone-800">Marcar como Lançamento</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Tags Selector & Quick Add */}
-              <div className="p-4 bg-white rounded-2xl border border-stone-200 space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="block text-xs font-bold text-stone-800 uppercase tracking-wide">
-                    Tags da Peça (para organização no catálogo)
-                  </label>
-                  <span className="text-[11px] text-stone-500">
-                    Clique nas tags para vincular
-                  </span>
-                </div>
-
-                {/* Available Tag Pills to toggle */}
-                <div className="flex flex-wrap gap-1.5">
-                  {allAvailableTags.map((tName) => {
-                    const isSelected = productForm.tags?.includes(tName);
-                    return (
-                      <button
-                        key={tName}
-                        type="button"
-                        onClick={() => {
-                          const current = productForm.tags || [];
-                          if (isSelected) {
-                            setProductForm({
-                              ...productForm,
-                              tags: current.filter((t) => t !== tName),
-                            });
-                          } else {
-                            setProductForm({
-                              ...productForm,
-                              tags: [...current, tName],
-                            });
-                          }
-                        }}
-                        className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center space-x-1 ${
-                          isSelected
-                            ? 'bg-brand-primary-darker text-white shadow-xs'
-                            : 'bg-stone-50 text-stone-700 hover:bg-stone-200 border border-stone-300'
-                        }`}
-                      >
-                        <span>#{tName}</span>
-                        <span>{isSelected ? '✓' : '+'}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Custom Tag Input */}
-                <div className="flex gap-2 pt-1">
-                  <input
-                    type="text"
-                    placeholder="Adicionar nova tag personalizada..."
-                    value={newTagInput}
-                    onChange={(e) => setNewTagInput(e.target.value)}
-                    className="flex-1 px-3 py-1.5 bg-stone-50 border border-stone-300 rounded-xl text-xs"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!newTagInput.trim()) return;
-                      const formatted = newTagInput.trim().replace(/^#/, '');
-                      const cur = productForm.tags || [];
-                      if (!cur.includes(formatted)) {
-                        setProductForm({ ...productForm, tags: [...cur, formatted] });
-                      }
-                      setNewTagInput('');
-                    }}
-                    className="px-3.5 py-1.5 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold cursor-pointer"
-                  >
-                    + Adicionar Tag
-                  </button>
-                </div>
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">
-                  Descrição / Detalhes
-                </label>
-                <textarea
-                  rows={2}
-                  value={productForm.description || ''}
-                  onChange={(e) =>
-                    setProductForm({ ...productForm, description: e.target.value })
-                  }
-                  className="w-full px-3.5 py-2 bg-white border border-stone-300 rounded-xl text-xs text-stone-900"
-                />
-              </div>
-
-              {/* Fabric details & Care */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 mb-1">
-                    Composição do Tecido
-                  </label>
-                  <input
-                    type="text"
-                    value={productForm.fabricDetails || ''}
-                    onChange={(e) =>
-                      setProductForm({ ...productForm, fabricDetails: e.target.value })
-                    }
-                    placeholder="Ex: 100% Linho Puro Europeu"
-                    className="w-full px-3.5 py-2 bg-white border border-stone-300 rounded-xl text-xs text-stone-900"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 mb-1">
-                    Cuidados de Lavagem
-                  </label>
-                  <input
-                    type="text"
-                    value={productForm.careInstructions || ''}
-                    onChange={(e) =>
-                      setProductForm({ ...productForm, careInstructions: e.target.value })
-                    }
-                    placeholder="Ex: Lavagem suave à mão"
-                    className="w-full px-3.5 py-2 bg-white border border-stone-300 rounded-xl text-xs text-stone-900"
-                  />
-                </div>
-              </div>
-
-              {/* Sizes */}
-              <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">
-                  Tamanhos Disponíveis
-                </label>
-                <div className="flex gap-2 mb-2">
-                  <input
-                    type="text"
-                    placeholder="Adicionar tamanho (ex: P, M, 38, 40...)"
-                    value={newSizeInput}
-                    onChange={(e) => setNewSizeInput(e.target.value.toUpperCase())}
-                    className="flex-1 px-3 py-1.5 bg-white border border-stone-300 rounded-xl text-xs"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!newSizeInput.trim()) return;
-                      const current = productForm.sizes || [];
-                      if (!current.includes(newSizeInput.trim())) {
-                        setProductForm({
-                          ...productForm,
-                          sizes: [...current, newSizeInput.trim()],
-                        });
-                      }
-                      setNewSizeInput('');
-                    }}
-                    className="px-3 py-1.5 bg-stone-900 text-white rounded-xl text-xs font-semibold cursor-pointer"
-                  >
-                    + Adicionar
-                  </button>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {productForm.sizes?.map((sz, szIdx) => (
-                    <span
-                      key={`${sz}-${szIdx}`}
-                      className="inline-flex items-center gap-1 bg-white border border-stone-300 text-stone-800 text-xs px-2.5 py-1 rounded-lg"
-                    >
-                      {sz}
+                  {/* Category */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="relative">
+                      <label className="block text-xs font-bold text-stone-800 mb-1">
+                        Categoria Principal *
+                      </label>
                       <button
                         type="button"
-                        onClick={() =>
-                          setProductForm({
-                            ...productForm,
-                            sizes: productForm.sizes?.filter((s) => s !== sz),
-                          })
-                        }
-                        className="text-stone-400 hover:text-red-600 ml-1 cursor-pointer"
+                        onClick={() => setIsProductCategoryOpen(!isProductCategoryOpen)}
+                        className="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-xs text-stone-900 font-medium flex items-center justify-between shadow-2xs cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all"
                       >
-                        ✕
+                        <span>{productForm.category || categories[0]?.name || 'Selecione a Categoria'}</span>
+                        <ChevronDown className="w-3.5 h-3.5 opacity-70" />
                       </button>
-                    </span>
-                  ))}
-                </div>
-              </div>
 
-              {/* Shopee-Style Color Palette Variants with Instant Image Binding */}
-              <div className="p-4 bg-white rounded-2xl border border-stone-200 space-y-3.5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="block text-xs font-bold text-stone-900 uppercase tracking-wide">
-                      Variações de Cores da Peça (Estilo Shopee)
-                    </label>
-                    <p className="text-[11px] text-stone-500">
-                      Quando o cliente clica na cor (ex: Rosa), a foto muda automaticamente para a peça daquela cor.
-                    </p>
-                  </div>
-
-                  <label className="flex items-center space-x-2 cursor-pointer bg-stone-50 px-3 py-1.5 rounded-xl border border-stone-300">
-                    <input
-                      type="checkbox"
-                      checked={productForm.hasColors !== false}
-                      onChange={(e) =>
-                        setProductForm({ ...productForm, hasColors: e.target.checked })
-                      }
-                      className="rounded text-stone-900 focus:ring-stone-900"
-                    />
-                    <span className="text-xs font-semibold text-stone-800">
-                      Ativar Cores
-                    </span>
-                  </label>
-                </div>
-
-                {productForm.hasColors !== false && (
-                  <div className="space-y-3 pt-1">
-                    {/* Quick Color Presets */}
-                    <div>
-                      <span className="text-[11px] font-semibold text-stone-600 block mb-1.5">
-                        Sugestões Rápidas de Cores Nobres:
-                      </span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {[
-                          { name: 'Rosa Chiclete', hex: '#F472B6' },
-                          { name: 'Rosa Pastel', hex: '#FBCFE8' },
-                          { name: 'Preto Nobre', hex: '#111111' },
-                          { name: 'Off White', hex: '#FAF8F5' },
-                          { name: 'Terracota', hex: '#C26D53' },
-                          { name: 'Verde Oliva', hex: '#556B2F' },
-                          { name: 'Azul Marinho', hex: '#1E293B' },
-                          { name: 'Dourado Mostarda', hex: '#D97706' },
-                          { name: 'Vinho Marsala', hex: '#881337' },
-                          { name: 'Lavanda', hex: '#A78BFA' },
-                          { name: 'Caramelo', hex: '#B45309' },
-                          { name: 'Nude Areia', hex: '#D7C4B7' },
-                        ].map((preset) => (
-                          <button
-                            key={preset.name}
-                            type="button"
-                            onClick={() => {
-                              setNewColorName(preset.name);
-                              setNewColorHex(preset.hex);
-                            }}
-                            className="inline-flex items-center space-x-1.5 px-2.5 py-1 bg-stone-50 hover:bg-stone-200 border border-stone-300 rounded-lg text-xs text-stone-800 transition-all cursor-pointer"
-                          >
-                            <span
-                              className="w-3 h-3 rounded-full border border-black/15 flex-shrink-0"
-                              style={{ backgroundColor: preset.hex }}
+                      <AnimatePresence>
+                        {isProductCategoryOpen && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-40"
+                              onClick={() => setIsProductCategoryOpen(false)}
                             />
-                            <span>{preset.name}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Add Color Form */}
-                    <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 space-y-2.5">
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                        <div className="sm:col-span-1">
-                          <label className="block text-[11px] font-semibold text-stone-700 mb-1">
-                            Nome da Cor *
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="Ex: Rosa, Preto, Off White..."
-                            value={newColorName}
-                            onChange={(e) => setNewColorName(e.target.value)}
-                            className="w-full px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs"
-                          />
-                        </div>
-
-                        <div className="sm:col-span-1">
-                          <label className="block text-[11px] font-semibold text-stone-700 mb-1">
-                            Tom / Hexadecimal
-                          </label>
-                          <div className="flex items-center space-x-2">
-                            <input
-                              type="color"
-                              value={newColorHex}
-                              onChange={(e) => setNewColorHex(e.target.value)}
-                              className="w-8 h-8 rounded-md border border-stone-300 cursor-pointer p-0.5"
-                            />
-                            <input
-                              type="text"
-                              value={newColorHex}
-                              onChange={(e) => setNewColorHex(e.target.value)}
-                              className="w-full px-2 py-1.5 bg-white border border-stone-300 rounded-lg text-xs font-mono"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="sm:col-span-1 relative">
-                          <label className="block text-[11px] font-semibold text-stone-700 mb-1">
-                            Vincular Foto da Cor
-                          </label>
-                          {/* Choose from existing photos or paste URL */}
-                          <button
-                            type="button"
-                            onClick={() => setIsColorImageOpen(!isColorImageOpen)}
-                            className="w-full px-2 py-1.5 bg-white border border-stone-300 rounded-lg text-xs flex items-center justify-between shadow-2xs cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all text-left font-medium text-stone-800"
-                          >
-                            <span>
-                              {newColorImageUrl ? (
-                                <>
-                                  Foto {((productForm.images || []).indexOf(newColorImageUrl) + 1) || 'URL'} 
-                                  {((productForm.images || []).indexOf(newColorImageUrl) === 0) ? ' (Capa)' : ''}
-                                </>
-                              ) : (
-                                '(Usar foto principal)'
-                              )}
-                            </span>
-                            <ChevronDown className="w-3.5 h-3.5 opacity-70 shrink-0" />
-                          </button>
-
-                          <AnimatePresence>
-                            {isColorImageOpen && (
-                              <>
-                                <div
-                                  className="fixed inset-0 z-40"
-                                  onClick={() => setIsColorImageOpen(false)}
-                                />
-                                <motion.div
-                                  initial={{ opacity: 0, scale: 0.95, y: 5 }}
-                                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                                  exit={{ opacity: 0, scale: 0.95, y: 5 }}
-                                  transition={{ duration: 0.12, ease: "easeOut" }}
-                                  className="absolute left-0 right-0 top-full mt-2 max-h-60 overflow-y-auto bg-stone-900 border border-stone-300 shadow-xl rounded-2xl p-2 z-50 space-y-1 text-left"
-                                >
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.95, y: 5 }}
+                              animate={{ opacity: 1, scale: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.95, y: 5 }}
+                              transition={{ duration: 0.12, ease: "easeOut" }}
+                              className="absolute left-0 right-0 top-full mt-2 max-h-60 overflow-y-auto bg-stone-900 border border-stone-300 shadow-xl rounded-2xl p-2 z-50 space-y-1"
+                            >
+                              {categories.map((c) => {
+                                const isSelected = (productForm.category || categories[0]?.name) === c.name;
+                                return (
                                   <button
+                                    key={c.id}
                                     type="button"
                                     onClick={() => {
-                                      setNewColorImageUrl('');
-                                      setIsColorImageOpen(false);
+                                      setProductForm({ ...productForm, category: c.name });
+                                      setIsProductCategoryOpen(false);
                                     }}
                                     className={`w-full text-left px-3 py-2 text-xs rounded-xl transition-all flex items-center justify-between cursor-pointer ${
-                                      !newColorImageUrl
-                                        ? 'bg-stone-800 text-brand-primary font-bold shadow-xs'
+                                      isSelected
+                                        ? 'bg-stone-800 text-[#D4AF37] font-bold shadow-xs'
                                         : 'text-stone-300 hover:bg-stone-800/60 hover:text-white'
                                     }`}
                                   >
-                                    <span>(Usar foto principal)</span>
-                                    {!newColorImageUrl && (
-                                      <Check className="w-3.5 h-3.5 text-brand-primary" />
+                                    <span>{c.name}</span>
+                                    {isSelected && (
+                                      <Check className="w-3.5 h-3.5 text-[#D4AF37]" />
                                     )}
                                   </button>
+                                );
+                              })}
+                            </motion.div>
+                          </>
+                        )}
+                      </AnimatePresence>
+                    </div>
 
-                                  {(productForm.images || []).map((img, i) => {
-                                    const isSelected = newColorImageUrl === img;
-                                    return (
-                                      <button
-                                        key={i}
-                                        type="button"
-                                        onClick={() => {
-                                          setNewColorImageUrl(img);
-                                          setIsColorImageOpen(false);
-                                        }}
-                                        className={`w-full text-left px-3 py-2 text-xs rounded-xl transition-all flex items-center justify-between cursor-pointer ${
-                                          isSelected
-                                            ? 'bg-stone-800 text-brand-primary font-bold shadow-xs'
-                                            : 'text-stone-300 hover:bg-stone-800/60 hover:text-white'
-                                        }`}
-                                      >
-                                        <span>Foto {i + 1} {i === 0 ? '(Capa)' : ''}</span>
-                                        {isSelected && (
-                                          <Check className="w-3.5 h-3.5 text-brand-primary" />
-                                        )}
-                                      </button>
-                                    );
-                                  })}
-                                </motion.div>
-                              </>
-                            )}
-                          </AnimatePresence>
-                        </div>
+                    <div>
+                      <label className="block text-xs font-bold text-stone-800 mb-1">
+                        Código de Referência (SKU)
+                      </label>
+                      <input
+                        type="text"
+                        value={productForm.id || ''}
+                        disabled
+                        className="w-full px-3.5 py-2.5 bg-stone-100 border border-stone-300 rounded-xl text-xs text-stone-600 font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Pricing Box & Profit Calculator */}
+                  <div className="p-4 bg-white rounded-2xl border border-stone-200 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-stone-900 uppercase tracking-wide">
+                        Precificação & Promoções
+                      </span>
+                      {productForm.price && productForm.price > 0 && productForm.promotionalPrice && productForm.promotionalPrice > 0 && productForm.promotionalPrice < productForm.price && (
+                        <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-[11px] font-bold">
+                          -{Math.round(((productForm.price - productForm.promotionalPrice) / productForm.price) * 100)}% de Desconto
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                          Preço de Venda (R$) *
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          required
+                          value={productForm.price || ''}
+                          onChange={(e) =>
+                            setProductForm({ ...productForm, price: parseFloat(e.target.value) || 0 })
+                          }
+                          placeholder="0,00"
+                          className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs text-stone-900 font-bold"
+                        />
                       </div>
 
-                      <div className="flex items-center justify-between pt-1">
-                        <span className="text-[10px] text-stone-500">
-                          {newColorImageUrl ? '✓ Foto específica associada a esta cor' : 'Dica: Carregue as fotos abaixo para vincular a foto da cor'}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (!newColorName.trim()) return;
-                            const curColors = productForm.colors || [];
-                            const newColorObj = {
-                              name: newColorName.trim(),
-                              hex: newColorHex,
-                              imageUrl: newColorImageUrl.trim() || undefined,
-                            };
+                      <div>
+                        <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                          Preço Promocional (R$)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={productForm.promotionalPrice || ''}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value);
                             setProductForm({
                               ...productForm,
-                              colors: [...curColors, newColorObj],
+                              promotionalPrice: val > 0 ? val : undefined,
+                              isOnSale: val > 0,
                             });
-                            setNewColorName('');
-                            setNewColorImageUrl('');
                           }}
-                          className="px-4 py-1.5 bg-stone-900 hover:bg-stone-800 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
-                        >
-                          + Adicionar Cor
-                        </button>
+                          placeholder="Deixe vazio se sem promo"
+                          className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs text-stone-900 font-bold text-red-700"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                          Preço de Custo (Opcional)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={costPriceInput}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value);
+                            setCostPriceInput(isNaN(val) ? '' : val);
+                          }}
+                          placeholder="Ex: 45.00"
+                          className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs text-stone-900 font-medium"
+                        />
                       </div>
                     </div>
 
-                    {/* Configured Colors List */}
-                    <div className="space-y-1.5">
-                      <span className="text-[11px] font-bold text-stone-700 block">
-                        Cores Ativas nesta Peça ({productForm.colors?.length || 0}):
-                      </span>
-
-                      {(!productForm.colors || productForm.colors.length === 0) && (
-                        <p className="text-xs text-stone-400 italic py-1">
-                          Nenhuma cor adicionada. A peça será exibida sem seletor de cor.
-                        </p>
-                      )}
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {productForm.colors?.map((c, idx) => (
-                          <div
-                            key={idx}
-                            className="flex items-center justify-between p-2 bg-stone-50 border border-stone-200 rounded-xl text-xs"
-                          >
-                            <div className="flex items-center space-x-2.5">
-                              <span
-                                className="w-5 h-5 rounded-full border border-black/20 shrink-0 shadow-2xs"
-                                style={{ backgroundColor: c.hex }}
-                              />
-                              <div>
-                                <span className="font-bold text-stone-900 block leading-tight">
-                                  {c.name}
-                                </span>
-                                <span className="text-[10px] text-stone-500 font-mono">
-                                  {c.hex} {c.imageUrl ? '• Foto vinculada' : ''}
-                                </span>
-                              </div>
-                            </div>
-
-                            {c.imageUrl && (
-                              <img
-                                src={c.imageUrl}
-                                alt={c.name}
-                                className="w-8 h-8 rounded-lg object-cover border border-stone-300"
-                              />
+                    {/* Calculated Margin Info */}
+                    {costPriceInput !== '' && Number(costPriceInput) > 0 && productForm.price && productForm.price > 0 && (
+                      <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-xs text-emerald-800">
+                        <span>
+                          Margem Bruta por Peça:{' '}
+                          <strong>
+                            {formatCurrency(
+                              (productForm.isOnSale && productForm.promotionalPrice ? productForm.promotionalPrice : productForm.price) -
+                                Number(costPriceInput)
                             )}
+                          </strong>
+                        </span>
+                        <span className="font-bold">
+                          {Math.round(
+                            (((productForm.isOnSale && productForm.promotionalPrice ? productForm.promotionalPrice : productForm.price) -
+                              Number(costPriceInput)) /
+                              Number(costPriceInput)) *
+                              100
+                          )}
+                          % de Lucro
+                        </span>
+                      </div>
+                    )}
 
-                            <button
-                              type="button"
-                              onClick={() => {
+                    {/* Badges / Visibility Toggles */}
+                    <div className="flex flex-wrap items-center gap-5 pt-2 text-xs border-t border-stone-100">
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={productForm.isAvailable !== false}
+                          onChange={(e) =>
+                            setProductForm({ ...productForm, isAvailable: e.target.checked })
+                          }
+                          className="rounded text-stone-900 focus:ring-stone-900"
+                        />
+                        <span className="font-semibold text-stone-900">Exibir na Vitrine Pública</span>
+                      </label>
+
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={productForm.isOnSale || false}
+                          onChange={(e) =>
+                            setProductForm({ ...productForm, isOnSale: e.target.checked })
+                          }
+                          className="rounded text-stone-900 focus:ring-stone-900"
+                        />
+                        <span className="font-medium text-stone-800">Em Promoção</span>
+                      </label>
+
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={productForm.isNew !== false}
+                          onChange={(e) =>
+                            setProductForm({ ...productForm, isNew: e.target.checked })
+                          }
+                          className="rounded text-stone-900 focus:ring-stone-900"
+                        />
+                        <span className="font-medium text-stone-800">Marcar como Lançamento</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Tags */}
+                  <div className="p-4 bg-white rounded-2xl border border-stone-200 space-y-2.5">
+                    <label className="block text-xs font-bold text-stone-800 uppercase tracking-wide">
+                      Tags da Peça (Filtros no Catálogo)
+                    </label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {allAvailableTags.map((tName) => {
+                        const isSelected = productForm.tags?.includes(tName);
+                        return (
+                          <button
+                            key={tName}
+                            type="button"
+                            onClick={() => {
+                              const current = productForm.tags || [];
+                              if (isSelected) {
                                 setProductForm({
                                   ...productForm,
-                                  colors: productForm.colors?.filter((_, i) => i !== idx),
+                                  tags: current.filter((t) => t !== tName),
                                 });
-                              }}
-                              className="text-stone-400 hover:text-red-600 p-1 cursor-pointer"
-                              title="Remover cor"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
+                              } else {
+                                setProductForm({
+                                  ...productForm,
+                                  tags: [...current, tName],
+                                });
+                              }
+                            }}
+                            className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center space-x-1 ${
+                              isSelected
+                                ? 'bg-stone-900 text-[#D4AF37] shadow-xs'
+                                : 'bg-stone-100 text-stone-700 hover:bg-stone-200 border border-stone-300'
+                            }`}
+                          >
+                            <span>#{tName}</span>
+                            <span>{isSelected ? '✓' : '+'}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="flex gap-2 pt-1">
+                      <input
+                        type="text"
+                        placeholder="Adicionar nova tag personalizada..."
+                        value={newTagInput}
+                        onChange={(e) => setNewTagInput(e.target.value)}
+                        className="flex-1 px-3 py-1.5 bg-stone-50 border border-stone-300 rounded-xl text-xs"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!newTagInput.trim()) return;
+                          const formatted = newTagInput.trim().replace(/^#/, '');
+                          const cur = productForm.tags || [];
+                          if (!cur.includes(formatted)) {
+                            setProductForm({ ...productForm, tags: [...cur, formatted] });
+                          }
+                          setNewTagInput('');
+                        }}
+                        className="px-3.5 py-1.5 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold cursor-pointer"
+                      >
+                        + Adicionar Tag
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: ESTOQUE INTELIGENTE & TAMANHOS */}
+              {productModalTab === 'stock_sizes' && (
+                <div className="space-y-4">
+                  {/* Stock Controls */}
+                  <div className="p-4 bg-white rounded-2xl border border-stone-200 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="block text-xs font-bold text-stone-900 uppercase tracking-wide">
+                          Estoque Disponível da Peça
+                        </label>
+                        <p className="text-[11px] text-stone-500">
+                          O sistema inicia com 10 unidades para nunca exibir "Esgotado" por engano.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        {(productForm.stock ?? 10) > 3 ? (
+                          <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold">
+                            ✓ Estoque Saudável
+                          </span>
+                        ) : (productForm.stock ?? 10) > 0 ? (
+                          <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[11px] font-bold">
+                            ⚠️ Últimas Peças
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-1 rounded-full bg-red-100 text-red-800 text-[11px] font-bold">
+                            ✕ Esgotado
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center border border-stone-300 rounded-xl bg-stone-50">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setProductForm((prev) => ({
+                              ...prev,
+                              stock: Math.max(0, (prev.stock ?? 10) - 1),
+                            }))
+                          }
+                          className="px-3.5 py-2 text-stone-600 hover:text-stone-900 font-bold text-base cursor-pointer"
+                        >
+                          -
+                        </button>
+                        <input
+                          type="number"
+                          min="0"
+                          value={productForm.stock ?? 10}
+                          onChange={(e) =>
+                            setProductForm({ ...productForm, stock: parseInt(e.target.value) || 0 })
+                          }
+                          className="w-16 text-center py-2 bg-transparent text-stone-900 font-bold text-sm focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setProductForm((prev) => ({
+                              ...prev,
+                              stock: (prev.stock ?? 10) + 1,
+                            }))
+                          }
+                          className="px-3.5 py-2 text-stone-600 hover:text-stone-900 font-bold text-base cursor-pointer"
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {[5, 10, 20, 50].map((quickQty) => (
+                          <button
+                            key={quickQty}
+                            type="button"
+                            onClick={() => setProductForm({ ...productForm, stock: quickQty })}
+                            className="px-2.5 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 border border-stone-300 text-xs text-stone-800 font-semibold cursor-pointer"
+                          >
+                            Definir {quickQty} un.
+                          </button>
                         ))}
                       </div>
                     </div>
                   </div>
-                )}
-              </div>
 
-              {/* Photos Management (Base64 + Max 10 Photos) */}
-              <div className="p-4 bg-white rounded-2xl border border-stone-200 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="block text-xs font-bold text-stone-900 uppercase tracking-wide">
-                      Galeria de Fotos da Peça (Até 10 Fotos em Base64)
-                    </label>
-                    <p className="text-[11px] text-stone-500">
-                      A 1ª foto é a capa principal exibida na vitrine. Você pode reordenar as fotos pelas setas.
-                    </p>
-                  </div>
+                  {/* Sizes Grade with 1-Click Presets */}
+                  <div className="p-4 bg-white rounded-2xl border border-stone-200 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-bold text-stone-900 uppercase tracking-wide">
+                        Grade de Tamanhos Disponíveis
+                      </label>
+                      <span className="text-[11px] text-stone-500">
+                        {productForm.sizes?.length || 0} tamanhos ativos
+                      </span>
+                    </div>
 
-                  <div className="flex items-center space-x-1.5 bg-stone-50 px-2.5 py-1 border border-stone-300 rounded-lg text-xs font-bold">
-                    <span className={(productForm.images?.length || 0) >= 10 ? 'text-amber-600' : 'text-stone-800'}>
-                      {productForm.images?.length || 0} / 10 fotos
-                    </span>
-                  </div>
-                </div>
-
-                {/* File Upload Dropzone / Button */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleProductImageFiles}
-                  className="hidden"
-                  id="product-photo-upload-input"
-                  multiple
-                />
-
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <button
-                    type="button"
-                    disabled={isUploadingImages || (productForm.images?.length || 0) >= 10}
-                    onClick={() => fileInputRef.current?.click()}
-                    className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl border-2 border-dashed font-semibold text-xs transition-all cursor-pointer ${
-                      (productForm.images?.length || 0) >= 10
-                        ? 'bg-stone-100 border-stone-300 text-stone-400 cursor-not-allowed'
-                        : 'bg-stone-50 hover:bg-[#F4ECE1] border-stone-300 text-stone-800'
-                    }`}
-                  >
-                    <Upload className="w-4 h-4 text-brand-primary-darker" />
-                    <span>
-                      {isUploadingImages
-                        ? 'Processando fotos (Base64)...'
-                        : (productForm.images?.length || 0) >= 10
-                        ? 'Limite de 10 fotos atingido'
-                        : 'Selecionar Fotos (Base64)'}
-                    </span>
-                  </button>
-                </div>
-
-                {/* Secondary URL input fallback */}
-                <div className="flex gap-2">
-                  <input
-                    type="url"
-                    placeholder="Ou cole o link direto da imagem (URL)..."
-                    value={newImageInput}
-                    onChange={(e) => setNewImageInput(e.target.value)}
-                    disabled={(productForm.images?.length || 0) >= 10}
-                    className="flex-1 px-3 py-1.5 bg-stone-50 border border-stone-300 rounded-xl text-xs disabled:opacity-50"
-                  />
-                  <button
-                    type="button"
-                    disabled={(productForm.images?.length || 0) >= 10 || !newImageInput.trim()}
-                    onClick={() => {
-                      if (!newImageInput.trim()) return;
-                      const cur = productForm.images || [];
-                      if (cur.length >= 10) return;
-                      setProductForm({ ...productForm, images: [...cur, newImageInput.trim()] });
-                      setNewImageInput('');
-                    }}
-                    className="px-3 py-1.5 bg-stone-800 hover:bg-stone-900 disabled:opacity-40 text-white rounded-xl text-xs font-semibold cursor-pointer"
-                  >
-                    + URL
-                  </button>
-                </div>
-
-                {/* Main Photo Preview (Only Principal) */}
-                {productForm.images && productForm.images.length > 0 && (
-                  <div className="pt-4 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
-                    {productForm.images.map((imgUrl, idx) => (
-                      <div key={idx} className={`relative aspect-[3/4] w-full rounded-2xl overflow-hidden shadow-sm border-2 ${idx === 0 ? 'border-brand-primary-darker shadow-lg' : 'border-stone-200'}`}>
-                        <img
-                          src={imgUrl}
-                          alt={`Foto ${idx + 1}`}
-                          className="w-full h-full object-cover object-top"
-                        />
+                    {/* Quick 1-Click Grade Presets */}
+                    <div className="space-y-1.5">
+                      <span className="text-[11px] font-semibold text-stone-600 block">
+                        Adicionar Grade Rápida:
+                      </span>
+                      <div className="flex flex-wrap gap-2">
                         <button
                           type="button"
-                          onClick={() => handleRemoveProductImage(idx)}
-                          className="absolute top-1.5 right-1.5 p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-md cursor-pointer transition-colors"
-                          title="Remover foto"
+                          onClick={() => {
+                            const cur = productForm.sizes || [];
+                            const combined = Array.from(new Set([...cur, 'P', 'M', 'G', 'GG']));
+                            setProductForm({ ...productForm, sizes: combined });
+                          }}
+                          className="px-3 py-1.5 bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-xl text-xs font-semibold text-stone-800 cursor-pointer"
                         >
-                          <X className="w-3.5 h-3.5" />
+                          + Grade Roupas (P, M, G, GG)
                         </button>
-                        {idx === 0 && (
-                          <div className="absolute bottom-0 inset-x-0 bg-brand-primary-darker/90 text-white text-[9px] font-bold py-1 text-center uppercase tracking-wider">
-                            ⭐ Capa
-                          </div>
-                        )}
-                        {idx > 0 && (
-                           <button
-                             type="button"
-                             onClick={() => {
-                               const arr = [...(productForm.images || [])];
-                               const temp = arr[0];
-                               arr[0] = arr[idx];
-                               arr[idx] = temp;
-                               setProductForm({ ...productForm, images: arr });
-                             }}
-                             className="absolute bottom-1.5 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-stone-900/80 hover:bg-stone-900 backdrop-blur-xs text-white text-[9px] font-bold rounded-lg cursor-pointer whitespace-nowrap"
-                           >
-                             Tornar Capa
-                           </button>
-                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const cur = productForm.sizes || [];
+                            const combined = Array.from(new Set([...cur, 'PP', 'P', 'M', 'G', 'GG', 'XG']));
+                            setProductForm({ ...productForm, sizes: combined });
+                          }}
+                          className="px-3 py-1.5 bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-xl text-xs font-semibold text-stone-800 cursor-pointer"
+                        >
+                          + Grade Completa (PP ao XG)
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const cur = productForm.sizes || [];
+                            const combined = Array.from(new Set([...cur, '36', '38', '40', '42', '44']));
+                            setProductForm({ ...productForm, sizes: combined });
+                          }}
+                          className="px-3 py-1.5 bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-xl text-xs font-semibold text-stone-800 cursor-pointer"
+                        >
+                          + Numeração (36 ao 44)
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setProductForm({ ...productForm, sizes: ['Único'] });
+                          }}
+                          className="px-3 py-1.5 bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-xl text-xs font-semibold text-stone-800 cursor-pointer"
+                        >
+                          + Tamanho Único
+                        </button>
                       </div>
-                    ))}
+                    </div>
+
+                    {/* Custom Size Input */}
+                    <div className="flex gap-2 pt-1">
+                      <input
+                        type="text"
+                        placeholder="Adicionar tamanho customizado (ex: 38, 40, G2...)"
+                        value={newSizeInput}
+                        onChange={(e) => setNewSizeInput(e.target.value.toUpperCase())}
+                        className="flex-1 px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!newSizeInput.trim()) return;
+                          const current = productForm.sizes || [];
+                          if (!current.includes(newSizeInput.trim())) {
+                            setProductForm({
+                              ...productForm,
+                              sizes: [...current, newSizeInput.trim()],
+                            });
+                          }
+                          setNewSizeInput('');
+                        }}
+                        className="px-4 py-2 bg-stone-900 text-white rounded-xl text-xs font-semibold cursor-pointer"
+                      >
+                        + Adicionar
+                      </button>
+                    </div>
+
+                    {/* Active Size Badges */}
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {productForm.sizes?.map((sz, szIdx) => (
+                        <span
+                          key={`${sz}-${szIdx}`}
+                          className="inline-flex items-center gap-1.5 bg-stone-100 border border-stone-300 text-stone-800 text-xs px-3 py-1.5 rounded-xl font-bold shadow-2xs"
+                        >
+                          {sz}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setProductForm({
+                                ...productForm,
+                                sizes: productForm.sizes?.filter((s) => s !== sz),
+                              })
+                            }
+                            className="text-stone-400 hover:text-red-600 cursor-pointer"
+                            title="Remover tamanho"
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                )}
+                </div>
+              )}
+
+              {/* TAB 3: FOTOS & CORES DINÂMICAS */}
+              {productModalTab === 'photos_colors' && (
+                <div className="space-y-4">
+                  {/* Photo Gallery */}
+                  <div className="p-4 bg-white rounded-2xl border border-stone-200 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="block text-xs font-bold text-stone-900 uppercase tracking-wide">
+                          Galeria de Fotos da Peça (Até 10 Fotos)
+                        </label>
+                        <p className="text-[11px] text-stone-500">
+                          A 1ª foto é a capa principal da vitrine. Use as setas para definir a capa.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center space-x-1.5 bg-stone-100 px-3 py-1 border border-stone-300 rounded-lg text-xs font-bold">
+                        <span className={(productForm.images?.length || 0) >= 10 ? 'text-amber-600' : 'text-stone-800'}>
+                          {productForm.images?.length || 0} / 10 fotos
+                        </span>
+                      </div>
+                    </div>
+
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleProductImageFiles}
+                      className="hidden"
+                      id="product-photo-upload-input"
+                      multiple
+                    />
+
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <button
+                        type="button"
+                        disabled={isUploadingImages || (productForm.images?.length || 0) >= 10}
+                        onClick={() => fileInputRef.current?.click()}
+                        className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl border-2 border-dashed font-semibold text-xs transition-all cursor-pointer ${
+                          (productForm.images?.length || 0) >= 10
+                            ? 'bg-stone-100 border-stone-300 text-stone-400 cursor-not-allowed'
+                            : 'bg-stone-50 hover:bg-[#F4ECE1] border-stone-300 text-stone-800'
+                        }`}
+                      >
+                        <Upload className="w-4 h-4 text-brand-primary-darker" />
+                        <span>
+                          {isUploadingImages
+                            ? 'Processando fotos...'
+                            : (productForm.images?.length || 0) >= 10
+                            ? 'Limite de 10 fotos atingido'
+                            : 'Selecionar Fotos do Dispositivo (Base64)'}
+                        </span>
+                      </button>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        placeholder="Ou cole o link direto da imagem (URL)..."
+                        value={newImageInput}
+                        onChange={(e) => setNewImageInput(e.target.value)}
+                        disabled={(productForm.images?.length || 0) >= 10}
+                        className="flex-1 px-3 py-1.5 bg-stone-50 border border-stone-300 rounded-xl text-xs disabled:opacity-50"
+                      />
+                      <button
+                        type="button"
+                        disabled={(productForm.images?.length || 0) >= 10 || !newImageInput.trim()}
+                        onClick={() => {
+                          if (!newImageInput.trim()) return;
+                          const cur = productForm.images || [];
+                          if (cur.length >= 10) return;
+                          setProductForm({ ...productForm, images: [...cur, newImageInput.trim()] });
+                          setNewImageInput('');
+                        }}
+                        className="px-3 py-1.5 bg-stone-900 hover:bg-stone-800 disabled:opacity-40 text-white rounded-xl text-xs font-semibold cursor-pointer"
+                      >
+                        + URL
+                      </button>
+                    </div>
+
+                    {/* Previews */}
+                    {productForm.images && productForm.images.length > 0 && (
+                      <div className="pt-2 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
+                        {productForm.images.map((imgUrl, idx) => (
+                          <div
+                            key={idx}
+                            className={`relative aspect-[3/4] w-full rounded-2xl overflow-hidden shadow-sm border-2 ${
+                              idx === 0 ? 'border-stone-900 shadow-md ring-2 ring-[#D4AF37]' : 'border-stone-200'
+                            }`}
+                          >
+                            <img
+                              src={imgUrl}
+                              alt={`Foto ${idx + 1}`}
+                              className="w-full h-full object-cover object-top"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveProductImage(idx)}
+                              className="absolute top-1.5 right-1.5 p-1 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-md cursor-pointer transition-colors"
+                              title="Remover foto"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                            {idx === 0 && (
+                              <div className="absolute bottom-0 inset-x-0 bg-stone-900/90 text-[#D4AF37] text-[10px] font-bold py-1 text-center uppercase tracking-wider">
+                                ⭐ Capa Principal
+                              </div>
+                            )}
+                            {idx > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const arr = [...(productForm.images || [])];
+                                  const temp = arr[0];
+                                  arr[0] = arr[idx];
+                                  arr[idx] = temp;
+                                  setProductForm({ ...productForm, images: arr });
+                                }}
+                                className="absolute bottom-1.5 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-stone-900/80 hover:bg-stone-900 text-white text-[9px] font-bold rounded-lg cursor-pointer whitespace-nowrap"
+                              >
+                                Tornar Capa
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Colors Variations (Shopee Style) */}
+                  <div className="p-4 bg-white rounded-2xl border border-stone-200 space-y-3.5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="block text-xs font-bold text-stone-900 uppercase tracking-wide">
+                          Variações de Cores com Troca Dinâmica de Foto
+                        </label>
+                        <p className="text-[11px] text-stone-500">
+                          Ao clicar na cor na vitrine, a foto muda automaticamente para a peça daquela cor.
+                        </p>
+                      </div>
+
+                      <label className="flex items-center space-x-2 cursor-pointer bg-stone-50 px-3 py-1.5 rounded-xl border border-stone-300">
+                        <input
+                          type="checkbox"
+                          checked={productForm.hasColors !== false}
+                          onChange={(e) =>
+                            setProductForm({ ...productForm, hasColors: e.target.checked })
+                          }
+                          className="rounded text-stone-900 focus:ring-stone-900"
+                        />
+                        <span className="text-xs font-semibold text-stone-800">
+                          Ativar Cores
+                        </span>
+                      </label>
+                    </div>
+
+                    {productForm.hasColors !== false && (
+                      <div className="space-y-3 pt-1">
+                        {/* Quick Presets */}
+                        <div>
+                          <span className="text-[11px] font-semibold text-stone-600 block mb-1.5">
+                            Cores Sugeridas:
+                          </span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {[
+                              { name: 'Rosa Chiclete', hex: '#F472B6' },
+                              { name: 'Rosa Pastel', hex: '#FBCFE8' },
+                              { name: 'Preto Nobre', hex: '#111111' },
+                              { name: 'Off White', hex: '#FAF8F5' },
+                              { name: 'Terracota', hex: '#C26D53' },
+                              { name: 'Verde Oliva', hex: '#556B2F' },
+                              { name: 'Azul Marinho', hex: '#1E293B' },
+                              { name: 'Dourado Mostarda', hex: '#D97706' },
+                              { name: 'Vinho Marsala', hex: '#881337' },
+                              { name: 'Lavanda', hex: '#A78BFA' },
+                              { name: 'Caramelo', hex: '#B45309' },
+                              { name: 'Nude Areia', hex: '#D7C4B7' },
+                            ].map((preset) => (
+                              <button
+                                key={preset.name}
+                                type="button"
+                                onClick={() => {
+                                  setNewColorName(preset.name);
+                                  setNewColorHex(preset.hex);
+                                }}
+                                className="inline-flex items-center space-x-1.5 px-2.5 py-1 bg-stone-50 hover:bg-stone-200 border border-stone-300 rounded-lg text-xs text-stone-800 transition-all cursor-pointer"
+                              >
+                                <span
+                                  className="w-3 h-3 rounded-full border border-black/15 flex-shrink-0"
+                                  style={{ backgroundColor: preset.hex }}
+                                />
+                                <span>{preset.name}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Add Color Form */}
+                        <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 space-y-2.5">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                            <div>
+                              <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                                Nome da Cor *
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="Ex: Rosa, Preto, Off White..."
+                                value={newColorName}
+                                onChange={(e) => setNewColorName(e.target.value)}
+                                className="w-full px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                                Tom / Hexadecimal
+                              </label>
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="color"
+                                  value={newColorHex}
+                                  onChange={(e) => setNewColorHex(e.target.value)}
+                                  className="w-8 h-8 rounded-md border border-stone-300 cursor-pointer p-0.5"
+                                />
+                                <input
+                                  type="text"
+                                  value={newColorHex}
+                                  onChange={(e) => setNewColorHex(e.target.value)}
+                                  className="w-full px-2 py-1.5 bg-white border border-stone-300 rounded-lg text-xs font-mono"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="relative">
+                              <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                                Vincular Foto da Cor
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => setIsColorImageOpen(!isColorImageOpen)}
+                                className="w-full px-2 py-1.5 bg-white border border-stone-300 rounded-lg text-xs flex items-center justify-between shadow-2xs cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all text-left font-medium text-stone-800"
+                              >
+                                <span>
+                                  {newColorImageUrl ? (
+                                    <>
+                                      Foto {((productForm.images || []).indexOf(newColorImageUrl) + 1) || 'URL'} 
+                                      {((productForm.images || []).indexOf(newColorImageUrl) === 0) ? ' (Capa)' : ''}
+                                    </>
+                                  ) : (
+                                    '(Usar foto principal)'
+                                  )}
+                                </span>
+                                <ChevronDown className="w-3.5 h-3.5 opacity-70 shrink-0" />
+                              </button>
+
+                              <AnimatePresence>
+                                {isColorImageOpen && (
+                                  <>
+                                    <div
+                                      className="fixed inset-0 z-40"
+                                      onClick={() => setIsColorImageOpen(false)}
+                                    />
+                                    <motion.div
+                                      initial={{ opacity: 0, scale: 0.95, y: 5 }}
+                                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                                      exit={{ opacity: 0, scale: 0.95, y: 5 }}
+                                      transition={{ duration: 0.12, ease: "easeOut" }}
+                                      className="absolute left-0 right-0 top-full mt-2 max-h-60 overflow-y-auto bg-stone-900 border border-stone-300 shadow-xl rounded-2xl p-2 z-50 space-y-1 text-left"
+                                    >
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setNewColorImageUrl('');
+                                          setIsColorImageOpen(false);
+                                        }}
+                                        className={`w-full text-left px-3 py-2 text-xs rounded-xl transition-all flex items-center justify-between cursor-pointer ${
+                                          !newColorImageUrl
+                                            ? 'bg-stone-800 text-[#D4AF37] font-bold shadow-xs'
+                                            : 'text-stone-300 hover:bg-stone-800/60 hover:text-white'
+                                        }`}
+                                      >
+                                        <span>(Usar foto principal)</span>
+                                        {!newColorImageUrl && (
+                                          <Check className="w-3.5 h-3.5 text-[#D4AF37]" />
+                                        )}
+                                      </button>
+
+                                      {(productForm.images || []).map((img, i) => {
+                                        const isSelected = newColorImageUrl === img;
+                                        return (
+                                          <button
+                                            key={i}
+                                            type="button"
+                                            onClick={() => {
+                                              setNewColorImageUrl(img);
+                                              setIsColorImageOpen(false);
+                                            }}
+                                            className={`w-full text-left px-3 py-2 text-xs rounded-xl transition-all flex items-center justify-between cursor-pointer ${
+                                              isSelected
+                                                ? 'bg-stone-800 text-[#D4AF37] font-bold shadow-xs'
+                                                : 'text-stone-300 hover:bg-stone-800/60 hover:text-white'
+                                            }`}
+                                          >
+                                            <span>Foto {i + 1} {i === 0 ? '(Capa)' : ''}</span>
+                                            {isSelected && (
+                                              <Check className="w-3.5 h-3.5 text-[#D4AF37]" />
+                                            )}
+                                          </button>
+                                        );
+                                      })}
+                                    </motion.div>
+                                  </>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-1">
+                            <span className="text-[10px] text-stone-500">
+                              {newColorImageUrl ? '✓ Foto específica associada a esta cor' : 'Dica: Carregue fotos para vincular cores específicas'}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!newColorName.trim()) return;
+                                const curColors = productForm.colors || [];
+                                const newColorObj = {
+                                  name: newColorName.trim(),
+                                  hex: newColorHex,
+                                  imageUrl: newColorImageUrl.trim() || undefined,
+                                };
+                                setProductForm({
+                                  ...productForm,
+                                  colors: [...curColors, newColorObj],
+                                });
+                                setNewColorName('');
+                                setNewColorImageUrl('');
+                              }}
+                              className="px-4 py-1.5 bg-stone-900 hover:bg-stone-800 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                            >
+                              + Adicionar Cor
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Active Colors List */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {productForm.colors?.map((c, idx) => (
+                            <div
+                              key={idx}
+                              className="flex items-center justify-between p-2 bg-stone-50 border border-stone-200 rounded-xl text-xs"
+                            >
+                              <div className="flex items-center space-x-2.5">
+                                <span
+                                  className="w-5 h-5 rounded-full border border-black/20 shrink-0 shadow-2xs"
+                                  style={{ backgroundColor: c.hex }}
+                                />
+                                <div>
+                                  <span className="font-bold text-stone-900 block leading-tight">
+                                    {c.name}
+                                  </span>
+                                  <span className="text-[10px] text-stone-500 font-mono">
+                                    {c.hex} {c.imageUrl ? '• Foto vinculada' : ''}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setProductForm({
+                                    ...productForm,
+                                    colors: productForm.colors?.filter((_, i) => i !== idx),
+                                  });
+                                }}
+                                className="text-stone-400 hover:text-red-600 p-1 cursor-pointer"
+                                title="Remover cor"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 4: FICHA TÉCNICA & MEDIDAS */}
+              {productModalTab === 'details' && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-stone-800 mb-1">
+                      Descrição Detalhada da Peça
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={productForm.description || ''}
+                      onChange={(e) =>
+                        setProductForm({ ...productForm, description: e.target.value })
+                      }
+                      placeholder="Descreva o caimento, estilo, ocasiões de uso e diferenciais da peça..."
+                      className="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-xs text-stone-900"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-stone-800 mb-1">
+                        Composição do Tecido / Material
+                      </label>
+                      <input
+                        type="text"
+                        value={productForm.fabricDetails || ''}
+                        onChange={(e) =>
+                          setProductForm({ ...productForm, fabricDetails: e.target.value })
+                        }
+                        placeholder="Ex: 100% Linho Puro Europeu"
+                        className="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-xs text-stone-900"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-stone-800 mb-1">
+                        Cuidados de Lavagem & Conservação
+                      </label>
+                      <input
+                        type="text"
+                        value={productForm.careInstructions || ''}
+                        onChange={(e) =>
+                          setProductForm({ ...productForm, careInstructions: e.target.value })
+                        }
+                        placeholder="Ex: Lavagem suave à mão, secar à sombra"
+                        className="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-xs text-stone-900"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Live Mini Summary Bar */}
+              <div className="p-3 bg-stone-100 rounded-2xl border border-stone-300 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-3 text-stone-700">
+                  <span>
+                    Preço:{' '}
+                    <strong className="text-stone-900">
+                      {formatCurrency(
+                        productForm.isOnSale && productForm.promotionalPrice ? productForm.promotionalPrice : productForm.price || 0
+                      )}
+                    </strong>
+                  </span>
+                  <span>•</span>
+                  <span>
+                    Estoque:{' '}
+                    <strong className="text-emerald-700">
+                      {productForm.stock ?? 10} unidades
+                    </strong>
+                  </span>
+                  <span>•</span>
+                  <span>
+                    Tamanhos:{' '}
+                    <strong>{productForm.sizes?.join(', ') || 'Nenhum'}</strong>
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] text-stone-500">
+                    {productForm.images?.length || 0} fotos
+                  </span>
+                </div>
               </div>
 
               {/* Modal Footer */}
-              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-stone-200">
+              <div className="flex items-center justify-between pt-4 border-t border-stone-200">
                 <button
                   type="button"
                   onClick={() => setIsEditingProduct(false)}
@@ -2429,12 +2708,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 >
                   Cancelar
                 </button>
-                <button
-                  type="submit"
-                  className="px-6 py-2.5 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-bold shadow-md cursor-pointer"
-                >
-                  Confirmar Alterações
-                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 bg-stone-900 hover:bg-stone-800 text-[#D4AF37] rounded-xl text-xs font-bold shadow-md cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Check className="w-4 h-4 text-[#D4AF37]" />
+                    <span>Salvar e Publicar Peça</span>
+                  </button>
+                </div>
               </div>
             </form>
           </div>

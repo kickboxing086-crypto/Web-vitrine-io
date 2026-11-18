@@ -9,7 +9,6 @@ import {
   ShieldCheck,
   ChevronDown,
   Crown,
-  Sparkles,
   Zap,
   ShoppingBag,
   Layers,
@@ -26,17 +25,19 @@ interface LandingPageProps {
   settings?: StoreSettings;
   onEnterStore: (slug?: string) => void;
   onAdminLogin: () => void;
+  onOpenRegister?: () => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
   settings,
   onEnterStore,
   onAdminLogin,
+  onOpenRegister,
 }) => {
-  const officialPhone = '5584986113980';
+  const officialPhone = '5511999999999';
   
   const whatsappBuyMessage = encodeURIComponent(
-    'Olá! Quero ativar minha vitrine virtual agora mesmo. Como faço para liberar meu acesso imediato?'
+    'Olá! Quero tirar dúvidas sobre a plataforma Web Vitrine.'
   );
   
   const buyLink = `https://wa.me/${officialPhone}?text=${whatsappBuyMessage}`;
@@ -135,7 +136,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* Top Bar Announcement */}
       <div className="relative z-50 bg-[#16161A] border-b border-[#D4AF37]/30 py-2.5 px-4 text-center text-xs text-[#F3E5AB]">
         <div className="max-w-7xl mx-auto flex items-center justify-center gap-2">
-          <Sparkles className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
           <span>
             Tenha seu catálogo virtual funcionando hoje por apenas <strong className="text-white font-bold">R$ 29,99/mês</strong>. Sem comissões por venda.
           </span>
@@ -172,23 +172,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="flex items-center space-x-2 sm:space-x-3">
             <button
               onClick={onAdminLogin}
-              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#16161A] hover:bg-stone-800 border border-[#27272A] text-stone-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+              className="inline-flex items-center px-4 py-2 bg-[#16161A] hover:bg-stone-800 border border-[#27272A] hover:border-[#D4AF37]/50 text-stone-200 hover:text-white rounded-xl text-xs font-semibold transition-colors cursor-pointer"
               id="btn-landing-login"
             >
-              <Lock className="w-3.5 h-3.5 text-[#D4AF37]" />
-              <span className="hidden sm:inline">Área do Lojista</span>
+              <span>Acessar</span>
             </button>
 
-            <a
-              href={buyLink}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={onOpenRegister}
               className="inline-flex items-center space-x-2 px-4 py-2 bg-[#D4AF37] hover:bg-[#C5A059] text-stone-950 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
               id="btn-landing-cta-header"
             >
-              <MessageCircle className="w-4 h-4 fill-stone-950 text-stone-950" />
-              <span>Ativar no WhatsApp</span>
-            </a>
+              <span className="font-bold">Cadastre sua Loja (5 Dias Grátis)</span>
+            </button>
           </div>
         </div>
       </header>
@@ -217,17 +214,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
             {/* CTAs */}
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5">
-              <a
-                href={buyLink}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                type="button"
+                onClick={onOpenRegister}
                 className="w-full sm:w-auto inline-flex items-center justify-center space-x-2.5 px-8 py-3.5 bg-[#D4AF37] hover:bg-[#C5A059] text-stone-950 rounded-xl text-sm font-bold shadow-md transition-all cursor-pointer"
                 id="btn-hero-create-store"
               >
-                <MessageCircle className="w-5 h-5 fill-stone-950 text-stone-950" />
-                <span>Ativar Minha Vitrine</span>
+                <span>Criar Minha Loja Grátis (5 Dias de Teste)</span>
                 <ArrowRight className="w-4 h-4" />
-              </a>
+              </button>
 
               <button
                 onClick={() => onEnterStore('teste@123')}
@@ -516,20 +511,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </li>
               <li className="flex items-center gap-2.5">
                 <Check className="w-4 h-4 text-[#D4AF37] shrink-0" />
-                <span>Renovação descomplicada via Mercado Pago (Pix ou Cartão)</span>
+                <span>Renovação descomplicada e instantânea via Pix</span>
               </li>
             </ul>
 
             <div className="space-y-3">
-              <a
-                href={`https://wa.me/${officialPhone}?text=${encodeURIComponent('Olá! Quero ativar meus 5 dias grátis na Web Vitrine por R$ 29,99/mês. Como faço para liberar meu acesso agora?')}`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                type="button"
+                onClick={onOpenRegister}
                 className="w-full py-4 bg-[#D4AF37] hover:bg-[#E5C378] text-stone-950 font-extrabold rounded-2xl text-sm transition-all shadow-xl flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.01] active:scale-[0.99] text-center"
               >
-                <span>Ativar Meus 5 Dias Grátis Agora</span>
+                <span>Criar Minha Loja com 5 Dias Grátis</span>
                 <ArrowRight className="w-4 h-4" />
-              </a>
+              </button>
 
               <button
                 type="button"

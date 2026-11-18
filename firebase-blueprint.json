@@ -147,6 +147,26 @@
         },
         "required": ["type", "amount", "description", "date"]
       }
+    },
+    {
+      "name": "clients",
+      "description": "Store registered clients, tenants and credential security metadata",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "username": { "type": "string", "maxLength": 30 },
+          "storeName": { "type": "string", "maxLength": 100 },
+          "storeSlug": { "type": "string", "maxLength": 30 },
+          "phoneWhatsapp": { "type": "string" },
+          "email": { "type": "string" },
+          "status": { "type": "string", "enum": ["active", "pending", "expired"] },
+          "dueDate": { "type": "string" },
+          "planPrice": { "type": "number" },
+          "createdAt": { "type": "string" }
+        },
+        "required": ["id", "username", "storeName", "createdAt"]
+      }
     }
   ]
 }

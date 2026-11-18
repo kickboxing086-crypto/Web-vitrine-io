@@ -9,7 +9,6 @@ import {
   X,
   ShieldCheck,
   Store,
-  Sparkles,
   AlertCircle,
   CheckCircle2,
   ArrowRight,
@@ -21,6 +20,7 @@ interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLoginSuccess: (type?: 'super_admin' | 'store_admin' | 'vulnerability_admin', client?: any) => void;
+  onOpenRegister?: () => void;
   adminUser: AdminUser;
   settings: StoreSettings;
 }
@@ -29,6 +29,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   isOpen,
   onClose,
   onLoginSuccess,
+  onOpenRegister,
   adminUser,
   settings,
 }) => {
@@ -68,7 +69,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       const lockTime = Date.now() + 30 * 60 * 1000; 
       localStorage.setItem(LOCK_UNTIL_KEY, lockTime.toString());
       setIsLocked(true);
-      setErrorMessage('Conta bloqueada por excesso de tentativas. Contate o suporte no WhatsApp (84) 98611-3980 para recuperação dos dados.');
+      setErrorMessage('Conta bloqueada por excesso de tentativas. Contate o suporte no WhatsApp (11) 99999-9999 para recuperação dos dados.');
     } else {
       setErrorMessage(`Credenciais inválidas. Tentativa ${currentAttempts} de ${MAX_ATTEMPTS}.`);
     }
@@ -88,7 +89,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     setErrorMessage('');
 
     if (isLocked) {
-      setErrorMessage('Conta bloqueada por excesso de tentativas. Contate o suporte no WhatsApp (84) 98611-3980 para recuperação dos dados.');
+      setErrorMessage('Conta bloqueada por excesso de tentativas. Contate o suporte no WhatsApp (11) 99999-9999 para recuperação dos dados.');
       return;
     }
 
@@ -412,35 +413,34 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                   </>
                 ) : (
                   <>
-                    <Lock className="w-4 h-4 text-brand-primary" />
-                    <span>Entrar no Painel da Loja</span>
+                    <span>Acessar</span>
                     <ArrowRight className="w-3.5 h-3.5 ml-0.5" />
                   </>
                 )}
               </button>
             </form>
 
-            {/* Acquisition Banner & Notice */}
+            {/* Autonomous Self-Service Store Creation */}
             <div className="pt-3 border-t border-brand-border space-y-2">
-              <div className="p-3 bg-amber-50/60 border border-amber-200/80 rounded-2xl space-y-1 text-center">
+              <div className="p-3 bg-amber-50/60 border border-amber-200/80 rounded-2xl space-y-1.5 text-center">
                 <span className="text-[11px] font-bold text-amber-900 block">
-                  Ainda não tem o sistema para a sua loja?
+                  Ainda não tem conta para a sua loja?
                 </span>
                 <p className="text-[10px] text-stone-600 leading-tight">
-                  Organize seus produtos e receba pedidos no WhatsApp por apenas <strong>R$ 29,99/mês</strong>.
-                  <br />
-                  <span className="text-stone-500 italic">*Não realizamos tráfego pago; fornecemos a plataforma inteligente de vitrine.</span>
+                  Cadastre sua loja em 1 minuto e ganhe <strong>5 dias de acesso grátis</strong> sem precisar falar no WhatsApp!
                 </p>
-                <a
-                  href="https://wa.me/5584986113980?text=Ol%C3%A1!%20Quero%20ativar%20a%20minha%20vitrine%20de%20luxo%20e%20liberar%20meu%20acesso%20agora%20mesmo!"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-2 inline-flex items-center justify-center space-x-1.5 w-full py-2 px-3 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl text-xs font-bold shadow-xs transition-colors"
-                  id="btn-adquira-aqui-login-modal"
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    if (onOpenRegister) onOpenRegister();
+                  }}
+                  className="mt-2 inline-flex items-center justify-center space-x-1.5 w-full py-2.5 px-3 bg-stone-900 hover:bg-stone-800 text-[#D4AF37] border border-[#D4AF37]/40 rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer"
+                  id="btn-register-store-login-modal"
                 >
-                  <span>Ativação Rápida no WhatsApp</span>
+                  <span>Criar Minha Loja Grátis (5 Dias)</span>
                   <ArrowRight className="w-3.5 h-3.5" />
-                </a>
+                </button>
               </div>
             </div>
           </div>

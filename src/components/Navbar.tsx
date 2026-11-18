@@ -185,11 +185,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   type="button"
                   onClick={() => onToggleView('admin')}
-                  className="p-2 text-stone-400 hover:text-white bg-[#16161A] border border-[#27272A] hover:border-stone-600 rounded-xl transition-colors cursor-pointer"
+                  className="inline-flex items-center px-3 py-1.5 text-stone-200 hover:text-white bg-[#16161A] border border-[#27272A] hover:border-[#D4AF37]/50 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
                   id="btn-nav-admin"
-                  title="Painel do Lojista"
+                  title="Acessar"
                 >
-                  <LayoutDashboard className="w-4 h-4" />
+                  <span>Acessar</span>
                 </button>
               ) : null}
             </div>

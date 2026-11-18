@@ -330,8 +330,14 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                           type="button"
                           onClick={() => {
                             setSelectedColor(color);
+                            if (color.imageUrl && color.imageUrl.trim()) {
+                              const foundIdx = images.findIndex((img) => img === color.imageUrl);
+                              if (foundIdx !== -1) {
+                                setActiveImageIndex(foundIdx);
+                              }
+                            }
                           }}
-                          className={`group relative flex items-center space-x-2 px-3 py-1.5 rounded-xl border text-xs transition-all cursor-pointer ${
+                          className={`group relative flex items-center space-x-2 px-3 py-2 rounded-xl border text-xs transition-all cursor-pointer ${
                             selectedColor.name === color.name
                               ? 'bg-[#1E1E26] border-[#D4AF37] text-white shadow-xs font-semibold'
                               : 'bg-[#18181E] border-[#2A2A33] text-stone-300 hover:border-stone-500'

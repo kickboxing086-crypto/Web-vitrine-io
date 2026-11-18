@@ -247,24 +247,41 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               onClick={(e) => {
                 e.stopPropagation();
                 if (product.stock !== 0) {
-                  onQuickAddToCart(product);
+                  const hasVariations = (product.sizes && product.sizes.length > 1) || (hasColorVariants && product.colors.length > 1);
+                  if (hasVariations) {
+                    onOpenDetails(product);
+                  } else {
+                    onQuickAddToCart(product);
+                  }
                 }
               }}
-              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                 product.stock === 0
                   ? 'bg-stone-900 text-stone-600 cursor-not-allowed border border-stone-800'
                   : cartQuantity > 0
                   ? 'bg-[#D4AF37] text-stone-950 border border-[#D4AF37] shadow-md hover:bg-[#E5C378] active:scale-95'
                   : 'bg-[#1C1C22] hover:bg-[#D4AF37] text-stone-300 hover:text-stone-950 border border-[#2B2B33] hover:border-[#D4AF37] cursor-pointer active:scale-95'
               }`}
-              title={product.stock === 0 ? 'Sem estoque' : cartQuantity > 0 ? `Adicionar mais um (Já possui ${cartQuantity})` : 'Adicionar ao pedido'}
+              title={
+                product.stock === 0
+                  ? 'Sem estoque'
+                  : cartQuantity > 0
+                  ? `Adicionar mais um (Já possui ${cartQuantity})`
+                  : (product.sizes && product.sizes.length > 1) || (hasColorVariants && product.colors.length > 1)
+                  ? 'Selecionar tamanho e cor'
+                  : 'Adicionar ao pedido'
+              }
               id={`btn-quick-add-${product.id}`}
             >
               <ShoppingBag className="w-4 h-4 shrink-0" />
               {cartQuantity > 0 ? (
                 <span className="font-extrabold text-[11px]">{cartQuantity}</span>
               ) : (
-                <span className="hidden sm:inline text-[11px] font-semibold">Pedir</span>
+                <span className="text-[11px] font-semibold">
+                  {(product.sizes && product.sizes.length > 1) || (hasColorVariants && product.colors.length > 1)
+                    ? 'Escolher'
+                    : 'Pedir'}
+                </span>
               )}
             </button>
           </div>

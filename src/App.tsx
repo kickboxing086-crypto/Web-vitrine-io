@@ -55,6 +55,7 @@ import { CartDrawer } from './components/CartDrawer';
 import { StoreSetupModal } from './components/StoreSetupModal';
 import { DeleteConfirmModal } from './components/DeleteConfirmModal';
 import { LoginModal } from './components/LoginModal';
+import { RegisterStoreModal } from './components/RegisterStoreModal';
 import { AdminPanel } from './components/AdminPanel';
 import { SuperAdminPanel } from './components/SuperAdminPanel';
 import { VulnerabilityPanel } from './components/VulnerabilityPanel';
@@ -84,6 +85,7 @@ export default function App() {
   const [adminUser] = useState<AdminUser>(getStoredAdminUser);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(getAuthSession);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState<boolean>(false);
   const [isStoreHoursModalOpen, setIsStoreHoursModalOpen] = useState<boolean>(false);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState<boolean>(false);
   const [isLandingHeroModalOpen, setIsLandingHeroModalOpen] = useState<boolean>(false);
@@ -181,6 +183,28 @@ export default function App() {
     } else {
       setActiveView('admin');
     }
+  };
+
+  const handleRegisterSuccess = (newClient: any) => {
+    setIsAdminAuthenticated(true);
+    saveAuthSession(true);
+    const enrichedClient = {
+      ...newClient,
+      isOfficial: true,
+    };
+    setCurrentClient(enrichedClient);
+    localStorage.setItem('store_current_client', JSON.stringify(enrichedClient));
+    if (newClient.storeName) {
+      setSettings((prev) => ({
+        ...prev,
+        storeName: newClient.storeName,
+        phoneWhatsapp: newClient.phoneWhatsapp || prev.phoneWhatsapp,
+        storeType: newClient.storeType || prev.storeType || 'clothing',
+        cityState: newClient.cityState || prev.cityState,
+      }));
+    }
+    setActiveView('admin');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleLogout = () => {
@@ -895,14 +919,22 @@ export default function App() {
           settings={settings}
           onEnterStore={handleEnterStore}
           onAdminLogin={() => setIsLoginModalOpen(true)}
+          onOpenRegister={() => setIsRegisterModalOpen(true)}
         />
         {/* Admin Login Modal */}
         <LoginModal
           isOpen={isLoginModalOpen}
           onClose={() => setIsLoginModalOpen(false)}
           onLoginSuccess={handleLoginSuccess}
+          onOpenRegister={() => setIsRegisterModalOpen(true)}
           adminUser={adminUser}
           settings={settings}
+        />
+        {/* Self-Service Autonomous Store Registration Modal */}
+        <RegisterStoreModal
+          isOpen={isRegisterModalOpen}
+          onClose={() => setIsRegisterModalOpen(false)}
+          onRegisterSuccess={handleRegisterSuccess}
         />
         <PaymentSuccessModal
           isOpen={paymentSuccessInfo.isOpen}
@@ -1276,6 +1308,7 @@ export default function App() {
         isOpen={isLandingHeroModalOpen}
         onClose={() => setIsLandingHeroModalOpen(false)}
         onOpenLogin={() => setIsLoginModalOpen(true)}
+        onOpenRegister={() => setIsRegisterModalOpen(true)}
         onEnterStore={handleEnterStore}
       />
 
@@ -1284,8 +1317,16 @@ export default function App() {
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
         onLoginSuccess={handleLoginSuccess}
+        onOpenRegister={() => setIsRegisterModalOpen(true)}
         adminUser={adminUser}
         settings={settings}
+      />
+
+      {/* Self-Service Autonomous Store Registration Modal */}
+      <RegisterStoreModal
+        isOpen={isRegisterModalOpen}
+        onClose={() => setIsRegisterModalOpen(false)}
+        onRegisterSuccess={handleRegisterSuccess}
       />
 
       {/* Product Details Modal */}
