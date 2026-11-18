@@ -3,6 +3,8 @@
  * Official Credentials for SF TECNOLOGIA (Samuel Silva Freitas)
  */
 
+import { generatePixPayload } from './pixUtils';
+
 export const MERCADO_PAGO_ACCESS_TOKEN =
   'APP_USR-7247429744524217-032816-ab91c2f2e9f3c2af82fb7fdc7a7c6b23-1084123941';
 
@@ -95,16 +97,21 @@ export async function createMercadoPagoPixPayment(clientInfo: {
     console.warn('CORS/Network restriction calling Mercado Pago API directly, using robust instant Pix fallback:', error);
   }
 
-  // Fallback robust Pix generator so it NEVER shows "Failed to fetch" and always provides an instant QR Code & Copia e Cola for R$ 29,99
+  // Fallback robust Pix generator with valid EMV format and CRC16 checksum
   const mockPaymentId = 'pix-instant-' + Date.now();
-  const randomSuffix = Math.random().toString(36).substring(2, 12).toUpperCase();
-  const mockCopiaECola = `00020126580014br.gov.bcb.pix0136sf-tecnologia-pagamentos-${randomSuffix}520400005303986540529.995802BR5925SF TECNOLOGIA E PAGAMENTOS6009SAO PAULO62070503***6304ABCD`;
+  const validPixCopiaECola = generatePixPayload(
+    'samuellsilvva02@gmail.com',
+    SINGLE_PLAN_CONFIG.price,
+    'SF TECNOLOGIA',
+    'SAO PAULO',
+    `RENOV${Date.now().toString().slice(-6)}`
+  );
 
   return {
     success: true,
     paymentId: mockPaymentId,
     status: 'pending',
-    qrCode: mockCopiaECola,
+    qrCode: validPixCopiaECola,
     ticketUrl: `https://mercadopago.com.br/payments/${mockPaymentId}`,
   };
 }
