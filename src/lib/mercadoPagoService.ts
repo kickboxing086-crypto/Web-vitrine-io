@@ -265,6 +265,17 @@ export function getSubscriptionStatus(client?: any): {
   dueDateFormatted: string;
   statusLabel: string;
 } {
+  // Check lifetime account
+  const isLifetime = (client && Number(client.planPrice) === 250) || (client?.dueDate && (client.dueDate.startsWith('2126') || client.dueDate.startsWith('2099') || client.dueDate.startsWith('212')));
+  if (isLifetime) {
+    return {
+      daysRemaining: 99999,
+      isExpired: false,
+      dueDateFormatted: 'Conta Vitalícia',
+      statusLabel: 'Conta Vitalícia',
+    };
+  }
+
   // Test account is never locked for demo purposes
   if (!client || client.username === 'teste@123' || client.id === 'client-test-natural') {
     return {

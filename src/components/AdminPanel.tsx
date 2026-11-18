@@ -42,6 +42,7 @@ import {
   Clock,
   Truck,
   Building2,
+  Printer,
   Share2,
   Sparkles,
   ExternalLink,
@@ -367,6 +368,73 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     };
     onSaveProduct(finalProduct);
     setIsEditingProduct(false);
+  };
+
+  const handlePrintOrder = (ord: any) => {
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (!printWindow) return;
+    const isDelivery = ord.orderType === 'delivery';
+    const itemsHtml = ord.items.map((i: any) => `
+      <tr>
+        <td style="padding: 8px; border-bottom: 1px solid #ddd;">${i.productName} (Tam: ${i.selectedSize}, Cor: ${i.selectedColorName})</td>
+        <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: center;">${i.quantity}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right;">R$ ${(i.unitPrice * i.quantity).toFixed(2).replace('.', ',')}</td>
+      </tr>
+    `).join('');
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Comprovante para Entregador - Pedido #${ord.orderNumber} - ${settings.storeName}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; color: #111; max-width: 700px; margin: 0 auto; }
+            h2 { margin-bottom: 4px; text-transform: uppercase; font-size: 18px; }
+            .header { border-bottom: 2px solid #000; padding-bottom: 12px; margin-bottom: 16px; }
+            .info { margin-bottom: 12px; font-size: 13px; line-height: 1.5; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 13px; }
+            th { background: #f4f4f4; padding: 8px; text-align: left; border-bottom: 2px solid #ddd; }
+            .total { text-align: right; font-size: 16px; font-weight: bold; margin-top: 12px; }
+            .footer { margin-top: 40px; border-top: 1px dashed #666; padding-top: 15px; font-size: 12px; text-align: center; color: #555; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h2>${settings.storeName} - Comprovante de Entrega</h2>
+            <p><strong>Pedido #${ord.orderNumber}</strong> | Data: ${new Date(ord.createdAt).toLocaleString('pt-BR')}</p>
+          </div>
+          <div class="info">
+            <p><strong>Cliente:</strong> ${ord.customerName} (${formatPhone(ord.customerWhatsapp)})</p>
+            <p><strong>Modalidade:</strong> ${isDelivery ? 'Entrega no Endereço' : 'Retirada na Loja'}</p>
+            ${isDelivery && ord.deliveryAddress ? `<p><strong>Endereço de Entrega:</strong> ${ord.deliveryAddress.street}, ${ord.deliveryAddress.number} - ${ord.deliveryAddress.neighborhood}, ${ord.deliveryAddress.city}</p>` : ''}
+            <p><strong>Forma de Pagamento:</strong> ${ord.paymentMethod === 'pix' ? 'Pix (Pago)' : ord.paymentMethod}</p>
+            ${ord.customerNotes ? `<p><strong>Observações:</strong> ${ord.customerNotes}</p>` : ''}
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Produto / Variação</th>
+                <th style="text-align: center;">Qtd</th>
+                <th style="text-align: right;">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsHtml}
+            </tbody>
+          </table>
+          <div class="total">
+            Total do Pedido: R$ ${Number(ord.finalTotal).toFixed(2).replace('.', ',')}
+          </div>
+          <div class="footer">
+            <p>Obrigado pela preferência! — ${settings.storeName}</p>
+            <p style="margin-top: 30px;">___________________________________________________<br>Assinatura do Entregador / Recebedor</p>
+          </div>
+          <script>
+            window.onload = function() { window.print(); }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
   };
 
   // Dynamic list of unique tags from both registered tags and products
@@ -716,6 +784,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <p className="text-xs text-stone-500 mt-0.5">
                 Usuário autenticado: <strong className="text-stone-800 font-mono">@{currentClient.username}</strong>
                 {currentClient.dueDate && (() => {
+                  const isLifetime = (currentClient && Number(currentClient.planPrice) === 250) || (currentClient.dueDate && (currentClient.dueDate.startsWith('2126') || currentClient.dueDate.startsWith('2099') || currentClient.dueDate.startsWith('212')));
+                  if (isLifetime) {
+                    return (
+                      <span className="flex items-center gap-2 mt-1">
+                        <span>• Plano:</span>
+                        <strong className="text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full text-[11px] font-bold border border-amber-200">Conta Vitalícia</strong>
+                      </span>
+                    );
+                  }
+
                   const today = new Date();
                   today.setHours(0, 0, 0, 0);
                   const due = new Date(currentClient.dueDate + 'T00:00:00');
@@ -2899,7 +2977,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </div>
 
                   {/* Order Footer summary */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs pt-2 border-t border-stone-100 gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs pt-3 border-t border-stone-100 gap-3">
                     <div className="text-stone-600">
                       <span>Modalidade: </span>
                       <strong className="text-stone-900">
@@ -2912,11 +2990,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       )}
                     </div>
 
-                    <div className="flex items-baseline space-x-2">
-                      <span className="text-stone-500">Total do Pedido:</span>
-                      <span className="text-base font-bold text-stone-900 font-serif-luxury">
-                        {formatCurrency(ord.finalTotal)}
-                      </span>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => handlePrintOrder(ord)}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-stone-900 hover:bg-stone-800 text-[#D4AF37] rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+                        title="Imprimir Recibo para o Entregador"
+                      >
+                        <Printer className="w-4 h-4 text-[#D4AF37]" />
+                        <span>Imprimir / Entregador</span>
+                      </button>
+
+                      <div className="flex items-baseline space-x-2">
+                        <span className="text-stone-500">Total do Pedido:</span>
+                        <span className="text-base font-bold text-stone-900 font-serif-luxury">
+                          {formatCurrency(ord.finalTotal)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>

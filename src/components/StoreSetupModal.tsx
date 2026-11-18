@@ -69,6 +69,21 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
     }
   }, [isOpen, settings, currentClient]);
 
+  // Real-time auto-save as the CEO types/edits
+  useEffect(() => {
+    if (!isOpen) return;
+    const timer = setTimeout(() => {
+      onSave({
+        ...formData,
+        isFirstSetupDone: true,
+      });
+      if (onUpdateClientSlug && storeSlug.trim()) {
+        onUpdateClientSlug(storeSlug.trim().replace(/\s+/g, '').toLowerCase());
+      }
+    }, 700);
+    return () => clearTimeout(timer);
+  }, [formData, storeSlug, isOpen]);
+
   if (!isOpen) return null;
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

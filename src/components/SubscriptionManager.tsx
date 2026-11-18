@@ -58,7 +58,9 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
           <div className="bg-[#18181E] border border-[#27272A] rounded-2xl p-4 sm:p-5 flex items-center gap-4 min-w-[220px] shadow-lg">
             <div
               className={`p-3 rounded-2xl ${
-                subStatus.isExpired
+                subStatus.dueDateFormatted === 'Conta Vitalícia'
+                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                  : subStatus.isExpired
                   ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
                   : subStatus.daysRemaining <= 5
                   ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
@@ -68,20 +70,26 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
               {subStatus.isExpired ? (
                 <AlertCircle className="w-7 h-7 text-rose-400" />
               ) : (
-                <Clock className="w-7 h-7 text-[#D4AF37]" />
+                <Crown className="w-7 h-7 text-[#D4AF37]" />
               )}
             </div>
             <div>
               <p className="text-[11px] font-bold uppercase tracking-wider text-stone-400">
-                {subStatus.isExpired ? 'Status' : 'Tempo de Acesso'}
+                {subStatus.dueDateFormatted === 'Conta Vitalícia' ? 'Plano da Conta' : subStatus.isExpired ? 'Status' : 'Tempo de Acesso'}
               </p>
-              <p className="text-xl sm:text-2xl font-black text-white">
-                {subStatus.isExpired
+              <p className="text-lg sm:text-xl font-black text-white">
+                {subStatus.dueDateFormatted === 'Conta Vitalícia'
+                  ? 'Conta Vitalícia'
+                  : subStatus.isExpired
                   ? 'Expirado'
                   : `${subStatus.daysRemaining} ${subStatus.daysRemaining === 1 ? 'dia' : 'dias'}`}
               </p>
               <p className="text-[10px] text-stone-400 mt-0.5 font-medium">
-                {subStatus.isExpired ? 'Renove para desbloquear' : `Vence em: ${subStatus.dueDateFormatted}`}
+                {subStatus.dueDateFormatted === 'Conta Vitalícia'
+                  ? 'Acesso permanente sem vencimento'
+                  : subStatus.isExpired
+                  ? 'Renove para desbloquear'
+                  : `Vence em: ${subStatus.dueDateFormatted}`}
               </p>
             </div>
           </div>
