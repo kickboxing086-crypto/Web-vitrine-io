@@ -7,9 +7,10 @@ interface FooterProps {
   settings: StoreSettings;
   onOpenAdmin: () => void;
   onOpenLanding?: () => void;
+  onOpenPrivacyPolicy?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ settings, onOpenAdmin, onOpenLanding }) => {
+export const Footer: React.FC<FooterProps> = ({ settings, onOpenAdmin, onOpenLanding, onOpenPrivacyPolicy }) => {
   const whatsappLink = `https://wa.me/${cleanPhoneForWhatsapp(settings.phoneWhatsapp)}`;
   const instagramUrl = settings.instagramHandle
     ? `https://instagram.com/${settings.instagramHandle.replace('@', '')}`
@@ -150,6 +151,16 @@ export const Footer: React.FC<FooterProps> = ({ settings, onOpenAdmin, onOpenLan
           </p>
 
           <div className="flex items-center space-x-4">
+            {onOpenPrivacyPolicy && (
+              <button
+                type="button"
+                onClick={onOpenPrivacyPolicy}
+                className="text-stone-400 hover:text-[#D4AF37] transition-colors cursor-pointer text-[11px]"
+              >
+                Política de Privacidade
+              </button>
+            )}
+
             {onOpenLanding && (
               <button
                 type="button"

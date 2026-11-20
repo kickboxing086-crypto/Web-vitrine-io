@@ -21,6 +21,7 @@ interface LoginModalProps {
   onClose: () => void;
   onLoginSuccess: (type?: 'super_admin' | 'store_admin' | 'vulnerability_admin', client?: any) => void;
   onOpenRegister?: () => void;
+  onOpenForgotPassword?: () => void;
   adminUser: AdminUser;
   settings: StoreSettings;
 }
@@ -30,6 +31,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   onClose,
   onLoginSuccess,
   onOpenRegister,
+  onOpenForgotPassword,
   adminUser,
   settings,
 }) => {
@@ -380,7 +382,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 </p>
               </div>
 
-              {/* Remember checkbox */}
+              {/* Remember checkbox & Forgot Password */}
               <div className="flex items-center justify-between pt-1">
                 <label className="flex items-center gap-2 text-xs text-stone-600 cursor-pointer select-none">
                   <input
@@ -390,8 +392,21 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     className="w-4 h-4 text-stone-900 rounded border-stone-300 focus:ring-brand-primary-dark accent-stone-900"
                     id="checkbox-remember-login"
                   />
-                  <span>Lembrar login neste navegador</span>
+                  <span>Lembrar login</span>
                 </label>
+
+                {onOpenForgotPassword && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      onOpenForgotPassword();
+                    }}
+                    className="text-xs font-semibold text-[#D4AF37] hover:underline cursor-pointer"
+                  >
+                    Esqueceu a senha?
+                  </button>
+                )}
               </div>
 
               {/* Submit Button */}

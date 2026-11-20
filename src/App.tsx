@@ -56,6 +56,8 @@ import { StoreSetupModal } from './components/StoreSetupModal';
 import { DeleteConfirmModal } from './components/DeleteConfirmModal';
 import { LoginModal } from './components/LoginModal';
 import { RegisterStoreModal } from './components/RegisterStoreModal';
+import { ForgotPasswordModal } from './components/ForgotPasswordModal';
+import { PrivacyPolicyModal } from './components/PrivacyPolicyModal';
 import { AdminPanel } from './components/AdminPanel';
 import { SuperAdminPanel } from './components/SuperAdminPanel';
 import { VulnerabilityPanel } from './components/VulnerabilityPanel';
@@ -231,6 +233,9 @@ export default function App() {
     setCoupons([]);
     setOrders([]);
     setFinance([]);
+    if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
     setActiveView('landing');
   };
 
@@ -279,6 +284,8 @@ export default function App() {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isStoreSetupOpen, setIsStoreSetupOpen] = useState(false);
+  const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] = useState(false);
+  const [isPrivacyPolicyModalOpen, setIsPrivacyPolicyModalOpen] = useState(false);
   const [isFirstOnboarding, setIsFirstOnboarding] = useState(false);
   const [addedItemToast, setAddedItemToast] = useState<{ name: string; timestamp: number } | null>(null);
 
@@ -946,6 +953,10 @@ export default function App() {
           onClose={() => setIsLoginModalOpen(false)}
           onLoginSuccess={handleLoginSuccess}
           onOpenRegister={() => setIsRegisterModalOpen(true)}
+          onOpenForgotPassword={() => {
+            setIsLoginModalOpen(false);
+            setIsForgotPasswordModalOpen(true);
+          }}
           adminUser={adminUser}
           settings={settings}
         />
@@ -954,6 +965,17 @@ export default function App() {
           isOpen={isRegisterModalOpen}
           onClose={() => setIsRegisterModalOpen(false)}
           onRegisterSuccess={handleRegisterSuccess}
+        />
+        {/* Forgot Password Modal */}
+        <ForgotPasswordModal
+          isOpen={isForgotPasswordModalOpen}
+          onClose={() => setIsForgotPasswordModalOpen(false)}
+          onOpenLogin={() => setIsLoginModalOpen(true)}
+        />
+        {/* Privacy Policy Modal */}
+        <PrivacyPolicyModal
+          isOpen={isPrivacyPolicyModalOpen}
+          onClose={() => setIsPrivacyPolicyModalOpen(false)}
         />
         <PaymentSuccessModal
           isOpen={paymentSuccessInfo.isOpen}
@@ -1313,6 +1335,7 @@ export default function App() {
         settings={settings}
         onOpenAdmin={() => handleToggleView('admin')}
         onOpenLanding={() => setActiveView('landing')}
+        onOpenPrivacyPolicy={() => setIsPrivacyPolicyModalOpen(true)}
       />
 
       {/* Store Hours Status Modal */}
@@ -1337,6 +1360,10 @@ export default function App() {
         onClose={() => setIsLoginModalOpen(false)}
         onLoginSuccess={handleLoginSuccess}
         onOpenRegister={() => setIsRegisterModalOpen(true)}
+        onOpenForgotPassword={() => {
+          setIsLoginModalOpen(false);
+          setIsForgotPasswordModalOpen(true);
+        }}
         adminUser={adminUser}
         settings={settings}
       />
@@ -1346,6 +1373,19 @@ export default function App() {
         isOpen={isRegisterModalOpen}
         onClose={() => setIsRegisterModalOpen(false)}
         onRegisterSuccess={handleRegisterSuccess}
+      />
+
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal
+        isOpen={isForgotPasswordModalOpen}
+        onClose={() => setIsForgotPasswordModalOpen(false)}
+        onOpenLogin={() => setIsLoginModalOpen(true)}
+      />
+
+      {/* Privacy Policy Modal */}
+      <PrivacyPolicyModal
+        isOpen={isPrivacyPolicyModalOpen}
+        onClose={() => setIsPrivacyPolicyModalOpen(false)}
       />
 
       {/* Product Details Modal */}
