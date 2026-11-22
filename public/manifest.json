@@ -1,7 +1,7 @@
 {
-  "name": "Web Vitrine",
+  "name": "Web Vitrine — Catálogo Digital Profissional",
   "short_name": "Web Vitrine",
-  "description": "Vitrine virtual e catálogo digital oficial.",
+  "description": "Catálogo digital profissional com fotos em alta definição e pedidos diretos no WhatsApp.",
   "start_url": "/",
   "id": "/",
   "scope": "/",

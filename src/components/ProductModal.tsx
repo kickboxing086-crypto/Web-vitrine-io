@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Product, StoreSettings } from '../types';
 import { formatCurrency, generateWhatsappDirectProductMessage, cleanPhoneForWhatsapp } from '../lib/formatters';
+import { resolveColorImageUrl } from '../lib/imageUtils';
 import {
   X,
   ShoppingBag,
@@ -46,6 +47,19 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   const [showSizeGuide, setShowSizeGuide] = useState(false);
   const [addedAnimation, setAddedAnimation] = useState(false);
 
+  useEffect(() => {
+    if (isOpen && product) {
+      setActiveImageIndex(0);
+      setIsZoomOpen(false);
+      setSelectedSize(product.sizes?.[0] || 'M');
+      setSelectedColor(
+        product.colors && product.colors[0] ? product.colors[0] : { name: 'Padrão', hex: '#111111' }
+      );
+      setQuantity(1);
+      setAddedAnimation(false);
+    }
+  }, [isOpen, product?.id]);
+
   if (!isOpen || !product) return null;
 
   const stockVal = product.stock !== undefined ? product.stock : 10;
@@ -56,7 +70,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     ])
   ).filter((img) => img && img.trim().length > 0);
 
-  const images = allImages.length > 0 ? allImages : ['https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80'];
+  const images = allImages;
 
   const currentPrice = product.isOnSale && product.promotionalPrice
     ? product.promotionalPrice
@@ -128,13 +142,21 @@ export const ProductModal: React.FC<ProductModalProps> = ({
             {/* Gallery Column */}
             <div className="relative bg-[#0D0D0F] flex flex-col justify-start p-4 sm:p-6 overflow-y-auto max-h-[40vh] md:max-h-full space-y-4">
               {/* Main Image */}
-              <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden bg-black shadow-inner border border-[#27272A] group">
-                <img
-                  src={images[activeImageIndex] || images[0]}
-                  alt={product.name}
-                  onClick={() => setIsZoomOpen(true)}
-                  className="w-full h-full object-contain object-center transition-transform duration-500 group-hover:scale-103 cursor-zoom-in"
-                />
+              <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden bg-black shadow-inner border border-[#27272A] group flex items-center justify-center">
+                {images[activeImageIndex] || images[0] ? (
+                  <img
+                    src={images[activeImageIndex] || images[0]}
+                    alt={product.name}
+                    referrerPolicy="no-referrer"
+                    onClick={() => setIsZoomOpen(true)}
+                    className="w-full h-full object-contain object-center transition-transform duration-500 group-hover:scale-103 cursor-zoom-in"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center gap-2 text-stone-500 p-6 text-center">
+                    <ShoppingBag className="w-10 h-10 text-[#D4AF37]/60" />
+                    <span className="text-xs font-medium text-stone-400">{product.name}</span>
+                  </div>
+                )}
 
                 {/* Navigation arrows for multiple images */}
                 {images.length > 1 && (
@@ -330,8 +352,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                           type="button"
                           onClick={() => {
                             setSelectedColor(color);
-                            if (color.imageUrl && color.imageUrl.trim()) {
-                              const foundIdx = images.findIndex((img) => img === color.imageUrl);
+                            const resolvedUrl = resolveColorImageUrl(color.imageUrl, images);
+                            if (resolvedUrl) {
+                              const foundIdx = images.findIndex((img) => img === resolvedUrl);
                               if (foundIdx !== -1) {
                                 setActiveImageIndex(foundIdx);
                               }

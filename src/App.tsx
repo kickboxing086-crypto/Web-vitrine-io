@@ -111,7 +111,15 @@ export default function App() {
       return true;
     }
   });
-  const [products, setProducts] = useState<Product[]>(getStoredProducts);
+  const [products, setProducts] = useState<Product[]>(() => {
+    try {
+      const saved = localStorage.getItem('store_current_client');
+      const parsed = saved ? JSON.parse(saved) : null;
+      return getStoredProducts(parsed?.id);
+    } catch {
+      return getStoredProducts();
+    }
+  });
   const [categories, setCategories] = useState<TagCategory[]>(getStoredCategories);
   const [tags, setTags] = useState<TagCategory[]>(getStoredTags);
   const [coupons, setCoupons] = useState<Coupon[]>(getStoredCoupons);
@@ -399,43 +407,82 @@ export default function App() {
 
   // Dynamic document title, meta tags, OpenGraph share metadata, fonts and primary colors update
   useEffect(() => {
-    if (selectedProduct) {
-      const priceStr = formatCurrency(selectedProduct.isOnSale && selectedProduct.promotionalPrice ? selectedProduct.promotionalPrice : selectedProduct.price);
-      document.title = `${selectedProduct.name} - ${settings.storeName} (${priceStr})`;
-      const metaDesc = document.querySelector('meta[name="description"]');
-      if (metaDesc) metaDesc.setAttribute('content', `${selectedProduct.name} por ${priceStr} na ${settings.storeName}. ${selectedProduct.description || ''}`);
+    const rawName = (settings.storeName || currentClient?.storeName || '').trim();
+    const isGenericName = !rawName || rawName.toLowerCase() === 'web vitrine';
+    const storeDisplayName = isGenericName ? 'Vitrine Digital Oficial' : rawName;
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
-      const ogTitle = document.querySelector('meta[property="og:title"]');
-      if (ogTitle) ogTitle.setAttribute('content', `${selectedProduct.name} - ${settings.storeName}`);
+    const setMeta = (selector: string, content: string) => {
+      const el = document.querySelector(selector);
+      if (el && content) el.setAttribute('content', content);
+    };
 
-      const ogDesc = document.querySelector('meta[property="og:description"]');
-      if (ogDesc) ogDesc.setAttribute('content', `Por apenas ${priceStr}. Confira os detalhes e fotos exclusivas!`);
-
-      const ogImage = document.querySelector('meta[property="og:image"]');
-      if (ogImage && selectedProduct.images?.[0]) {
-        ogImage.setAttribute('content', selectedProduct.images[0]);
+    if (activeView === 'landing' && !selectedProduct) {
+      const landingTitle = 'Web Vitrine — Catálogo Digital Profissional e Vendas pelo WhatsApp';
+      const landingDesc =
+        'Plataforma profissional de catálogo online: apresente seus produtos com fotos em alta definição, variações, preços e receba pedidos organizados direto no WhatsApp.';
+      document.title = landingTitle;
+      setMeta('meta[name="description"]', landingDesc);
+      setMeta('meta[property="og:site_name"]', 'Web Vitrine • Plataforma Profissional de Vendas');
+      setMeta('meta[property="og:title"]', landingTitle);
+      setMeta('meta[property="og:description"]', landingDesc);
+      setMeta('meta[name="twitter:title"]', landingTitle);
+      setMeta('meta[name="twitter:description"]', landingDesc);
+      if (origin) {
+        setMeta('meta[property="og:image"]', `${origin}/logo-master.jpg`);
+        setMeta('meta[name="twitter:image"]', `${origin}/logo-master.jpg`);
       }
-    } else if (settings.storeName) {
-      document.title = `${settings.storeName} | Vitrine Virtual`;
-      const metaDescription = document.querySelector('meta[name="description"]');
-      if (metaDescription) {
-        metaDescription.setAttribute('content', settings.description || `Vitrine virtual e catálogo exclusivo da ${settings.storeName}.`);
+    } else if (selectedProduct) {
+      const activePrice =
+        selectedProduct.isOnSale && selectedProduct.promotionalPrice
+          ? selectedProduct.promotionalPrice
+          : selectedProduct.price;
+      const priceStr = formatCurrency(activePrice);
+      const prodTitle = `${selectedProduct.name} • ${priceStr} | ${storeDisplayName}`;
+      const prodDesc = `Confira ${selectedProduct.name} por ${priceStr} na ${storeDisplayName}. ${selectedProduct.description || 'Veja fotos, opções disponíveis e peça direto pelo WhatsApp!'}`;
+
+      document.title = prodTitle;
+      setMeta('meta[name="description"]', prodDesc);
+      setMeta('meta[property="og:site_name"]', `${storeDisplayName} • Catálogo Oficial`);
+      setMeta('meta[property="og:title"]', prodTitle);
+      setMeta('meta[property="og:description"]', prodDesc);
+      setMeta('meta[name="twitter:title"]', prodTitle);
+      setMeta('meta[name="twitter:description"]', prodDesc);
+
+      const firstImg = selectedProduct.images?.[0] || '';
+      if (firstImg && origin) {
+        const lojaParam = new URLSearchParams(window.location.search).get('loja') || '';
+        const ogImgUrl = firstImg.startsWith('data:image/')
+          ? `${origin}/api/og-image?${lojaParam ? `loja=${encodeURIComponent(lojaParam)}&` : ''}produto=${encodeURIComponent(selectedProduct.id)}`
+          : firstImg;
+        setMeta('meta[property="og:image"]', ogImgUrl);
+        setMeta('meta[name="twitter:image"]', ogImgUrl);
       }
-      const ogTitle = document.querySelector('meta[property="og:title"]');
-      if (ogTitle) ogTitle.setAttribute('content', settings.storeName);
-
-      const ogDesc = document.querySelector('meta[property="og:description"]');
-      if (ogDesc) ogDesc.setAttribute('content', settings.description || 'Explore nosso catálogo exclusivo de produtos e faça seus pedidos.');
-
-      const ogImage = document.querySelector('meta[property="og:image"]');
-      if (ogImage && settings.logoUrl) {
-        ogImage.setAttribute('content', settings.logoUrl);
+    } else {
+      const storeTitle = `${storeDisplayName} — Catálogo Oficial & Pedidos Online`;
+      const storeDesc =
+        settings.description ||
+        `Explore o catálogo oficial da ${storeDisplayName}, veja lançamentos com fotos e faça seu pedido direto pelo WhatsApp.`;
+      document.title = storeTitle;
+      setMeta('meta[name="description"]', storeDesc);
+      setMeta('meta[property="og:site_name"]', `${storeDisplayName} • Loja Oficial`);
+      setMeta('meta[property="og:title"]', storeTitle);
+      setMeta('meta[property="og:description"]', storeDesc);
+      setMeta('meta[name="twitter:title"]', storeTitle);
+      setMeta('meta[name="twitter:description"]', storeDesc);
+      if (settings.logoUrl && origin) {
+        const lojaParam = new URLSearchParams(window.location.search).get('loja') || '';
+        const ogStoreImg = settings.logoUrl.startsWith('data:image/') && lojaParam
+          ? `${origin}/api/og-image?loja=${encodeURIComponent(lojaParam)}&type=store`
+          : settings.logoUrl;
+        setMeta('meta[property="og:image"]', ogStoreImg);
+        setMeta('meta[name="twitter:image"]', ogStoreImg);
       }
     }
 
     // Apply custom dynamic store font and primary color to root document
     applyStoreTheme(settings);
-  }, [settings, selectedProduct]);
+  }, [settings, selectedProduct, currentClient, activeView]);
 
   // Check first access and URL params for admin login and tenant stores
   useEffect(() => {
@@ -460,11 +507,11 @@ export default function App() {
         }
       }
 
-      // Check pathname (e.g. /loja/xxx)
+      // Check pathname (e.g. /loja/xxx or /loja/xxx/produto/yyy)
       const pathname = window.location.pathname;
-      if (pathname.startsWith('/loja/')) {
-        const pathSlug = pathname.replace('/loja/', '').replace(/\/$/, '').trim().toLowerCase();
-        if (pathSlug) return pathSlug;
+      const pathMatch = pathname.match(/^\/loja\/([^/]+)/i);
+      if (pathMatch && pathMatch[1]) {
+        return decodeURIComponent(pathMatch[1]).trim().toLowerCase();
       }
 
       const hostname = window.location.hostname;
@@ -572,8 +619,9 @@ export default function App() {
       setSettings(clientCached);
     }
 
-    // Clear local states immediately to prevent flashing data from previous client
-    setProducts([]);
+    // Hydrate client-scoped product cache immediately if available while waiting for snapshot
+    const cachedClientProducts = targetClientId ? getStoredProducts(targetClientId) : [];
+    setProducts(cachedClientProducts);
     setCategories([]);
     setTags([]);
     setCoupons([]);
@@ -723,11 +771,12 @@ export default function App() {
     };
   }, [currentClient, isAdminAuthenticated]);
 
-  // Open product modal automatically if product ID is in URL parameters
+  // Open product modal automatically if product ID is in URL parameters or path
   useEffect(() => {
     if (products.length > 0) {
       const params = new URLSearchParams(window.location.search);
-      const prodId = params.get('produto') || params.get('product');
+      const pathProdMatch = window.location.pathname.match(/\/produto\/([^/]+)\/?$/i);
+      const prodId = params.get('produto') || params.get('product') || (pathProdMatch?.[1] ? decodeURIComponent(pathProdMatch[1]) : '');
       if (prodId) {
         const product = products.find((p) => p.id === prodId);
         if (product) {
@@ -744,16 +793,15 @@ export default function App() {
     await saveSettingsToDb(newSettings, currentClient?.id);
   };
 
-  const handleSaveProduct = async (product: Product) => {
-    const exists = products.some((p) => p.id === product.id);
-    let updated: Product[];
-    if (exists) {
-      updated = products.map((p) => (p.id === product.id ? product : p));
-    } else {
-      updated = [product, ...products];
-    }
-    setProducts(updated);
-    await saveProductToDb(product, currentClient?.id);
+  const handleSaveProduct = async (product: Product): Promise<void> => {
+    const savedProduct = await saveProductToDb(product, currentClient?.id);
+    setProducts((prev) => {
+      const exists = prev.some((p) => p.id === savedProduct.id);
+      const updated = exists
+        ? prev.map((p) => (p.id === savedProduct.id ? savedProduct : p))
+        : [savedProduct, ...prev];
+      return updated;
+    });
   };
 
   const handleDeleteProduct = (product: Product) => {

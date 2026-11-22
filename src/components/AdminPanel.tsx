@@ -19,7 +19,7 @@ import {
   getStoreShareUrl,
   copyToClipboardSafe,
 } from '../lib/formatters';
-import { fileToBase64, filesToBase64List } from '../lib/imageUtils';
+import { fileToBase64, filesToBase64List, resolveColorImageUrl, encodeColorImageRef } from '../lib/imageUtils';
 import {
   LayoutDashboard,
   Package,
@@ -105,7 +105,7 @@ interface AdminPanelProps {
   finance: FinancialRecord[];
   categories: TagCategory[];
   tags: TagCategory[];
-  onSaveProduct: (product: Product) => void;
+  onSaveProduct: (product: Product) => Promise<void> | void;
   onRequestDeleteProduct: (product: Product) => void;
   onUpdateOrderStatus: (orderId: string, status: OrderStatus) => void;
   onRequestDeleteOrder: (order: Order) => void;
@@ -224,21 +224,24 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [productTagFilter, setProductTagFilter] = useState('all');
   const [productViewMode, setProductViewMode] = useState<'grouped' | 'grid'>('grouped');
 
-  // Product Form Modal state
+  // Product Form Modal state (4-Step Mandatory Wizard)
   const [isEditingProduct, setIsEditingProduct] = useState(false);
-  const [productModalTab, setProductModalTab] = useState<'basic' | 'stock_sizes' | 'photos_colors' | 'details'>('basic');
+  const [isProductEditMode, setIsProductEditMode] = useState(false);
+  const [productWizardStep, setProductWizardStep] = useState<1 | 2 | 3 | 4>(1);
+  const [maxUnlockedStep, setMaxUnlockedStep] = useState<1 | 2 | 3 | 4>(1);
+  const [productStepError, setProductStepError] = useState<string | null>(null);
+  const [isSavingProduct, setIsSavingProduct] = useState(false);
+  const [productSavedToast, setProductSavedToast] = useState<string | null>(null);
   const [costPriceInput, setCostPriceInput] = useState<number | ''>('');
   const [productForm, setProductForm] = useState<Partial<Product>>({});
   const [newColorName, setNewColorName] = useState('');
   const [newColorHex, setNewColorHex] = useState('#F472B6');
   const [newColorImageUrl, setNewColorImageUrl] = useState('');
-  const [isUploadingColorImg, setIsUploadingColorImg] = useState(false);
   const [newSizeInput, setNewSizeInput] = useState('');
   const [newTagInput, setNewTagInput] = useState('');
   const [newImageInput, setNewImageInput] = useState('');
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const colorFileInputRef = useRef<HTMLInputElement>(null);
 
   // Coupon Form state
   const [isAddingCoupon, setIsAddingCoupon] = useState(false);
@@ -308,42 +311,118 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   const COLORS = ['#B58D5F', '#2C3E50', '#9C3A3A', '#735D78', '#556B2F', '#D4A373'];
 
-  // Handle Product Save
+  const productDraftKey = `draft_new_product_${currentClient?.id || 'default'}`;
+
+  // Auto-persist unsaved new-product draft (including uploaded photos) so navigating or accidental reloads never wipe work
+  React.useEffect(() => {
+    if (!isEditingProduct || isProductEditMode || !productForm.id) return;
+    try {
+      sessionStorage.setItem(
+        productDraftKey,
+        JSON.stringify({
+          productForm,
+          step: productWizardStep,
+          maxUnlockedStep,
+        })
+      );
+    } catch {
+      // Ignore storage quota if many photos are queued; memory state holds them safely until Firestore save
+    }
+  }, [isEditingProduct, isProductEditMode, productForm, productWizardStep, maxUnlockedStep, productDraftKey]);
+
+  const buildBlankProductForm = (): Partial<Product> => ({
+    id: 'prod-' + Date.now(),
+    name: '',
+    description: '',
+    category: categories[0]?.name || 'Vestidos & Macacões',
+    price: 0,
+    promotionalPrice: undefined,
+    isOnSale: false,
+    isFeatured: false,
+    isNew: true,
+    isAvailable: true,
+    hasColors: false,
+    images: [],
+    sizes: ['P', 'M', 'G'],
+    colors: [],
+    stock: 10,
+    tags: [tags[0]?.name || 'Lançamento'],
+    fabricDetails: '',
+    careInstructions: '',
+    viewsCount: 0,
+    ordersCount: 0,
+    createdAt: new Date().toISOString(),
+  });
+
+  // Handle Product Create / Edit
   const handleOpenProductCreate = () => {
-    setProductForm({
-      id: 'prod-' + Date.now(),
-      name: '',
-      description: '',
-      category: categories[0]?.name || 'Vestidos & Macacões',
-      price: 0,
-      promotionalPrice: undefined,
-      isOnSale: false,
-      isFeatured: false,
-      isNew: true,
-      isAvailable: true,
-      images: [],
-      sizes: ['P', 'M', 'G'],
-      colors: [],
-      stock: 10, // Stock defaults to 10 so it never shows as Esgotado if CEO forgets!
-      tags: ['Lançamento'],
-      fabricDetails: '',
-      careInstructions: '',
-      viewsCount: 0,
-      ordersCount: 0,
-      createdAt: new Date().toISOString(),
-    });
+    setProductStepError(null);
+    setNewImageInput('');
+    setNewColorName('');
+    setNewColorImageUrl('');
+    setNewSizeInput('');
+    setNewTagInput('');
     setCostPriceInput('');
-    setProductModalTab('basic');
+    setIsProductEditMode(false);
+
+    // Restore unfinished draft if it contains photos or name
+    try {
+      const savedDraft = sessionStorage.getItem(productDraftKey);
+      if (savedDraft) {
+        const parsed = JSON.parse(savedDraft);
+        if (parsed?.productForm && (parsed.productForm.images?.length > 0 || parsed.productForm.name)) {
+          setProductForm(parsed.productForm);
+          setProductWizardStep(parsed.step || 1);
+          setMaxUnlockedStep(parsed.maxUnlockedStep || 1);
+          setIsEditingProduct(true);
+          return;
+        }
+      }
+    } catch {
+      // Ignore malformed draft
+    }
+
+    setProductForm(buildBlankProductForm());
+    setProductWizardStep(1);
+    setMaxUnlockedStep(1);
     setIsEditingProduct(true);
   };
 
+  const handleResetNewProductDraft = () => {
+    try {
+      sessionStorage.removeItem(productDraftKey);
+    } catch {}
+    setProductForm(buildBlankProductForm());
+    setProductWizardStep(1);
+    setMaxUnlockedStep(1);
+    setProductStepError(null);
+    setNewImageInput('');
+  };
+
   const handleOpenProductEdit = (product: Product) => {
+    const resolvedColors = Array.isArray(product.colors)
+      ? product.colors.map((c) => ({
+          ...c,
+          imageUrl: resolveColorImageUrl(c.imageUrl, product.images) || undefined,
+        }))
+      : [];
     setProductForm({
       ...product,
+      images: Array.isArray(product.images) ? product.images.filter(Boolean) : [],
+      sizes: Array.isArray(product.sizes) && product.sizes.length > 0 ? product.sizes : ['M'],
+      colors: resolvedColors,
+      hasColors: resolvedColors.length > 0 ? product.hasColors !== false : Boolean(product.hasColors),
+      tags: Array.isArray(product.tags) && product.tags.length > 0 ? product.tags : [tags[0]?.name || 'Lançamento'],
       stock: product.stock !== undefined ? product.stock : 10,
     });
     setCostPriceInput('');
-    setProductModalTab('basic');
+    setNewImageInput('');
+    setNewColorName('');
+    setNewColorImageUrl('');
+    setProductStepError(null);
+    setIsProductEditMode(true);
+    setProductWizardStep(1);
+    setMaxUnlockedStep(4);
     setIsEditingProduct(true);
   };
 
@@ -352,7 +431,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       ...product,
       isAvailable: product.isAvailable === false ? true : false,
     };
-    onSaveProduct(updatedProduct);
+    await onSaveProduct(updatedProduct);
   };
 
   const handleProductImageFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -361,12 +440,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
     const currentImages = productForm.images || [];
     if (currentImages.length >= 10) {
-      alert('Esta peça já atingiu o limite máximo de 10 fotos.');
+      setProductStepError('Esta peça já atingiu o limite máximo de 10 fotos.');
       return;
     }
 
     try {
       setIsUploadingImages(true);
+      setProductStepError(null);
       const base64List = await filesToBase64List(files, 10, currentImages.length);
       setProductForm((prev) => ({
         ...prev,
@@ -374,7 +454,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       }));
     } catch (err) {
       console.error('Erro ao converter fotos para base64:', err);
-      alert('Não foi possível processar algumas imagens. Tente novamente com imagens em formato JPG ou PNG.');
+      setProductStepError('Não foi possível processar algumas imagens. Use arquivos JPG, PNG ou WEBP.');
     } finally {
       setIsUploadingImages(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -386,31 +466,208 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     if (toIdx < 0 || toIdx >= images.length) return;
     const item = images.splice(fromIdx, 1)[0];
     images.splice(toIdx, 0, item);
-    setProductForm({ ...productForm, images });
+    setProductForm((prev) => ({ ...prev, images }));
   };
 
   const handleRemoveProductImage = (idxToRemove: number) => {
-    setProductForm({
-      ...productForm,
-      images: productForm.images?.filter((_, i) => i !== idxToRemove),
+    setProductForm((prev) => {
+      const currentImgs = prev.images || [];
+      const removedUrl = currentImgs[idxToRemove];
+      const nextImages = currentImgs.filter((_, i) => i !== idxToRemove);
+      const nextColors = (prev.colors || []).map((c) => {
+        const resolved = resolveColorImageUrl(c.imageUrl, currentImgs);
+        if (resolved && resolved === removedUrl) {
+          return { ...c, imageUrl: undefined };
+        }
+        return { ...c, imageUrl: resolved || undefined };
+      });
+      return {
+        ...prev,
+        images: nextImages,
+        colors: nextColors,
+      };
     });
   };
 
-  const handleSaveProductForm = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!productForm.name || !productForm.price) return;
-    const finalStock = (productForm.stock !== undefined && !isNaN(productForm.stock) && productForm.stock !== null)
-      ? Number(productForm.stock)
-      : 10;
-    const finalProduct: Product = {
-      ...(productForm as Product),
-      stock: finalStock,
-      sizes: productForm.sizes && productForm.sizes.length > 0 ? productForm.sizes : ['M'],
-      images: productForm.images && productForm.images.length > 0 ? productForm.images : ['https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80'],
-      isAvailable: productForm.isAvailable !== false,
+  // Absorb a typed URL in newImageInput automatically if the CEO forgot to click "+ URL"
+  const absorbPendingImageUrl = (formSnapshot: Partial<Product>): Partial<Product> => {
+    const pendingUrl = newImageInput.trim();
+    if (!pendingUrl) return formSnapshot;
+    const curImgs = formSnapshot.images || [];
+    if (curImgs.length >= 10 || curImgs.includes(pendingUrl)) {
+      setNewImageInput('');
+      return formSnapshot;
+    }
+    setNewImageInput('');
+    return {
+      ...formSnapshot,
+      images: [...curImgs, pendingUrl],
     };
-    onSaveProduct(finalProduct);
-    setIsEditingProduct(false);
+  };
+
+  const validateProductStep = (step: 1 | 2 | 3 | 4, formToCheck: Partial<Product>): string | null => {
+    if (step === 1) {
+      if (isUploadingImages) {
+        return 'Aguarde o processamento das fotos terminar antes de avançar.';
+      }
+      if (!formToCheck.images || formToCheck.images.length === 0) {
+        return 'Adicione pelo menos 1 foto da peça para continuar.';
+      }
+      if (!formToCheck.name || formToCheck.name.trim().length < 2) {
+        return 'Informe o nome completo da peça (mínimo 2 caracteres).';
+      }
+      if (!formToCheck.category || !formToCheck.category.trim()) {
+        return 'Selecione a categoria principal da peça.';
+      }
+    }
+
+    if (step === 2) {
+      if (!formToCheck.price || Number(formToCheck.price) <= 0) {
+        return 'Informe um preço de venda maior que R$ 0,00.';
+      }
+      if (
+        formToCheck.promotionalPrice !== undefined &&
+        Number(formToCheck.promotionalPrice) > 0 &&
+        Number(formToCheck.promotionalPrice) >= Number(formToCheck.price)
+      ) {
+        return 'O preço promocional deve ser menor que o preço normal de venda.';
+      }
+    }
+
+    if (step === 3) {
+      if (formToCheck.stock === undefined || formToCheck.stock === null || Number(formToCheck.stock) < 0 || Number.isNaN(Number(formToCheck.stock))) {
+        return 'Informe a quantidade em estoque (0 ou mais unidades).';
+      }
+      if (!formToCheck.sizes || formToCheck.sizes.length === 0) {
+        return 'Selecione pelo menos 1 tamanho disponível para a peça.';
+      }
+      if (formToCheck.hasColors && (!formToCheck.colors || formToCheck.colors.length === 0)) {
+        return 'Adicione pelo menos 1 cor ou selecione "Peça em Cor Única".';
+      }
+    }
+
+    if (step === 4) {
+      if (!formToCheck.description || formToCheck.description.trim().length < 10) {
+        return 'Escreva uma breve descrição da peça (mínimo 10 caracteres) para ajudar na venda.';
+      }
+      if (!formToCheck.tags || formToCheck.tags.length === 0) {
+        return 'Selecione pelo menos 1 tag para organizar a peça no catálogo.';
+      }
+    }
+
+    return null;
+  };
+
+  const handleNextProductStep = () => {
+    const syncedForm = productWizardStep === 1 ? absorbPendingImageUrl(productForm) : productForm;
+    if (syncedForm !== productForm) {
+      setProductForm(syncedForm);
+    }
+
+    const err = validateProductStep(productWizardStep, syncedForm);
+    if (err) {
+      setProductStepError(err);
+      return;
+    }
+
+    setProductStepError(null);
+    if (productWizardStep < 4) {
+      const nextStep = (productWizardStep + 1) as 1 | 2 | 3 | 4;
+      setProductWizardStep(nextStep);
+      setMaxUnlockedStep((prev) => (nextStep > prev ? nextStep : prev));
+    }
+  };
+
+  const handlePrevProductStep = () => {
+    setProductStepError(null);
+    if (productWizardStep > 1) {
+      setProductWizardStep((productWizardStep - 1) as 1 | 2 | 3 | 4);
+    }
+  };
+
+  const handleSaveProductForm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSavingProduct || isUploadingImages) return;
+
+    const syncedForm = absorbPendingImageUrl(productForm);
+    if (syncedForm !== productForm) {
+      setProductForm(syncedForm);
+    }
+
+    // Validate all 4 mandatory steps before saving
+    for (const s of [1, 2, 3, 4] as const) {
+      const err = validateProductStep(s, syncedForm);
+      if (err) {
+        setProductWizardStep(s);
+        setProductStepError(err);
+        return;
+      }
+    }
+
+    setProductStepError(null);
+    setIsSavingProduct(true);
+
+    try {
+      const cleanImages = (syncedForm.images || []).filter((img) => typeof img === 'string' && img.trim().length > 0);
+      const finalStock =
+        syncedForm.stock !== undefined && !isNaN(Number(syncedForm.stock)) && syncedForm.stock !== null
+          ? Number(syncedForm.stock)
+          : 10;
+
+      const cleanColors = syncedForm.hasColors
+        ? (syncedForm.colors || []).map((c) => {
+            const ref = encodeColorImageRef(c.imageUrl, cleanImages);
+            return {
+              name: c.name,
+              hex: c.hex,
+              ...(ref ? { imageUrl: ref } : {}),
+            };
+          })
+        : [];
+
+      const finalProduct: Product = {
+        id: syncedForm.id || 'prod-' + Date.now(),
+        name: (syncedForm.name || '').trim(),
+        description: (syncedForm.description || '').trim(),
+        category: (syncedForm.category || categories[0]?.name || 'Geral').trim(),
+        price: Number(syncedForm.price) || 0,
+        ...(syncedForm.promotionalPrice && Number(syncedForm.promotionalPrice) > 0
+          ? { promotionalPrice: Number(syncedForm.promotionalPrice) }
+          : {}),
+        isOnSale: Boolean(syncedForm.isOnSale && syncedForm.promotionalPrice && Number(syncedForm.promotionalPrice) > 0),
+        isFeatured: Boolean(syncedForm.isFeatured),
+        isNew: syncedForm.isNew !== false,
+        isAvailable: syncedForm.isAvailable !== false,
+        hasColors: Boolean(syncedForm.hasColors && cleanColors.length > 0),
+        images: cleanImages,
+        sizes: syncedForm.sizes && syncedForm.sizes.length > 0 ? syncedForm.sizes : ['Único'],
+        colors: cleanColors,
+        stock: finalStock,
+        tags: syncedForm.tags && syncedForm.tags.length > 0 ? syncedForm.tags : ['Lançamento'],
+        fabricDetails: (syncedForm.fabricDetails || '').trim(),
+        careInstructions: (syncedForm.careInstructions || '').trim(),
+        viewsCount: syncedForm.viewsCount || 0,
+        ordersCount: syncedForm.ordersCount || 0,
+        createdAt: syncedForm.createdAt || new Date().toISOString(),
+      };
+
+      await onSaveProduct(finalProduct);
+      try {
+        sessionStorage.removeItem(productDraftKey);
+      } catch {}
+      setIsEditingProduct(false);
+      setProductSavedToast(`"${finalProduct.name}" salvo com ${finalProduct.images.length} foto(s) na vitrine!`);
+      setTimeout(() => {
+        setProductSavedToast(null);
+      }, 4500);
+    } catch (err: any) {
+      console.error('Erro ao salvar produto:', err);
+      setProductStepError(
+        'Não foi possível salvar a peça no servidor agora. Suas fotos continuam preservadas aqui — tente clicar em "Salvar e Publicar Peça" novamente.'
+      );
+    } finally {
+      setIsSavingProduct(false);
+    }
   };
 
   const handlePrintOrder = (ord: any) => {
@@ -648,6 +905,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               className="ml-2 p-1 hover:bg-emerald-200 rounded-full transition-colors cursor-pointer"
             >
               <X className="w-4 h-4 text-emerald-600" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {productSavedToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-stone-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-[#D4AF37] flex items-center gap-3 font-semibold text-xs sm:text-sm max-w-[92vw] w-max"
+          >
+            <div className="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            </div>
+            <span>{productSavedToast}</span>
+            <button
+              type="button"
+              onClick={() => setProductSavedToast(null)}
+              className="ml-1 p-1 hover:bg-stone-800 rounded-full transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4 text-stone-400" />
             </button>
           </motion.div>
         )}
@@ -1868,195 +2148,385 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         </div>
       )}
 
-      {/* Product Edit / Create Modal with Detailed Sections & Smart Stock */}
+      {/* Product Edit / Create Modal — 4-Step Mandatory Wizard */}
       {isEditingProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-xs overflow-y-auto">
           <div className="relative w-full max-w-3xl bg-stone-50 rounded-3xl border border-[#E3D7CA] shadow-2xl p-5 sm:p-7 my-auto max-h-[92vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-stone-200 mb-4">
+            <div className="flex items-start justify-between pb-4 border-b border-stone-200 mb-4 gap-3">
               <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="px-2.5 py-0.5 rounded-full bg-stone-900 text-brand-primary text-[10px] font-extrabold uppercase tracking-wider">
-                    {productForm.id?.startsWith('prod-') && !products.find((p) => p.id === productForm.id)
-                      ? 'Nova Publicação'
-                      : 'Edição de Peça'}
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <span className="px-2.5 py-0.5 rounded-full bg-stone-900 text-[#D4AF37] text-[10px] font-extrabold uppercase tracking-wider">
+                    {isProductEditMode ? 'Edição de Peça' : 'Cadastro Guiado'}
                   </span>
-                  <span className="text-xs text-stone-500">
-                    Estoque padrão de 10 unidades ativo
+                  <span className="text-xs font-semibold text-stone-600">
+                    Etapa {productWizardStep} de 4 (Obrigatório)
                   </span>
+                  {!isProductEditMode && (productForm.images?.length || productForm.name) && (
+                    <button
+                      type="button"
+                      onClick={handleResetNewProductDraft}
+                      className="text-[11px] font-semibold text-stone-500 hover:text-rose-600 underline cursor-pointer ml-1"
+                    >
+                      Limpar rascunho
+                    </button>
+                  )}
                 </div>
                 <h3 className="font-serif-luxury text-xl sm:text-2xl font-bold text-stone-900">
-                  {productForm.id?.startsWith('prod-') && !products.find((p) => p.id === productForm.id)
-                    ? 'Publicar Nova Peça'
-                    : 'Editar Peça do Catálogo'}
+                  {isProductEditMode ? 'Editar Peça do Catálogo' : 'Publicar Nova Peça por Etapas'}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsEditingProduct(false)}
-                className="p-2 text-stone-400 hover:text-stone-700 rounded-full cursor-pointer hover:bg-stone-200 transition-colors"
-                title="Fechar"
+                className="p-2 text-stone-400 hover:text-stone-700 rounded-full cursor-pointer hover:bg-stone-200 transition-colors shrink-0"
+                title="Fechar (rascunho fica salvo)"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Tab Navigation */}
+            {/* Mandatory Step Progress Stepper */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1.5 bg-stone-200/80 rounded-2xl mb-5">
               {[
-                { id: 'basic', label: '1. Geral & Preços', icon: TagIcon },
-                { id: 'stock_sizes', label: '2. Estoque & Tamanhos', icon: Package },
-                { id: 'photos_colors', label: '3. Fotos & Cores', icon: ImageIcon },
-                { id: 'details', label: '4. Ficha & Cuidados', icon: Edit3 },
-              ].map((tab) => {
-                const Icon = tab.icon;
-                const isActive = productModalTab === tab.id;
+                { step: 1 as const, label: '1. Foto & Nome', icon: ImageIcon },
+                { step: 2 as const, label: '2. Preço & Oferta', icon: DollarSign },
+                { step: 3 as const, label: '3. Estoque & Grade', icon: Package },
+                { step: 4 as const, label: '4. Descrição & Publicar', icon: CheckCircle2 },
+              ].map((item) => {
+                const Icon = item.icon;
+                const isActive = productWizardStep === item.step;
+                const isCompleted = !validateProductStep(item.step, productForm) && item.step < productWizardStep;
+                const isUnlocked = isProductEditMode || item.step <= maxUnlockedStep;
                 return (
                   <button
-                    key={tab.id}
+                    key={item.step}
                     type="button"
-                    onClick={() => setProductModalTab(tab.id as any)}
-                    className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    disabled={!isUnlocked}
+                    onClick={() => {
+                      if (!isUnlocked) return;
+                      // Validate before jumping forward in create mode
+                      if (!isProductEditMode && item.step > productWizardStep) {
+                        const err = validateProductStep(productWizardStep, productForm);
+                        if (err) {
+                          setProductStepError(err);
+                          return;
+                        }
+                      }
+                      setProductStepError(null);
+                      setProductWizardStep(item.step);
+                    }}
+                    className={`flex items-center justify-center gap-1.5 py-2.5 px-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
                       isActive
-                        ? 'bg-stone-900 text-[#D4AF37] shadow-sm'
-                        : 'text-stone-700 hover:text-stone-900 hover:bg-stone-300/60'
+                        ? 'bg-stone-900 text-[#D4AF37] shadow-sm cursor-pointer'
+                        : isCompleted
+                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 cursor-pointer'
+                        : isUnlocked
+                        ? 'text-stone-700 hover:text-stone-900 hover:bg-stone-300/60 cursor-pointer'
+                        : 'text-stone-400 cursor-not-allowed opacity-70'
                     }`}
+                    id={`wizard-step-btn-${item.step}`}
                   >
-                    <Icon className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">{tab.label}</span>
+                    {isCompleted ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    ) : (
+                      <Icon className="w-3.5 h-3.5 shrink-0" />
+                    )}
+                    <span className="truncate">{item.label}</span>
                   </button>
                 );
               })}
             </div>
 
+            {/* Step Validation Error Alert */}
+            {productStepError && (
+              <div className="mb-4 p-3.5 rounded-2xl bg-rose-50 border border-rose-300 text-rose-800 flex items-start gap-2.5 text-xs font-semibold">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <span>{productStepError}</span>
+              </div>
+            )}
+
             <form onSubmit={handleSaveProductForm} className="space-y-5">
-              {/* TAB 1: GERAL & PREÇOS */}
-              {productModalTab === 'basic' && (
+              {/* ================= STEP 1: FOTOS & IDENTIDADE ================= */}
+              {productWizardStep === 1 && (
                 <div className="space-y-4">
-                  {/* Name */}
-                  <div>
-                    <label className="block text-xs font-bold text-stone-800 mb-1">
-                      Nome da Peça *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={productForm.name || ''}
-                      onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
-                      placeholder="Ex: Vestido Midi Linho Puro Italiano"
-                      className="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-xs text-stone-900 font-semibold focus:outline-none focus:ring-2 focus:ring-stone-800"
-                    />
-                  </div>
+                  {/* Photo Gallery (Mandatory >= 1) */}
+                  <div className="p-4 bg-white rounded-2xl border border-stone-200 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <label className="block text-xs font-bold text-stone-900 uppercase tracking-wide">
+                          Fotos da Peça * (Obrigatório mín. 1 foto, máx. 10)
+                        </label>
+                        <p className="text-[11px] text-stone-500">
+                          A 1ª foto é a capa principal na vitrine. Todas as fotos ficam salvas automaticamente na ficha.
+                        </p>
+                      </div>
 
-                  {/* Category */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="relative">
-                      <label className="block text-xs font-bold text-stone-800 mb-1">
-                        Categoria Principal *
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => setIsProductCategoryOpen(!isProductCategoryOpen)}
-                        className="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-xs text-stone-900 font-medium flex items-center justify-between shadow-2xs cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all"
-                      >
-                        <span>{productForm.category || categories[0]?.name || 'Selecione a Categoria'}</span>
-                        <ChevronDown className="w-3.5 h-3.5 opacity-70" />
-                      </button>
-
-                      <AnimatePresence>
-                        {isProductCategoryOpen && (
-                          <>
-                            <div
-                              className="fixed inset-0 z-40"
-                              onClick={() => setIsProductCategoryOpen(false)}
-                            />
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.95, y: 5 }}
-                              animate={{ opacity: 1, scale: 1, y: 0 }}
-                              exit={{ opacity: 0, scale: 0.95, y: 5 }}
-                              transition={{ duration: 0.12, ease: "easeOut" }}
-                              className="absolute left-0 right-0 top-full mt-2 max-h-60 overflow-y-auto bg-stone-900 border border-stone-300 shadow-xl rounded-2xl p-2 z-50 space-y-1"
-                            >
-                              {categories.map((c) => {
-                                const isSelected = (productForm.category || categories[0]?.name) === c.name;
-                                return (
-                                  <button
-                                    key={c.id}
-                                    type="button"
-                                    onClick={() => {
-                                      setProductForm({ ...productForm, category: c.name });
-                                      setIsProductCategoryOpen(false);
-                                    }}
-                                    className={`w-full text-left px-3 py-2 text-xs rounded-xl transition-all flex items-center justify-between cursor-pointer ${
-                                      isSelected
-                                        ? 'bg-stone-800 text-[#D4AF37] font-bold shadow-xs'
-                                        : 'text-stone-300 hover:bg-stone-800/60 hover:text-white'
-                                    }`}
-                                  >
-                                    <span>{c.name}</span>
-                                    {isSelected && (
-                                      <Check className="w-3.5 h-3.5 text-[#D4AF37]" />
-                                    )}
-                                  </button>
-                                );
-                              })}
-                            </motion.div>
-                          </>
-                        )}
-                      </AnimatePresence>
+                      <div className="flex items-center space-x-1.5 bg-stone-100 px-3 py-1 border border-stone-300 rounded-lg text-xs font-bold">
+                        <span
+                          className={
+                            (productForm.images?.length || 0) === 0
+                              ? 'text-amber-700'
+                              : (productForm.images?.length || 0) >= 10
+                              ? 'text-amber-600'
+                              : 'text-emerald-700'
+                          }
+                        >
+                          {productForm.images?.length || 0} / 10 fotos
+                        </span>
+                      </div>
                     </div>
 
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleProductImageFiles}
+                      className="hidden"
+                      id="product-photo-upload-input"
+                      multiple
+                    />
+
+                    <button
+                      type="button"
+                      disabled={isUploadingImages || (productForm.images?.length || 0) >= 10}
+                      onClick={() => fileInputRef.current?.click()}
+                      className={`w-full flex items-center justify-center space-x-2 py-3.5 px-4 rounded-xl border-2 border-dashed font-bold text-xs transition-all cursor-pointer ${
+                        (productForm.images?.length || 0) >= 10
+                          ? 'bg-stone-100 border-stone-300 text-stone-400 cursor-not-allowed'
+                          : 'bg-stone-50 hover:bg-[#F4ECE1] border-stone-400 text-stone-900'
+                      }`}
+                      id="btn-upload-product-photos"
+                    >
+                      <Upload className="w-4 h-4 text-brand-primary-darker" />
+                      <span>
+                        {isUploadingImages
+                          ? 'Otimizando e anexando fotos...'
+                          : (productForm.images?.length || 0) >= 10
+                          ? 'Limite de 10 fotos atingido'
+                          : 'Selecionar Fotos da Galeria ou Câmera'}
+                      </span>
+                    </button>
+
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        placeholder="Ou cole o link direto da imagem (URL)..."
+                        value={newImageInput}
+                        onChange={(e) => {
+                          setNewImageInput(e.target.value);
+                          if (productStepError) setProductStepError(null);
+                        }}
+                        disabled={(productForm.images?.length || 0) >= 10}
+                        className="flex-1 px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs text-stone-900 disabled:opacity-50"
+                      />
+                      <button
+                        type="button"
+                        disabled={(productForm.images?.length || 0) >= 10 || !newImageInput.trim()}
+                        onClick={() => {
+                          if (!newImageInput.trim()) return;
+                          const cur = productForm.images || [];
+                          if (cur.length >= 10) return;
+                          setProductForm({ ...productForm, images: [...cur, newImageInput.trim()] });
+                          setNewImageInput('');
+                          setProductStepError(null);
+                        }}
+                        className="px-3.5 py-2 bg-stone-900 hover:bg-stone-800 disabled:opacity-40 text-white rounded-xl text-xs font-bold cursor-pointer"
+                      >
+                        + Adicionar URL
+                      </button>
+                    </div>
+
+                    {/* Previews */}
+                    {productForm.images && productForm.images.length > 0 ? (
+                      <div className="pt-2 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
+                        {productForm.images.map((imgUrl, idx) => (
+                          <div
+                            key={idx}
+                            className={`relative aspect-[3/4] w-full rounded-2xl overflow-hidden shadow-sm border-2 bg-stone-100 ${
+                              idx === 0 ? 'border-stone-900 shadow-md ring-2 ring-[#D4AF37]' : 'border-stone-200'
+                            }`}
+                          >
+                            <img
+                              src={imgUrl}
+                              alt={`Foto ${idx + 1}`}
+                              referrerPolicy="no-referrer"
+                              className="w-full h-full object-cover object-top"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveProductImage(idx)}
+                              className="absolute top-1.5 right-1.5 p-1 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-md cursor-pointer transition-colors"
+                              title="Remover foto"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                            {idx === 0 ? (
+                              <div className="absolute bottom-0 inset-x-0 bg-stone-900/90 text-[#D4AF37] text-[10px] font-bold py-1 text-center uppercase tracking-wider">
+                                Capa Principal
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleMoveProductImage(idx, 0)}
+                                className="absolute bottom-1.5 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-stone-900/85 hover:bg-stone-900 text-white text-[9px] font-bold rounded-lg cursor-pointer whitespace-nowrap"
+                              >
+                                Tornar Capa
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-800 font-medium flex items-center gap-2">
+                        <ImageIcon className="w-4 h-4 text-amber-600 shrink-0" />
+                        <span>Envie ao menos 1 foto acima para liberar a próxima etapa.</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Product Name & Category */}
+                  <div className="p-4 bg-white rounded-2xl border border-stone-200 space-y-3.5">
                     <div>
                       <label className="block text-xs font-bold text-stone-800 mb-1">
-                        Código de Referência (SKU)
+                        Nome da Peça *
                       </label>
                       <input
                         type="text"
-                        value={productForm.id || ''}
-                        disabled
-                        className="w-full px-3.5 py-2.5 bg-stone-100 border border-stone-300 rounded-xl text-xs text-stone-600 font-mono"
+                        value={productForm.name || ''}
+                        onChange={(e) => {
+                          setProductForm({ ...productForm, name: e.target.value });
+                          if (productStepError) setProductStepError(null);
+                        }}
+                        placeholder="Ex: Vestido Midi Linho Puro Italiano"
+                        className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs text-stone-900 font-semibold focus:outline-none focus:ring-2 focus:ring-stone-800"
+                        id="input-product-name"
                       />
                     </div>
-                  </div>
 
-                  {/* Pricing Box & Profit Calculator */}
-                  <div className="p-4 bg-white rounded-2xl border border-stone-200 space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="relative">
+                        <label className="block text-xs font-bold text-stone-800 mb-1">
+                          Categoria Principal *
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setIsProductCategoryOpen(!isProductCategoryOpen)}
+                          className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs text-stone-900 font-medium flex items-center justify-between shadow-2xs cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all"
+                        >
+                          <span>{productForm.category || categories[0]?.name || 'Selecione a Categoria'}</span>
+                          <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+                        </button>
+
+                        <AnimatePresence>
+                          {isProductCategoryOpen && (
+                            <>
+                              <div
+                                className="fixed inset-0 z-40"
+                                onClick={() => setIsProductCategoryOpen(false)}
+                              />
+                              <motion.div
+                                initial={{ opacity: 0, scale: 0.95, y: 5 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, y: 5 }}
+                                transition={{ duration: 0.12, ease: 'easeOut' }}
+                                className="absolute left-0 right-0 top-full mt-2 max-h-60 overflow-y-auto bg-stone-900 border border-stone-300 shadow-xl rounded-2xl p-2 z-50 space-y-1"
+                              >
+                                {categories.map((c) => {
+                                  const isSelected = (productForm.category || categories[0]?.name) === c.name;
+                                  return (
+                                    <button
+                                      key={c.id}
+                                      type="button"
+                                      onClick={() => {
+                                        setProductForm({ ...productForm, category: c.name });
+                                        setIsProductCategoryOpen(false);
+                                      }}
+                                      className={`w-full text-left px-3 py-2 text-xs rounded-xl transition-all flex items-center justify-between cursor-pointer ${
+                                        isSelected
+                                          ? 'bg-stone-800 text-[#D4AF37] font-bold shadow-xs'
+                                          : 'text-stone-300 hover:bg-stone-800/60 hover:text-white'
+                                      }`}
+                                    >
+                                      <span>{c.name}</span>
+                                      {isSelected && <Check className="w-3.5 h-3.5 text-[#D4AF37]" />}
+                                    </button>
+                                  );
+                                })}
+                              </motion.div>
+                            </>
+                          )}
+                        </AnimatePresence>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-stone-800 mb-1">
+                          Código de Referência (SKU)
+                        </label>
+                        <input
+                          type="text"
+                          value={productForm.id || ''}
+                          disabled
+                          className="w-full px-3.5 py-2.5 bg-stone-100 border border-stone-300 rounded-xl text-xs text-stone-600 font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ================= STEP 2: PREÇO & OFERTA ================= */}
+              {productWizardStep === 2 && (
+                <div className="space-y-4">
+                  <div className="p-4 bg-white rounded-2xl border border-stone-200 space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-stone-900 uppercase tracking-wide">
-                        Precificação & Promoções
-                      </span>
-                      {productForm.price && productForm.price > 0 && productForm.promotionalPrice && productForm.promotionalPrice > 0 && productForm.promotionalPrice < productForm.price && (
-                        <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-[11px] font-bold">
-                          -{Math.round(((productForm.price - productForm.promotionalPrice) / productForm.price) * 100)}% de Desconto
+                      <div>
+                        <span className="text-xs font-bold text-stone-900 uppercase tracking-wide block">
+                          Precificação Obrigatória & Lucro
                         </span>
-                      )}
+                        <p className="text-[11px] text-stone-500">
+                          Defina o valor de venda e, se quiser, um preço promocional com desconto automático.
+                        </p>
+                      </div>
+                      {productForm.price &&
+                        productForm.price > 0 &&
+                        productForm.promotionalPrice &&
+                        productForm.promotionalPrice > 0 &&
+                        productForm.promotionalPrice < productForm.price && (
+                          <span className="px-2.5 py-1 rounded-lg bg-red-100 text-red-700 text-[11px] font-bold">
+                            -{Math.round(((productForm.price - productForm.promotionalPrice) / productForm.price) * 100)}% OFF
+                          </span>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
-                        <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                        <label className="block text-[11px] font-bold text-stone-800 mb-1">
                           Preço de Venda (R$) *
                         </label>
                         <input
                           type="number"
                           step="0.01"
-                          required
+                          min="0"
                           value={productForm.price || ''}
-                          onChange={(e) =>
-                            setProductForm({ ...productForm, price: parseFloat(e.target.value) || 0 })
-                          }
+                          onChange={(e) => {
+                            setProductForm({ ...productForm, price: parseFloat(e.target.value) || 0 });
+                            if (productStepError) setProductStepError(null);
+                          }}
                           placeholder="0,00"
                           className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs text-stone-900 font-bold"
+                          id="input-product-price"
                         />
                       </div>
 
                       <div>
                         <label className="block text-[11px] font-semibold text-stone-700 mb-1">
-                          Preço Promocional (R$)
+                          Preço Promocional (Opcional)
                         </label>
                         <input
                           type="number"
                           step="0.01"
+                          min="0"
                           value={productForm.promotionalPrice || ''}
                           onChange={(e) => {
                             const val = parseFloat(e.target.value);
@@ -2065,9 +2535,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                               promotionalPrice: val > 0 ? val : undefined,
                               isOnSale: val > 0,
                             });
+                            if (productStepError) setProductStepError(null);
                           }}
-                          placeholder="Deixe vazio se sem promo"
-                          className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs text-stone-900 font-bold text-red-700"
+                          placeholder="Vazio se sem promo"
+                          className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-bold text-red-700"
                         />
                       </div>
 
@@ -2078,6 +2549,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         <input
                           type="number"
                           step="0.01"
+                          min="0"
                           value={costPriceInput}
                           onChange={(e) => {
                             const val = parseFloat(e.target.value);
@@ -2089,21 +2561,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       </div>
                     </div>
 
-                    {/* Calculated Margin Info */}
                     {costPriceInput !== '' && Number(costPriceInput) > 0 && productForm.price && productForm.price > 0 && (
                       <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-xs text-emerald-800">
                         <span>
                           Margem Bruta por Peça:{' '}
                           <strong>
                             {formatCurrency(
-                              (productForm.isOnSale && productForm.promotionalPrice ? productForm.promotionalPrice : productForm.price) -
-                                Number(costPriceInput)
+                              (productForm.isOnSale && productForm.promotionalPrice
+                                ? productForm.promotionalPrice
+                                : productForm.price) - Number(costPriceInput)
                             )}
                           </strong>
                         </span>
                         <span className="font-bold">
                           {Math.round(
-                            (((productForm.isOnSale && productForm.promotionalPrice ? productForm.promotionalPrice : productForm.price) -
+                            (((productForm.isOnSale && productForm.promotionalPrice
+                              ? productForm.promotionalPrice
+                              : productForm.price) -
                               Number(costPriceInput)) /
                               Number(costPriceInput)) *
                               100
@@ -2113,15 +2587,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       </div>
                     )}
 
-                    {/* Badges / Visibility Toggles */}
-                    <div className="flex flex-wrap items-center gap-5 pt-2 text-xs border-t border-stone-100">
+                    {/* Visibility & Highlights */}
+                    <div className="flex flex-wrap items-center gap-5 pt-3 text-xs border-t border-stone-100">
                       <label className="flex items-center space-x-2 cursor-pointer">
                         <input
                           type="checkbox"
                           checked={productForm.isAvailable !== false}
-                          onChange={(e) =>
-                            setProductForm({ ...productForm, isAvailable: e.target.checked })
-                          }
+                          onChange={(e) => setProductForm({ ...productForm, isAvailable: e.target.checked })}
                           className="rounded text-stone-900 focus:ring-stone-900"
                         />
                         <span className="font-semibold text-stone-900">Exibir na Vitrine Pública</span>
@@ -2131,9 +2603,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         <input
                           type="checkbox"
                           checked={productForm.isOnSale || false}
-                          onChange={(e) =>
-                            setProductForm({ ...productForm, isOnSale: e.target.checked })
-                          }
+                          onChange={(e) => setProductForm({ ...productForm, isOnSale: e.target.checked })}
                           className="rounded text-stone-900 focus:ring-stone-900"
                         />
                         <span className="font-medium text-stone-800">Em Promoção</span>
@@ -2143,116 +2613,49 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         <input
                           type="checkbox"
                           checked={productForm.isNew !== false}
-                          onChange={(e) =>
-                            setProductForm({ ...productForm, isNew: e.target.checked })
-                          }
+                          onChange={(e) => setProductForm({ ...productForm, isNew: e.target.checked })}
                           className="rounded text-stone-900 focus:ring-stone-900"
                         />
                         <span className="font-medium text-stone-800">Marcar como Lançamento</span>
                       </label>
                     </div>
                   </div>
-
-                  {/* Tags */}
-                  <div className="p-4 bg-white rounded-2xl border border-stone-200 space-y-2.5">
-                    <label className="block text-xs font-bold text-stone-800 uppercase tracking-wide">
-                      Tags da Peça (Filtros no Catálogo)
-                    </label>
-                    <div className="flex flex-wrap gap-1.5">
-                      {allAvailableTags.map((tName) => {
-                        const isSelected = productForm.tags?.includes(tName);
-                        return (
-                          <button
-                            key={tName}
-                            type="button"
-                            onClick={() => {
-                              const current = productForm.tags || [];
-                              if (isSelected) {
-                                setProductForm({
-                                  ...productForm,
-                                  tags: current.filter((t) => t !== tName),
-                                });
-                              } else {
-                                setProductForm({
-                                  ...productForm,
-                                  tags: [...current, tName],
-                                });
-                              }
-                            }}
-                            className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center space-x-1 ${
-                              isSelected
-                                ? 'bg-stone-900 text-[#D4AF37] shadow-xs'
-                                : 'bg-stone-100 text-stone-700 hover:bg-stone-200 border border-stone-300'
-                            }`}
-                          >
-                            <span>#{tName}</span>
-                            <span>{isSelected ? '✓' : '+'}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <div className="flex gap-2 pt-1">
-                      <input
-                        type="text"
-                        placeholder="Adicionar nova tag personalizada..."
-                        value={newTagInput}
-                        onChange={(e) => setNewTagInput(e.target.value)}
-                        className="flex-1 px-3 py-1.5 bg-stone-50 border border-stone-300 rounded-xl text-xs"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (!newTagInput.trim()) return;
-                          const formatted = newTagInput.trim().replace(/^#/, '');
-                          const cur = productForm.tags || [];
-                          if (!cur.includes(formatted)) {
-                            setProductForm({ ...productForm, tags: [...cur, formatted] });
-                          }
-                          setNewTagInput('');
-                        }}
-                        className="px-3.5 py-1.5 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold cursor-pointer"
-                      >
-                        + Adicionar Tag
-                      </button>
-                    </div>
-                  </div>
                 </div>
               )}
 
-              {/* TAB 2: ESTOQUE INTELIGENTE & TAMANHOS */}
-              {productModalTab === 'stock_sizes' && (
+              {/* ================= STEP 3: ESTOQUE, TAMANHOS & CORES ================= */}
+              {productWizardStep === 3 && (
                 <div className="space-y-4">
                   {/* Stock Controls */}
                   <div className="p-4 bg-white rounded-2xl border border-stone-200 space-y-3">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2">
                       <div>
                         <label className="block text-xs font-bold text-stone-900 uppercase tracking-wide">
-                          Estoque Disponível da Peça
+                          Quantidade em Estoque *
                         </label>
                         <p className="text-[11px] text-stone-500">
-                          O sistema inicia com 10 unidades para nunca exibir "Esgotado" por engano.
+                          O sistema inicia com 10 unidades para sua peça já entrar disponível para venda.
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-1.5">
+                      <div>
                         {(productForm.stock ?? 10) > 3 ? (
-                          <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold">
-                            ✓ Estoque Saudável
+                          <span className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 text-[11px] font-bold">
+                            Estoque Saudável
                           </span>
                         ) : (productForm.stock ?? 10) > 0 ? (
-                          <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[11px] font-bold">
-                            ⚠️ Últimas Peças
+                          <span className="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 text-[11px] font-bold">
+                            Últimas Peças
                           </span>
                         ) : (
-                          <span className="px-2.5 py-1 rounded-full bg-red-100 text-red-800 text-[11px] font-bold">
-                            ✕ Esgotado
+                          <span className="px-2.5 py-1 rounded-lg bg-red-100 text-red-800 text-[11px] font-bold">
+                            Esgotado
                           </span>
                         )}
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                       <div className="flex items-center border border-stone-300 rounded-xl bg-stone-50">
                         <button
                           type="button"
@@ -2271,7 +2674,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           min="0"
                           value={productForm.stock ?? 10}
                           onChange={(e) =>
-                            setProductForm({ ...productForm, stock: parseInt(e.target.value) || 0 })
+                            setProductForm({ ...productForm, stock: Math.max(0, parseInt(e.target.value, 10) || 0) })
                           }
                           className="w-16 text-center py-2 bg-transparent text-stone-900 font-bold text-sm focus:outline-none"
                         />
@@ -2304,79 +2707,76 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </div>
                   </div>
 
-                  {/* Sizes Grade with 1-Click Presets */}
+                  {/* Mandatory Sizes */}
                   <div className="p-4 bg-white rounded-2xl border border-stone-200 space-y-3">
                     <div className="flex items-center justify-between">
                       <label className="block text-xs font-bold text-stone-900 uppercase tracking-wide">
-                        Grade de Tamanhos Disponíveis
+                        Grade de Tamanhos * (Mín. 1 obrigatório)
                       </label>
-                      <span className="text-[11px] text-stone-500">
-                        {productForm.sizes?.length || 0} tamanhos ativos
+                      <span className="text-[11px] font-semibold text-stone-600">
+                        {productForm.sizes?.length || 0} selecionado(s)
                       </span>
                     </div>
 
-                    {/* Quick 1-Click Grade Presets */}
-                    <div className="space-y-1.5">
-                      <span className="text-[11px] font-semibold text-stone-600 block">
-                        Adicionar Grade Rápida:
-                      </span>
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const cur = productForm.sizes || [];
-                            const combined = Array.from(new Set([...cur, 'P', 'M', 'G', 'GG']));
-                            setProductForm({ ...productForm, sizes: combined });
-                          }}
-                          className="px-3 py-1.5 bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-xl text-xs font-semibold text-stone-800 cursor-pointer"
-                        >
-                          + Grade Roupas (P, M, G, GG)
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const cur = productForm.sizes || [];
-                            const combined = Array.from(new Set([...cur, 'PP', 'P', 'M', 'G', 'GG', 'XG']));
-                            setProductForm({ ...productForm, sizes: combined });
-                          }}
-                          className="px-3 py-1.5 bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-xl text-xs font-semibold text-stone-800 cursor-pointer"
-                        >
-                          + Grade Completa (PP ao XG)
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const cur = productForm.sizes || [];
-                            const combined = Array.from(new Set([...cur, '36', '38', '40', '42', '44']));
-                            setProductForm({ ...productForm, sizes: combined });
-                          }}
-                          className="px-3 py-1.5 bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-xl text-xs font-semibold text-stone-800 cursor-pointer"
-                        >
-                          + Numeração (36 ao 44)
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setProductForm({ ...productForm, sizes: ['Único'] });
-                          }}
-                          className="px-3 py-1.5 bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-xl text-xs font-semibold text-stone-800 cursor-pointer"
-                        >
-                          + Tamanho Único
-                        </button>
-                      </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const cur = productForm.sizes || [];
+                          setProductForm({ ...productForm, sizes: Array.from(new Set([...cur, 'P', 'M', 'G', 'GG'])) });
+                          setProductStepError(null);
+                        }}
+                        className="px-3 py-1.5 bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-xl text-xs font-semibold text-stone-800 cursor-pointer"
+                      >
+                        + P, M, G, GG
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const cur = productForm.sizes || [];
+                          setProductForm({
+                            ...productForm,
+                            sizes: Array.from(new Set([...cur, 'PP', 'P', 'M', 'G', 'GG', 'XG'])),
+                          });
+                          setProductStepError(null);
+                        }}
+                        className="px-3 py-1.5 bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-xl text-xs font-semibold text-stone-800 cursor-pointer"
+                      >
+                        + PP ao XG
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const cur = productForm.sizes || [];
+                          setProductForm({
+                            ...productForm,
+                            sizes: Array.from(new Set([...cur, '36', '38', '40', '42', '44'])),
+                          });
+                          setProductStepError(null);
+                        }}
+                        className="px-3 py-1.5 bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-xl text-xs font-semibold text-stone-800 cursor-pointer"
+                      >
+                        + 36 ao 44
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProductForm({ ...productForm, sizes: ['Único'] });
+                          setProductStepError(null);
+                        }}
+                        className="px-3 py-1.5 bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-xl text-xs font-semibold text-stone-800 cursor-pointer"
+                      >
+                        Tamanho Único
+                      </button>
                     </div>
 
-                    {/* Custom Size Input */}
-                    <div className="flex gap-2 pt-1">
+                    <div className="flex gap-2">
                       <input
                         type="text"
-                        placeholder="Adicionar tamanho customizado (ex: 38, 40, G2...)"
+                        placeholder="Adicionar tamanho customizado (ex: 38, G2...)"
                         value={newSizeInput}
                         onChange={(e) => setNewSizeInput(e.target.value.toUpperCase())}
-                        className="flex-1 px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs"
+                        className="flex-1 px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs text-stone-900"
                       />
                       <button
                         type="button"
@@ -2384,12 +2784,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           if (!newSizeInput.trim()) return;
                           const current = productForm.sizes || [];
                           if (!current.includes(newSizeInput.trim())) {
-                            setProductForm({
-                              ...productForm,
-                              sizes: [...current, newSizeInput.trim()],
-                            });
+                            setProductForm({ ...productForm, sizes: [...current, newSizeInput.trim()] });
                           }
                           setNewSizeInput('');
+                          setProductStepError(null);
                         }}
                         className="px-4 py-2 bg-stone-900 text-white rounded-xl text-xs font-semibold cursor-pointer"
                       >
@@ -2397,7 +2795,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       </button>
                     </div>
 
-                    {/* Active Size Badges */}
                     <div className="flex flex-wrap gap-2 pt-1">
                       {productForm.sizes?.map((sz, szIdx) => (
                         <span
@@ -2422,184 +2819,64 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       ))}
                     </div>
                   </div>
-                </div>
-              )}
 
-              {/* TAB 3: FOTOS & CORES DINÂMICAS */}
-              {productModalTab === 'photos_colors' && (
-                <div className="space-y-4">
-                  {/* Photo Gallery */}
-                  <div className="p-4 bg-white rounded-2xl border border-stone-200 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <label className="block text-xs font-bold text-stone-900 uppercase tracking-wide">
-                          Galeria de Fotos da Peça (Até 10 Fotos)
-                        </label>
-                        <p className="text-[11px] text-stone-500">
-                          A 1ª foto é a capa principal da vitrine. Use as setas para definir a capa.
-                        </p>
-                      </div>
-
-                      <div className="flex items-center space-x-1.5 bg-stone-100 px-3 py-1 border border-stone-300 rounded-lg text-xs font-bold">
-                        <span className={(productForm.images?.length || 0) >= 10 ? 'text-amber-600' : 'text-stone-800'}>
-                          {productForm.images?.length || 0} / 10 fotos
-                        </span>
-                      </div>
+                  {/* Colors Selection */}
+                  <div className="p-4 bg-white rounded-2xl border border-stone-200 space-y-3.5">
+                    <div>
+                      <label className="block text-xs font-bold text-stone-900 uppercase tracking-wide">
+                        Cores Disponíveis da Peça *
+                      </label>
+                      <p className="text-[11px] text-stone-500">
+                        Escolha se esta peça possui variação de cores ou se é vendida apenas na cor da foto.
+                      </p>
                     </div>
 
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleProductImageFiles}
-                      className="hidden"
-                      id="product-photo-upload-input"
-                      multiple
-                    />
-
-                    <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       <button
                         type="button"
-                        disabled={isUploadingImages || (productForm.images?.length || 0) >= 10}
-                        onClick={() => fileInputRef.current?.click()}
-                        className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl border-2 border-dashed font-semibold text-xs transition-all cursor-pointer ${
-                          (productForm.images?.length || 0) >= 10
-                            ? 'bg-stone-100 border-stone-300 text-stone-400 cursor-not-allowed'
-                            : 'bg-stone-50 hover:bg-[#F4ECE1] border-stone-300 text-stone-800'
+                        onClick={() => {
+                          setProductForm({ ...productForm, hasColors: false });
+                          setProductStepError(null);
+                        }}
+                        className={`py-2.5 px-3 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                          !productForm.hasColors
+                            ? 'bg-stone-900 text-[#D4AF37] border-stone-900 shadow-xs'
+                            : 'bg-stone-50 text-stone-700 border-stone-300 hover:bg-stone-100'
                         }`}
                       >
-                        <Upload className="w-4 h-4 text-brand-primary-darker" />
-                        <span>
-                          {isUploadingImages
-                            ? 'Processando fotos...'
-                            : (productForm.images?.length || 0) >= 10
-                            ? 'Limite de 10 fotos atingido'
-                            : 'Selecionar Fotos do Dispositivo (Base64)'}
-                        </span>
+                        Cor Única / Padrão
                       </button>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <input
-                        type="url"
-                        placeholder="Ou cole o link direto da imagem (URL)..."
-                        value={newImageInput}
-                        onChange={(e) => setNewImageInput(e.target.value)}
-                        disabled={(productForm.images?.length || 0) >= 10}
-                        className="flex-1 px-3 py-1.5 bg-stone-50 border border-stone-300 rounded-xl text-xs disabled:opacity-50"
-                      />
                       <button
                         type="button"
-                        disabled={(productForm.images?.length || 0) >= 10 || !newImageInput.trim()}
                         onClick={() => {
-                          if (!newImageInput.trim()) return;
-                          const cur = productForm.images || [];
-                          if (cur.length >= 10) return;
-                          setProductForm({ ...productForm, images: [...cur, newImageInput.trim()] });
-                          setNewImageInput('');
+                          setProductForm({ ...productForm, hasColors: true });
+                          setProductStepError(null);
                         }}
-                        className="px-3 py-1.5 bg-stone-900 hover:bg-stone-800 disabled:opacity-40 text-white rounded-xl text-xs font-semibold cursor-pointer"
+                        className={`py-2.5 px-3 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                          productForm.hasColors
+                            ? 'bg-stone-900 text-[#D4AF37] border-stone-900 shadow-xs'
+                            : 'bg-stone-50 text-stone-700 border-stone-300 hover:bg-stone-100'
+                        }`}
                       >
-                        + URL
+                        Informar Várias Cores
                       </button>
                     </div>
 
-                    {/* Previews */}
-                    {productForm.images && productForm.images.length > 0 && (
-                      <div className="pt-2 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
-                        {productForm.images.map((imgUrl, idx) => (
-                          <div
-                            key={idx}
-                            className={`relative aspect-[3/4] w-full rounded-2xl overflow-hidden shadow-sm border-2 ${
-                              idx === 0 ? 'border-stone-900 shadow-md ring-2 ring-[#D4AF37]' : 'border-stone-200'
-                            }`}
-                          >
-                            <img
-                              src={imgUrl}
-                              alt={`Foto ${idx + 1}`}
-                              className="w-full h-full object-cover object-top"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveProductImage(idx)}
-                              className="absolute top-1.5 right-1.5 p-1 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-md cursor-pointer transition-colors"
-                              title="Remover foto"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                            {idx === 0 && (
-                              <div className="absolute bottom-0 inset-x-0 bg-stone-900/90 text-[#D4AF37] text-[10px] font-bold py-1 text-center uppercase tracking-wider">
-                                ⭐ Capa Principal
-                              </div>
-                            )}
-                            {idx > 0 && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const arr = [...(productForm.images || [])];
-                                  const temp = arr[0];
-                                  arr[0] = arr[idx];
-                                  arr[idx] = temp;
-                                  setProductForm({ ...productForm, images: arr });
-                                }}
-                                className="absolute bottom-1.5 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-stone-900/80 hover:bg-stone-900 text-white text-[9px] font-bold rounded-lg cursor-pointer whitespace-nowrap"
-                              >
-                                Tornar Capa
-                              </button>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Colors Variations (Shopee Style) */}
-                  <div className="p-4 bg-white rounded-2xl border border-stone-200 space-y-3.5">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <label className="block text-xs font-bold text-stone-900 uppercase tracking-wide">
-                          Variações de Cores com Troca Dinâmica de Foto
-                        </label>
-                        <p className="text-[11px] text-stone-500">
-                          Ao clicar na cor na vitrine, a foto muda automaticamente para a peça daquela cor.
-                        </p>
-                      </div>
-
-                      <label className="flex items-center space-x-2 cursor-pointer bg-stone-50 px-3 py-1.5 rounded-xl border border-stone-300">
-                        <input
-                          type="checkbox"
-                          checked={productForm.hasColors !== false}
-                          onChange={(e) =>
-                            setProductForm({ ...productForm, hasColors: e.target.checked })
-                          }
-                          className="rounded text-stone-900 focus:ring-stone-900"
-                        />
-                        <span className="text-xs font-semibold text-stone-800">
-                          Ativar Cores
-                        </span>
-                      </label>
-                    </div>
-
-                    {productForm.hasColors !== false && (
+                    {productForm.hasColors && (
                       <div className="space-y-3 pt-1">
-                        {/* Quick Presets */}
                         <div>
                           <span className="text-[11px] font-semibold text-stone-600 block mb-1.5">
-                            Cores Sugeridas:
+                            Cores Rápidas (clique para preencher):
                           </span>
                           <div className="flex flex-wrap gap-1.5">
                             {[
-                              { name: 'Rosa Chiclete', hex: '#F472B6' },
-                              { name: 'Rosa Pastel', hex: '#FBCFE8' },
                               { name: 'Preto Nobre', hex: '#111111' },
                               { name: 'Off White', hex: '#FAF8F5' },
+                              { name: 'Rosa Pastel', hex: '#FBCFE8' },
                               { name: 'Terracota', hex: '#C26D53' },
                               { name: 'Verde Oliva', hex: '#556B2F' },
                               { name: 'Azul Marinho', hex: '#1E293B' },
-                              { name: 'Dourado Mostarda', hex: '#D97706' },
                               { name: 'Vinho Marsala', hex: '#881337' },
-                              { name: 'Lavanda', hex: '#A78BFA' },
-                              { name: 'Caramelo', hex: '#B45309' },
                               { name: 'Nude Areia', hex: '#D7C4B7' },
                             ].map((preset) => (
                               <button
@@ -2612,7 +2889,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 className="inline-flex items-center space-x-1.5 px-2.5 py-1 bg-stone-50 hover:bg-stone-200 border border-stone-300 rounded-lg text-xs text-stone-800 transition-all cursor-pointer"
                               >
                                 <span
-                                  className="w-3 h-3 rounded-full border border-black/15 flex-shrink-0"
+                                  className="w-3 h-3 rounded-full border border-black/15 shrink-0"
                                   style={{ backgroundColor: preset.hex }}
                                 />
                                 <span>{preset.name}</span>
@@ -2621,7 +2898,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           </div>
                         </div>
 
-                        {/* Add Color Form */}
                         <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 space-y-2.5">
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                             <div>
@@ -2630,16 +2906,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                               </label>
                               <input
                                 type="text"
-                                placeholder="Ex: Rosa, Preto, Off White..."
+                                placeholder="Ex: Preto, Off White..."
                                 value={newColorName}
                                 onChange={(e) => setNewColorName(e.target.value)}
-                                className="w-full px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs"
+                                className="w-full px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs text-stone-900"
                               />
                             </div>
 
                             <div>
                               <label className="block text-[11px] font-semibold text-stone-700 mb-1">
-                                Tom / Hexadecimal
+                                Tom
                               </label>
                               <div className="flex items-center space-x-2">
                                 <input
@@ -2652,29 +2928,24 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                   type="text"
                                   value={newColorHex}
                                   onChange={(e) => setNewColorHex(e.target.value)}
-                                  className="w-full px-2 py-1.5 bg-white border border-stone-300 rounded-lg text-xs font-mono"
+                                  className="w-full px-2 py-1.5 bg-white border border-stone-300 rounded-lg text-xs font-mono text-stone-900"
                                 />
                               </div>
                             </div>
 
                             <div className="relative">
                               <label className="block text-[11px] font-semibold text-stone-700 mb-1">
-                                Vincular Foto da Cor
+                                Vincular à Foto
                               </label>
                               <button
                                 type="button"
                                 onClick={() => setIsColorImageOpen(!isColorImageOpen)}
-                                className="w-full px-2 py-1.5 bg-white border border-stone-300 rounded-lg text-xs flex items-center justify-between shadow-2xs cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all text-left font-medium text-stone-800"
+                                className="w-full px-2 py-1.5 bg-white border border-stone-300 rounded-lg text-xs flex items-center justify-between shadow-2xs cursor-pointer text-left font-medium text-stone-800"
                               >
-                                <span>
-                                  {newColorImageUrl ? (
-                                    <>
-                                      Foto {((productForm.images || []).indexOf(newColorImageUrl) + 1) || 'URL'} 
-                                      {((productForm.images || []).indexOf(newColorImageUrl) === 0) ? ' (Capa)' : ''}
-                                    </>
-                                  ) : (
-                                    '(Usar foto principal)'
-                                  )}
+                                <span className="truncate">
+                                  {newColorImageUrl
+                                    ? `Foto ${(productForm.images || []).indexOf(resolveColorImageUrl(newColorImageUrl, productForm.images)) + 1 || 'Anexa'}`
+                                    : '(Foto principal)'}
                                 </span>
                                 <ChevronDown className="w-3.5 h-3.5 opacity-70 shrink-0" />
                               </button>
@@ -2690,8 +2961,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                       initial={{ opacity: 0, scale: 0.95, y: 5 }}
                                       animate={{ opacity: 1, scale: 1, y: 0 }}
                                       exit={{ opacity: 0, scale: 0.95, y: 5 }}
-                                      transition={{ duration: 0.12, ease: "easeOut" }}
-                                      className="absolute left-0 right-0 top-full mt-2 max-h-60 overflow-y-auto bg-stone-900 border border-stone-300 shadow-xl rounded-2xl p-2 z-50 space-y-1 text-left"
+                                      transition={{ duration: 0.12, ease: 'easeOut' }}
+                                      className="absolute left-0 right-0 top-full mt-2 max-h-56 overflow-y-auto bg-stone-900 border border-stone-300 shadow-xl rounded-2xl p-2 z-50 space-y-1 text-left"
                                     >
                                       <button
                                         type="button"
@@ -2699,38 +2970,33 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                           setNewColorImageUrl('');
                                           setIsColorImageOpen(false);
                                         }}
-                                        className={`w-full text-left px-3 py-2 text-xs rounded-xl transition-all flex items-center justify-between cursor-pointer ${
-                                          !newColorImageUrl
-                                            ? 'bg-stone-800 text-[#D4AF37] font-bold shadow-xs'
-                                            : 'text-stone-300 hover:bg-stone-800/60 hover:text-white'
+                                        className={`w-full text-left px-3 py-2 text-xs rounded-xl flex items-center justify-between cursor-pointer ${
+                                          !newColorImageUrl ? 'bg-stone-800 text-[#D4AF37] font-bold' : 'text-stone-300 hover:bg-stone-800/60'
                                         }`}
                                       >
-                                        <span>(Usar foto principal)</span>
-                                        {!newColorImageUrl && (
-                                          <Check className="w-3.5 h-3.5 text-[#D4AF37]" />
-                                        )}
+                                        <span>(Foto principal)</span>
+                                        {!newColorImageUrl && <Check className="w-3.5 h-3.5 text-[#D4AF37]" />}
                                       </button>
 
                                       {(productForm.images || []).map((img, i) => {
-                                        const isSelected = newColorImageUrl === img;
+                                        const refKey = `imgref:${i}`;
+                                        const isSelected = newColorImageUrl === refKey || newColorImageUrl === img;
                                         return (
                                           <button
                                             key={i}
                                             type="button"
                                             onClick={() => {
-                                              setNewColorImageUrl(img);
+                                              setNewColorImageUrl(refKey);
                                               setIsColorImageOpen(false);
                                             }}
-                                            className={`w-full text-left px-3 py-2 text-xs rounded-xl transition-all flex items-center justify-between cursor-pointer ${
-                                              isSelected
-                                                ? 'bg-stone-800 text-[#D4AF37] font-bold shadow-xs'
-                                                : 'text-stone-300 hover:bg-stone-800/60 hover:text-white'
+                                            className={`w-full text-left px-3 py-2 text-xs rounded-xl flex items-center justify-between cursor-pointer ${
+                                              isSelected ? 'bg-stone-800 text-[#D4AF37] font-bold' : 'text-stone-300 hover:bg-stone-800/60'
                                             }`}
                                           >
-                                            <span>Foto {i + 1} {i === 0 ? '(Capa)' : ''}</span>
-                                            {isSelected && (
-                                              <Check className="w-3.5 h-3.5 text-[#D4AF37]" />
-                                            )}
+                                            <span>
+                                              Foto {i + 1} {i === 0 ? '(Capa)' : ''}
+                                            </span>
+                                            {isSelected && <Check className="w-3.5 h-3.5 text-[#D4AF37]" />}
                                           </button>
                                         );
                                       })}
@@ -2741,26 +3007,26 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-between pt-1">
-                            <span className="text-[10px] text-stone-500">
-                              {newColorImageUrl ? '✓ Foto específica associada a esta cor' : 'Dica: Carregue fotos para vincular cores específicas'}
-                            </span>
+                          <div className="flex items-center justify-end">
                             <button
                               type="button"
                               onClick={() => {
                                 if (!newColorName.trim()) return;
                                 const curColors = productForm.colors || [];
-                                const newColorObj = {
-                                  name: newColorName.trim(),
-                                  hex: newColorHex,
-                                  imageUrl: newColorImageUrl.trim() || undefined,
-                                };
                                 setProductForm({
                                   ...productForm,
-                                  colors: [...curColors, newColorObj],
+                                  colors: [
+                                    ...curColors,
+                                    {
+                                      name: newColorName.trim(),
+                                      hex: newColorHex,
+                                      ...(newColorImageUrl ? { imageUrl: newColorImageUrl } : {}),
+                                    },
+                                  ],
                                 });
                                 setNewColorName('');
                                 setNewColorImageUrl('');
+                                setProductStepError(null);
                               }}
                               className="px-4 py-1.5 bg-stone-900 hover:bg-stone-800 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
                             >
@@ -2769,7 +3035,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           </div>
                         </div>
 
-                        {/* Active Colors List */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {productForm.colors?.map((c, idx) => (
                             <div
@@ -2782,23 +3047,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                   style={{ backgroundColor: c.hex }}
                                 />
                                 <div>
-                                  <span className="font-bold text-stone-900 block leading-tight">
-                                    {c.name}
-                                  </span>
+                                  <span className="font-bold text-stone-900 block leading-tight">{c.name}</span>
                                   <span className="text-[10px] text-stone-500 font-mono">
                                     {c.hex} {c.imageUrl ? '• Foto vinculada' : ''}
                                   </span>
                                 </div>
                               </div>
-
                               <button
                                 type="button"
-                                onClick={() => {
+                                onClick={() =>
                                   setProductForm({
                                     ...productForm,
                                     colors: productForm.colors?.filter((_, i) => i !== idx),
-                                  });
-                                }}
+                                  })
+                                }
                                 className="text-stone-400 hover:text-red-600 p-1 cursor-pointer"
                                 title="Remover cor"
                               >
@@ -2813,108 +3075,243 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </div>
               )}
 
-              {/* TAB 4: FICHA TÉCNICA & MEDIDAS */}
-              {productModalTab === 'details' && (
+              {/* ================= STEP 4: DESCRIÇÃO, TAGS & REVISÃO FINAL ================= */}
+              {productWizardStep === 4 && (
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold text-stone-800 mb-1">
-                      Descrição Detalhada da Peça
-                    </label>
+                  {/* Mandatory Description */}
+                  <div className="p-4 bg-white rounded-2xl border border-stone-200 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <label className="block text-xs font-bold text-stone-900 uppercase tracking-wide">
+                        Descrição da Peça * (Obrigatório mín. 10 caracteres)
+                      </label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {[
+                          {
+                            label: 'Modelo Elegante',
+                            text: `${productForm.name || 'Peça'} com caimento impecável e acabamento refinado. Ideal para compor produções sofisticadas no dia a dia ou em ocasiões especiais.`,
+                          },
+                          {
+                            label: 'Modelo Conforto',
+                            text: `${productForm.name || 'Peça'} confeccionada com toque macio e modelagem confortável que valoriza a silhueta com leveza e praticidade.`,
+                          },
+                        ].map((tpl) => (
+                          <button
+                            key={tpl.label}
+                            type="button"
+                            onClick={() => {
+                              setProductForm({ ...productForm, description: tpl.text });
+                              setProductStepError(null);
+                            }}
+                            className="px-2.5 py-1 bg-stone-100 hover:bg-stone-200 border border-stone-300 rounded-lg text-[11px] font-semibold text-stone-800 cursor-pointer"
+                          >
+                            + {tpl.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
                     <textarea
                       rows={3}
                       value={productForm.description || ''}
-                      onChange={(e) =>
-                        setProductForm({ ...productForm, description: e.target.value })
-                      }
+                      onChange={(e) => {
+                        setProductForm({ ...productForm, description: e.target.value });
+                        if (productStepError) setProductStepError(null);
+                      }}
                       placeholder="Descreva o caimento, estilo, ocasiões de uso e diferenciais da peça..."
-                      className="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-xs text-stone-900"
+                      className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs text-stone-900"
+                      id="input-product-description"
                     />
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                      <div>
+                        <label className="block text-[11px] font-bold text-stone-700 mb-1">
+                          Tecido / Material (Opcional)
+                        </label>
+                        <input
+                          type="text"
+                          value={productForm.fabricDetails || ''}
+                          onChange={(e) => setProductForm({ ...productForm, fabricDetails: e.target.value })}
+                          placeholder="Ex: 100% Linho Puro"
+                          className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs text-stone-900"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-stone-700 mb-1">
+                          Cuidados de Lavagem (Opcional)
+                        </label>
+                        <input
+                          type="text"
+                          value={productForm.careInstructions || ''}
+                          onChange={(e) => setProductForm({ ...productForm, careInstructions: e.target.value })}
+                          placeholder="Ex: Lavagem suave, secar à sombra"
+                          className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs text-stone-900"
+                        />
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-stone-800 mb-1">
-                        Composição do Tecido / Material
-                      </label>
-                      <input
-                        type="text"
-                        value={productForm.fabricDetails || ''}
-                        onChange={(e) =>
-                          setProductForm({ ...productForm, fabricDetails: e.target.value })
-                        }
-                        placeholder="Ex: 100% Linho Puro Europeu"
-                        className="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-xs text-stone-900"
-                      />
+                  {/* Mandatory Tags */}
+                  <div className="p-4 bg-white rounded-2xl border border-stone-200 space-y-2.5">
+                    <label className="block text-xs font-bold text-stone-900 uppercase tracking-wide">
+                      Tags da Peça * (Selecione ao menos 1 para o catálogo)
+                    </label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {allAvailableTags.map((tName) => {
+                        const isSelected = productForm.tags?.includes(tName);
+                        return (
+                          <button
+                            key={tName}
+                            type="button"
+                            onClick={() => {
+                              const current = productForm.tags || [];
+                              if (isSelected) {
+                                setProductForm({ ...productForm, tags: current.filter((t) => t !== tName) });
+                              } else {
+                                setProductForm({ ...productForm, tags: [...current, tName] });
+                                setProductStepError(null);
+                              }
+                            }}
+                            className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center space-x-1 ${
+                              isSelected
+                                ? 'bg-stone-900 text-[#D4AF37] shadow-xs'
+                                : 'bg-stone-100 text-stone-700 hover:bg-stone-200 border border-stone-300'
+                            }`}
+                          >
+                            <span>#{tName}</span>
+                            <span>{isSelected ? '✓' : '+'}</span>
+                          </button>
+                        );
+                      })}
                     </div>
 
-                    <div>
-                      <label className="block text-xs font-bold text-stone-800 mb-1">
-                        Cuidados de Lavagem & Conservação
-                      </label>
+                    <div className="flex gap-2 pt-1">
                       <input
                         type="text"
-                        value={productForm.careInstructions || ''}
-                        onChange={(e) =>
-                          setProductForm({ ...productForm, careInstructions: e.target.value })
-                        }
-                        placeholder="Ex: Lavagem suave à mão, secar à sombra"
-                        className="w-full px-3.5 py-2.5 bg-white border border-stone-300 rounded-xl text-xs text-stone-900"
+                        placeholder="Nova tag personalizada..."
+                        value={newTagInput}
+                        onChange={(e) => setNewTagInput(e.target.value)}
+                        className="flex-1 px-3 py-1.5 bg-stone-50 border border-stone-300 rounded-xl text-xs text-stone-900"
                       />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!newTagInput.trim()) return;
+                          const formatted = newTagInput.trim().replace(/^#/, '');
+                          const cur = productForm.tags || [];
+                          if (!cur.includes(formatted)) {
+                            setProductForm({ ...productForm, tags: [...cur, formatted] });
+                          }
+                          setNewTagInput('');
+                          setProductStepError(null);
+                        }}
+                        className="px-3.5 py-1.5 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold cursor-pointer"
+                      >
+                        + Adicionar Tag
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Final Review Card with Cover Photo */}
+                  <div className="p-3.5 bg-stone-900 text-white rounded-2xl border border-[#D4AF37]/50 flex items-center gap-3.5">
+                    <div className="w-16 h-20 rounded-xl overflow-hidden bg-stone-800 border border-[#D4AF37]/40 shrink-0 flex items-center justify-center">
+                      {productForm.images?.[0] ? (
+                        <img
+                          src={productForm.images[0]}
+                          alt={productForm.name || 'Capa'}
+                          referrerPolicy="no-referrer"
+                          className="w-full h-full object-cover object-top"
+                        />
+                      ) : (
+                        <ImageIcon className="w-5 h-5 text-stone-500" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1 text-xs space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#D4AF37]">
+                          Pronto para Publicar • {productForm.category}
+                        </span>
+                        <span className="text-[11px] font-bold text-emerald-400">
+                          {productForm.images?.length || 0} foto(s) salva(s)
+                        </span>
+                      </div>
+                      <h4 className="font-serif-luxury text-sm font-bold text-white truncate">
+                        {productForm.name || 'Sem nome'}
+                      </h4>
+                      <div className="flex flex-wrap items-center gap-2 text-stone-300 text-[11px]">
+                        <strong className="text-white">
+                          {formatCurrency(
+                            productForm.isOnSale && productForm.promotionalPrice
+                              ? productForm.promotionalPrice
+                              : productForm.price || 0
+                          )}
+                        </strong>
+                        <span>•</span>
+                        <span>{productForm.stock ?? 10} un.</span>
+                        <span>•</span>
+                        <span>Tam: {productForm.sizes?.join(', ') || '-'}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Live Mini Summary Bar */}
-              <div className="p-3 bg-stone-100 rounded-2xl border border-stone-300 flex flex-wrap items-center justify-between gap-2 text-xs">
-                <div className="flex items-center gap-3 text-stone-700">
-                  <span>
-                    Preço:{' '}
-                    <strong className="text-stone-900">
-                      {formatCurrency(
-                        productForm.isOnSale && productForm.promotionalPrice ? productForm.promotionalPrice : productForm.price || 0
-                      )}
-                    </strong>
-                  </span>
-                  <span>•</span>
-                  <span>
-                    Estoque:{' '}
-                    <strong className="text-emerald-700">
-                      {productForm.stock ?? 10} unidades
-                    </strong>
-                  </span>
-                  <span>•</span>
-                  <span>
-                    Tamanhos:{' '}
-                    <strong>{productForm.sizes?.join(', ') || 'Nenhum'}</strong>
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] text-stone-500">
-                    {productForm.images?.length || 0} fotos
-                  </span>
-                </div>
-              </div>
-
-              {/* Modal Footer */}
-              <div className="flex items-center justify-between pt-4 border-t border-stone-200">
-                <button
-                  type="button"
-                  onClick={() => setIsEditingProduct(false)}
-                  className="px-4 py-2.5 border border-stone-300 rounded-xl text-xs font-semibold text-stone-700 hover:bg-stone-100 cursor-pointer"
-                >
-                  Cancelar
-                </button>
-
-                <div className="flex items-center gap-2">
+              {/* Modal Footer Navigation */}
+              <div className="flex items-center justify-between pt-4 border-t border-stone-200 gap-2">
+                {productWizardStep === 1 ? (
                   <button
-                    type="submit"
-                    className="px-6 py-2.5 bg-stone-900 hover:bg-stone-800 text-[#D4AF37] rounded-xl text-xs font-bold shadow-md cursor-pointer flex items-center gap-1.5"
+                    type="button"
+                    disabled={isSavingProduct}
+                    onClick={() => setIsEditingProduct(false)}
+                    className="px-4 py-2.5 border border-stone-300 rounded-xl text-xs font-semibold text-stone-700 hover:bg-stone-100 cursor-pointer"
                   >
-                    <Check className="w-4 h-4 text-[#D4AF37]" />
-                    <span>Salvar e Publicar Peça</span>
+                    Cancelar
                   </button>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={isSavingProduct}
+                    onClick={handlePrevProductStep}
+                    className="px-4 py-2.5 border border-stone-300 rounded-xl text-xs font-bold text-stone-800 hover:bg-stone-100 cursor-pointer flex items-center gap-1.5"
+                    id="btn-wizard-prev-step"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Voltar Etapa</span>
+                  </button>
+                )}
+
+                <div className="flex items-center gap-2">
+                  {productWizardStep < 4 ? (
+                    <button
+                      type="button"
+                      disabled={isUploadingImages}
+                      onClick={handleNextProductStep}
+                      className="px-6 py-2.5 bg-stone-900 hover:bg-stone-800 disabled:opacity-50 text-[#D4AF37] rounded-xl text-xs font-bold shadow-md cursor-pointer flex items-center gap-1.5"
+                      id="btn-wizard-next-step"
+                    >
+                      <span>Avançar Etapa</span>
+                      <ArrowRight className="w-4 h-4 text-[#D4AF37]" />
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      disabled={isSavingProduct || isUploadingImages}
+                      className="px-6 py-2.5 bg-stone-900 hover:bg-stone-800 disabled:opacity-60 text-[#D4AF37] rounded-xl text-xs font-bold shadow-md cursor-pointer flex items-center gap-1.5"
+                      id="btn-wizard-save-publish"
+                    >
+                      {isSavingProduct ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 text-[#D4AF37] animate-spin" />
+                          <span>Salvando Fotos e Peça...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Check className="w-4 h-4 text-[#D4AF37]" />
+                          <span>{isProductEditMode ? 'Salvar Alterações' : 'Salvar e Publicar Peça'}</span>
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
             </form>

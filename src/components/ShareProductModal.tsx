@@ -12,8 +12,9 @@ import {
   Twitter,
   Send,
   Mail,
-  ExternalLink,
   Sparkles,
+  ShoppingBag,
+  ExternalLink,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -37,17 +38,62 @@ export const ShareProductModal: React.FC<ShareProductModalProps> = ({
 
   if (!isOpen || !product) return null;
 
-  const currentPrice =
-    product.isOnSale && product.promotionalPrice
-      ? product.promotionalPrice
-      : product.price;
+  const basePrice = Number(product.price) || 0;
+  const hasPromo =
+    Boolean(product.isOnSale) &&
+    Boolean(product.promotionalPrice) &&
+    Number(product.promotionalPrice) > 0 &&
+    Number(product.promotionalPrice) < basePrice;
 
-  const storeBaseUrl = getStoreShareUrl(settings, currentClient);
+  const currentPrice = hasPromo ? Number(product.promotionalPrice) : basePrice;
+  const discountPct = hasPromo
+    ? Math.round(((basePrice - currentPrice) / basePrice) * 100)
+    : 0;
+
+  const rawStoreName = (settings.storeName || currentClient?.storeName || '').trim();
+  const storeDisplayName =
+    !rawStoreName || rawStoreName.toLowerCase() === 'web vitrine'
+      ? 'Vitrine Digital Oficial'
+      : rawStoreName;
+
+  let storeBaseUrl = getStoreShareUrl(settings, currentClient);
+  if (typeof window !== 'undefined' && !storeBaseUrl.includes('?loja=')) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const lojaFromUrl = urlParams.get('loja') || urlParams.get('u') || urlParams.get('store') || urlParams.get('slug');
+    if (lojaFromUrl) {
+      storeBaseUrl = `${window.location.origin}/?loja=${encodeURIComponent(lojaFromUrl.trim().toLowerCase())}`;
+    }
+  }
+
   const shareUrl = storeBaseUrl.includes('?loja=')
     ? `${storeBaseUrl}&produto=${encodeURIComponent(product.id)}`
     : `${storeBaseUrl}?produto=${encodeURIComponent(product.id)}`;
 
-  const shareMessage = `*${settings.storeName}*\n\n*${product.name}*\nPor apenas *${formatCurrency(currentPrice)}*\n\n${shareUrl}`;
+  const previewImage =
+    Array.isArray(product.images)
+      ? product.images.find((img) => typeof img === 'string' && img.trim().length > 0)?.trim() || ''
+      : '';
+
+  const previewTitle = hasPromo
+    ? `${product.name} • ${formatCurrency(currentPrice)} (${discountPct}% OFF) | ${storeDisplayName}`
+    : `${product.name} • ${formatCurrency(currentPrice)} | ${storeDisplayName}`;
+
+  const previewDescription = hasPromo
+    ? `Oferta na ${storeDisplayName}: de ${formatCurrency(basePrice)} por ${formatCurrency(currentPrice)}. Veja fotos, tamanhos disponíveis e peça pelo WhatsApp!`
+    : `Confira na ${storeDisplayName} por ${formatCurrency(currentPrice)}. Veja fotos em alta definição e peça pelo WhatsApp!`;
+
+  let shareDomain = '';
+  try {
+    shareDomain = new URL(shareUrl).host;
+  } catch {
+    shareDomain = 'vitrine-oficial';
+  }
+
+  const promoLine = hasPromo
+    ? `~De ${formatCurrency(basePrice)}~\n🔥 *Por apenas ${formatCurrency(currentPrice)}* (${discountPct}% OFF)\n`
+    : `✨ *Por apenas ${formatCurrency(currentPrice)}*\n`;
+
+  const shareMessage = `🛍️ *${storeDisplayName}*\n\n*${product.name}*\n${promoLine}\n👉 Veja as fotos e peça direto pelo catálogo:\n${shareUrl}`;
 
   const handleCopyLink = async () => {
     try {
@@ -84,11 +130,11 @@ export const ShareProductModal: React.FC<ShareProductModalProps> = ({
     if (typeof navigator !== 'undefined' && 'share' in navigator) {
       try {
         await navigator.share({
-          title: `${product.name} - ${settings.storeName}`,
-          text: `Confira ${product.name} por ${formatCurrency(currentPrice)} na ${settings.storeName}`,
+          title: previewTitle,
+          text: `Confira ${product.name} por ${formatCurrency(currentPrice)} na ${storeDisplayName}`,
           url: shareUrl,
         });
-      } catch (err) {
+      } catch {
         // user cancelled share
       }
     } else {
@@ -110,7 +156,7 @@ export const ShareProductModal: React.FC<ShareProductModalProps> = ({
       icon: Send,
       bgColor: 'bg-[#0088cc] hover:bg-[#0077b5]',
       textColor: 'text-white',
-      url: `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(`${product.name} por ${formatCurrency(currentPrice)} na ${settings.storeName}`)}`,
+      url: `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(`${product.name} por ${formatCurrency(currentPrice)} • ${storeDisplayName}`)}`,
       action: 'open',
     },
     {
@@ -126,7 +172,7 @@ export const ShareProductModal: React.FC<ShareProductModalProps> = ({
       icon: Twitter,
       bgColor: 'bg-black hover:bg-stone-900 border border-stone-800',
       textColor: 'text-white',
-      url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(`Confira ${product.name} por ${formatCurrency(currentPrice)} na ${settings.storeName}`)}&url=${encodeURIComponent(shareUrl)}`,
+      url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(`Confira ${product.name} por ${formatCurrency(currentPrice)} na ${storeDisplayName}`)}&url=${encodeURIComponent(shareUrl)}`,
       action: 'open',
     },
     {
@@ -142,7 +188,7 @@ export const ShareProductModal: React.FC<ShareProductModalProps> = ({
       icon: Mail,
       bgColor: 'bg-stone-800 hover:bg-stone-700',
       textColor: 'text-white',
-      url: `mailto:?subject=${encodeURIComponent(`${product.name} na ${settings.storeName}`)}&body=${encodeURIComponent(shareMessage)}`,
+      url: `mailto:?subject=${encodeURIComponent(`${product.name} • ${formatCurrency(currentPrice)} | ${storeDisplayName}`)}&body=${encodeURIComponent(shareMessage)}`,
       action: 'open',
     },
   ];
@@ -168,39 +214,60 @@ export const ShareProductModal: React.FC<ShareProductModalProps> = ({
           </button>
 
           {/* Header */}
-          <div className="flex items-center space-x-3 mb-5 pr-8">
+          <div className="flex items-center space-x-3 mb-4 pr-8">
             <div className="p-2.5 bg-[#1C1C22] text-[#D4AF37] border border-[#2B2B33] rounded-xl">
               <Share2 className="w-5 h-5" />
             </div>
             <div>
               <h3 className="font-serif-luxury font-bold text-lg text-white">
-                Compartilhar Peça
+                Compartilhar Produto
               </h3>
               <p className="text-xs text-stone-400">
-                Divulgue em suas redes sociais e contatos
+                Link com foto e cartão profissional no WhatsApp
               </p>
             </div>
           </div>
 
-          {/* Product Mini Preview Card */}
-          <div className="flex items-center space-x-3.5 p-3.5 bg-[#18181E] rounded-2xl border border-[#27272A] mb-5">
-            <div className="w-14 h-16 rounded-xl overflow-hidden bg-black shrink-0 border border-[#27272A]">
-              <img
-                src={product.images?.[0] || ''}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
+          {/* WhatsApp Rich Link Preview Card (Shopee / Mercado Livre style) */}
+          <div className="mb-5 rounded-2xl overflow-hidden bg-[#18181E] border border-[#27272A] shadow-inner">
+            <div className="relative h-36 w-full bg-black overflow-hidden flex items-center justify-center">
+              {previewImage ? (
+                <img
+                  src={previewImage}
+                  alt={product.name}
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover object-center"
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center text-stone-500 gap-1.5">
+                  <ShoppingBag className="w-8 h-8 text-[#D4AF37]/60" />
+                  <span className="text-[11px]">{product.name}</span>
+                </div>
+              )}
+              <div className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-xs border border-white/10 text-[10px] font-bold text-emerald-400 flex items-center gap-1">
+                <MessageCircle className="w-3 h-3" />
+                <span>Prévia no WhatsApp</span>
+              </div>
+              {hasPromo && (
+                <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-bold">
+                  -{discountPct}% OFF
+                </div>
+              )}
             </div>
-            <div className="min-w-0 flex-1">
-              <span className="text-[10px] uppercase font-bold text-[#D4AF37] tracking-wider block">
-                {product.category}
-              </span>
-              <h4 className="text-xs font-semibold text-white truncate">
-                {product.name}
+            <div className="p-3.5 space-y-1 border-t border-[#27272A]">
+              <p className="text-[10px] uppercase tracking-wider font-semibold text-[#D4AF37] flex items-center justify-between">
+                <span className="truncate">{storeDisplayName} • Catálogo Oficial</span>
+                <ExternalLink className="w-3 h-3 shrink-0 text-stone-500" />
+              </p>
+              <h4 className="text-xs font-bold text-white leading-snug line-clamp-1">
+                {previewTitle}
               </h4>
-              <span className="text-sm font-bold text-white mt-0.5 block">
-                {formatCurrency(currentPrice)}
-              </span>
+              <p className="text-[11px] text-stone-400 leading-relaxed line-clamp-2">
+                {previewDescription}
+              </p>
+              <p className="text-[10px] text-stone-500 font-mono truncate pt-0.5">
+                {shareDomain}
+              </p>
             </div>
           </div>
 

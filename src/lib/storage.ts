@@ -85,21 +85,24 @@ export const saveStoredSettings = (settings: StoreSettings, clientId?: string): 
   }
 };
 
-export const getStoredProducts = (): Product[] => {
+export const getStoredProducts = (clientId?: string): Product[] => {
   try {
-    const item = localStorage.getItem(KEYS.PRODUCTS);
-    return item ? JSON.parse(item) : initialProducts;
+    const key = clientId ? `${KEYS.PRODUCTS}_${clientId}` : KEYS.PRODUCTS;
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : clientId ? [] : initialProducts;
   } catch (e) {
     console.error('Failed to load products', e);
-    return initialProducts;
+    return clientId ? [] : initialProducts;
   }
 };
 
-export const saveStoredProducts = (products: Product[]): void => {
+export const saveStoredProducts = (products: Product[], clientId?: string): void => {
   try {
-    localStorage.setItem(KEYS.PRODUCTS, JSON.stringify(products));
+    const key = clientId ? `${KEYS.PRODUCTS}_${clientId}` : KEYS.PRODUCTS;
+    localStorage.setItem(key, JSON.stringify(products));
   } catch (e) {
-    console.error('Failed to save products', e);
+    // If localStorage 5MB quota is exceeded by Base64 photos, ignore silently since Cloud Firestore holds the source of truth
+    console.warn('Could not mirror full product cache in localStorage (quota limit):', e);
   }
 };
 

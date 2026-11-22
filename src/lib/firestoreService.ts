@@ -50,6 +50,29 @@ import {
   decryptClientData,
   hashPassword,
 } from './cryptoUtils';
+import { normalizeProductForFirestore } from './imageUtils';
+
+/**
+ * Recursively strips `undefined` values from objects and arrays before writing to Cloud Firestore,
+ * preventing `Unsupported field value: undefined` runtime rejections on optional fields like `promotionalPrice`.
+ */
+export function stripUndefinedDeep<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value
+      .filter((item) => item !== undefined)
+      .map((item) => stripUndefinedDeep(item)) as unknown as T;
+  }
+  if (value !== null && typeof value === 'object' && !(value instanceof Date)) {
+    const cleaned: Record<string, any> = {};
+    for (const [key, val] of Object.entries(value as Record<string, any>)) {
+      if (val !== undefined) {
+        cleaned[key] = stripUndefinedDeep(val);
+      }
+    }
+    return cleaned as T;
+  }
+  return value;
+}
 
 export enum OperationType {
   CREATE = 'create',
@@ -268,9 +291,10 @@ export const subscribeToSettings = (
 
 export const saveSettingsToDb = async (settings: StoreSettings, clientId?: string): Promise<void> => {
   try {
-    saveStoredSettings(settings, clientId);
+    const cleanSettings = stripUndefinedDeep(settings);
+    saveStoredSettings(cleanSettings, clientId);
     const settingsRef = getDocRef(COLLECTIONS.SETTINGS, SETTINGS_DOC_ID, clientId);
-    await setDoc(settingsRef, settings, { merge: true });
+    await setDoc(settingsRef, cleanSettings, { merge: true });
   } catch (error) {
     console.error('Error saving settings to Firestore:', error);
     throw error;
@@ -290,10 +314,17 @@ export const subscribeToProducts = (
     (snapshot) => {
       const items: Product[] = [];
       snapshot.forEach((docSnap) => {
-        items.push(docSnap.data() as Product);
+        const raw = docSnap.data() as Product;
+        items.push({
+          ...raw,
+          images: Array.isArray(raw.images) ? raw.images.filter(Boolean) : [],
+          sizes: Array.isArray(raw.sizes) ? raw.sizes : ['M'],
+          colors: Array.isArray(raw.colors) ? raw.colors : [],
+          tags: Array.isArray(raw.tags) ? raw.tags : [],
+        });
       });
       callback(items);
-      if (!clientId) saveStoredProducts(items);
+      saveStoredProducts(items, clientId);
     },
     (error) => {
       console.error('Error listening to products in Firestore:', error);
@@ -301,10 +332,13 @@ export const subscribeToProducts = (
   );
 };
 
-export const saveProductToDb = async (product: Product, clientId?: string): Promise<void> => {
+export const saveProductToDb = async (product: Product, clientId?: string): Promise<Product> => {
   try {
-    const prodRef = getDocRef(COLLECTIONS.PRODUCTS, product.id, clientId);
-    await setDoc(prodRef, product);
+    const normalized = await normalizeProductForFirestore(product);
+    const cleanProduct = stripUndefinedDeep(normalized);
+    const prodRef = getDocRef(COLLECTIONS.PRODUCTS, cleanProduct.id, clientId);
+    await setDoc(prodRef, cleanProduct);
+    return cleanProduct;
   } catch (error) {
     console.error('Error saving product to Firestore:', error);
     throw error;
@@ -348,7 +382,7 @@ export const subscribeToCategories = (
 export const saveCategoryToDb = async (category: TagCategory, clientId?: string): Promise<void> => {
   try {
     const catRef = getDocRef(COLLECTIONS.CATEGORIES, category.id, clientId);
-    await setDoc(catRef, category);
+    await setDoc(catRef, stripUndefinedDeep(category));
   } catch (error) {
     console.error('Error saving category to Firestore:', error);
     throw error;
@@ -392,7 +426,7 @@ export const subscribeToTags = (
 export const saveTagToDb = async (tag: TagCategory, clientId?: string): Promise<void> => {
   try {
     const tagRef = getDocRef(COLLECTIONS.TAGS, tag.id, clientId);
-    await setDoc(tagRef, tag);
+    await setDoc(tagRef, stripUndefinedDeep(tag));
   } catch (error) {
     console.error('Error saving tag to Firestore:', error);
     throw error;
@@ -436,7 +470,7 @@ export const subscribeToCoupons = (
 export const saveCouponToDb = async (coupon: Coupon, clientId?: string): Promise<void> => {
   try {
     const couponRef = getDocRef(COLLECTIONS.COUPONS, coupon.id, clientId);
-    await setDoc(couponRef, coupon);
+    await setDoc(couponRef, stripUndefinedDeep(coupon));
   } catch (error) {
     console.error('Error saving coupon to Firestore:', error);
     throw error;
@@ -484,7 +518,7 @@ export const subscribeToOrders = (
 export const saveOrderToDb = async (order: Order, clientId?: string): Promise<void> => {
   try {
     const orderRef = getDocRef(COLLECTIONS.ORDERS, order.id, clientId);
-    await setDoc(orderRef, order);
+    await setDoc(orderRef, stripUndefinedDeep(order));
   } catch (error) {
     console.error('Error saving order to Firestore:', error);
     throw error;
@@ -528,7 +562,7 @@ export const subscribeToFinance = (
 export const saveFinanceToDb = async (record: FinancialRecord, clientId?: string): Promise<void> => {
   try {
     const finRef = getDocRef(COLLECTIONS.FINANCE, record.id, clientId);
-    await setDoc(finRef, record);
+    await setDoc(finRef, stripUndefinedDeep(record));
   } catch (error) {
     console.error('Error saving finance to Firestore:', error);
     throw error;
@@ -573,9 +607,10 @@ export const subscribeToAdminUser = (
 
 export const saveAdminUserToDb = async (user: AdminUser): Promise<void> => {
   try {
-    saveStoredAdminUser(user);
+    const cleanUser = stripUndefinedDeep(user);
+    saveStoredAdminUser(cleanUser);
     const adminRef = doc(db, COLLECTIONS.ADMIN_AUTH, ADMIN_USER_DOC_ID);
-    await setDoc(adminRef, user, { merge: true });
+    await setDoc(adminRef, cleanUser, { merge: true });
   } catch (error) {
     console.error('Error saving admin auth to Firestore:', error);
     throw error;

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Product, StoreSettings } from '../types';
 import { formatCurrency, generateWhatsappDirectProductMessage, cleanPhoneForWhatsapp } from '../lib/formatters';
+import { resolveColorImageUrl } from '../lib/imageUtils';
 import { MessageCircle, Eye, ShoppingBag, Share2, Check } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -31,8 +32,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const hasColorVariants = product.hasColors !== false && Array.isArray(product.colors) && product.colors.length > 0;
   const activeColor = hasColorVariants ? product.colors[selectedColorIndex] : undefined;
 
+  const resolvedColorImg = resolveColorImageUrl(activeColor?.imageUrl, product.images);
   const mainImage =
-    (activeColor?.imageUrl && activeColor.imageUrl.trim()) ||
+    resolvedColorImg ||
     product.images?.[0] ||
     '';
 
