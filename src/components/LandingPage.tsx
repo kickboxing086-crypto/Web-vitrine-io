@@ -26,6 +26,7 @@ interface LandingPageProps {
   onEnterStore: (slug?: string) => void;
   onAdminLogin: () => void;
   onOpenRegister?: () => void;
+  onShareSystem?: () => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
@@ -33,6 +34,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onEnterStore,
   onAdminLogin,
   onOpenRegister,
+  onShareSystem,
 }) => {
   const officialPhone = '5511999999999';
   
@@ -170,6 +172,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
 
           <div className="flex items-center space-x-2 sm:space-x-3">
+            {onShareSystem && (
+              <button
+                type="button"
+                onClick={onShareSystem}
+                className="inline-flex items-center space-x-1.5 px-3 py-2 bg-[#16161A] hover:bg-stone-800 border border-[#27272A] hover:border-[#D4AF37]/50 text-stone-200 hover:text-white rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                id="btn-landing-share-system"
+                title="Compartilhar o sistema Web Vitrine"
+              >
+                <Share2 className="w-3.5 h-3.5 text-[#D4AF37]" />
+                <span className="hidden md:inline">Compartilhar</span>
+              </button>
+            )}
+
             <button
               onClick={onAdminLogin}
               className="inline-flex items-center px-4 py-2 bg-[#16161A] hover:bg-stone-800 border border-[#27272A] hover:border-[#D4AF37]/50 text-stone-200 hover:text-white rounded-xl text-xs font-semibold transition-colors cursor-pointer"
@@ -603,7 +618,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             Plataforma de vitrine virtual e catálogo digital para lojistas. Apresente seus produtos com elegância e venda direto no WhatsApp.
           </p>
 
-          <div>
+          <div className="flex flex-wrap items-center justify-center gap-3">
             <a
               href={buyLink}
               target="_blank"
@@ -613,6 +628,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <MessageCircle className="w-4 h-4 fill-stone-950" />
               <span>Falar com Atendimento Oficial</span>
             </a>
+
+            {onShareSystem && (
+              <button
+                type="button"
+                onClick={onShareSystem}
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#16161A] hover:bg-stone-800 text-stone-100 border border-[#27272A] hover:border-[#D4AF37]/50 font-semibold text-xs rounded-xl shadow-sm cursor-pointer transition-colors"
+                id="btn-landing-footer-share-system"
+              >
+                <Share2 className="w-4 h-4 text-[#D4AF37]" />
+                <span>Compartilhar Sistema</span>
+              </button>
+            )}
           </div>
 
           {/* Credits & Mandatory SF TECNOLOGIA attribution */}

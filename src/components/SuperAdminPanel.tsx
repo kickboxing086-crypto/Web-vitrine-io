@@ -34,6 +34,7 @@ import {
   Megaphone,
   Send,
   Users,
+  Share2,
 } from 'lucide-react';
 import { StoreClient, SystemNotification } from '../types';
 import {
@@ -49,9 +50,10 @@ import { CredentialChecklist } from './CredentialChecklist';
 
 interface SuperAdminPanelProps {
   onLogout: () => void;
+  onShareSystem?: () => void;
 }
 
-export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
+export function SuperAdminPanel({ onLogout, onShareSystem }: SuperAdminPanelProps) {
   const [clients, setClients] = useState<StoreClient[]>([]);
   const [isAddingOrEditing, setIsAddingOrEditing] = useState(false);
   const [editingClient, setEditingClient] = useState<Partial<StoreClient> | null>(null);
@@ -605,6 +607,20 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
 
             {/* Top Right Action & Logout */}
             <div className="flex items-center space-x-2 sm:space-x-3">
+              {onShareSystem && (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={onShareSystem}
+                  className="flex items-center space-x-2 px-3 sm:px-3.5 py-2.5 bg-white hover:bg-stone-100 text-stone-900 border border-stone-300 font-bold rounded-xl text-xs sm:text-sm shadow-sm transition-all cursor-pointer"
+                  id="btn-gestor-share-system"
+                  title="Compartilhar o Sistema Web Vitrine"
+                >
+                  <Share2 className="w-4 h-4 text-amber-600" />
+                  <span className="hidden md:inline">Compartilhar Sistema</span>
+                </motion.button>
+              )}
+
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}

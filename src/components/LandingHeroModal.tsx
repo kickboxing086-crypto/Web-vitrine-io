@@ -16,6 +16,7 @@ import {
   Lock,
   Tag,
   Store,
+  Share2,
 } from 'lucide-react';
 
 interface LandingHeroModalProps {
@@ -24,6 +25,7 @@ interface LandingHeroModalProps {
   onOpenLogin: () => void;
   onOpenRegister?: () => void;
   onEnterStore: (slug?: string) => void;
+  onShareSystem?: () => void;
 }
 
 export const LandingHeroModal: React.FC<LandingHeroModalProps> = ({
@@ -32,6 +34,7 @@ export const LandingHeroModal: React.FC<LandingHeroModalProps> = ({
   onOpenLogin,
   onOpenRegister,
   onEnterStore,
+  onShareSystem,
 }) => {
   if (!isOpen) return null;
 
@@ -191,21 +194,38 @@ export const LandingHeroModal: React.FC<LandingHeroModalProps> = ({
                   <span>Ver Vitrine de Demonstração (Exemplo)</span>
                 </button>
 
-                <div className="flex items-center justify-between pt-1">
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
                   <span className="text-xs text-stone-400">
                     Já é lojista cadastrado?
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onClose();
-                      onOpenLogin();
-                    }}
-                    className="inline-flex items-center px-4 py-2 bg-stone-800 hover:bg-stone-700 text-stone-200 hover:text-white rounded-xl text-xs font-semibold border border-stone-700 transition-colors cursor-pointer"
-                    id="btn-login-from-landing"
-                  >
-                    <span>Acessar</span>
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    {onShareSystem && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onClose();
+                          onShareSystem();
+                        }}
+                        className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#1C1C22] hover:bg-stone-800 text-[#D4AF37] hover:text-[#E5C378] rounded-xl text-xs font-semibold border border-[#D4AF37]/30 transition-colors cursor-pointer"
+                        id="btn-share-from-landing-modal"
+                      >
+                        <Share2 className="w-3.5 h-3.5" />
+                        <span>Compartilhar Sistema</span>
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onClose();
+                        onOpenLogin();
+                      }}
+                      className="inline-flex items-center px-4 py-2 bg-stone-800 hover:bg-stone-700 text-stone-200 hover:text-white rounded-xl text-xs font-semibold border border-stone-700 transition-colors cursor-pointer"
+                      id="btn-login-from-landing"
+                    >
+                      <span>Acessar</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

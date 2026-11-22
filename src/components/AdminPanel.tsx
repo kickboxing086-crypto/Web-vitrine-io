@@ -120,6 +120,7 @@ interface AdminPanelProps {
   onLogout?: () => void;
   onViewStore?: () => void;
   onShareProduct?: (product: Product) => void;
+  onShareSystem?: () => void;
   systemNotifications?: SystemNotification[];
   localReadNotifIds?: string[];
   onMarkNotificationRead?: (notifId: string) => void;
@@ -150,6 +151,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   onLogout,
   onViewStore,
   onShareProduct,
+  onShareSystem,
   systemNotifications = [],
   localReadNotifIds = [],
   onMarkNotificationRead,
@@ -1013,6 +1015,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       <MessageCircle className="w-4 h-4" />
                       <span>Divulgar Loja (WhatsApp)</span>
                     </button>
+
+                    {onShareSystem && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsSettingsMenuOpen(false);
+                          onShareSystem();
+                        }}
+                        className="w-full flex items-center space-x-3 px-3 py-2.5 hover:bg-amber-50 text-amber-800 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                        id="btn-admin-menu-share-system"
+                      >
+                        <Crown className="w-4 h-4 text-amber-600" />
+                        <span>Compartilhar o Sistema</span>
+                      </button>
+                    )}
 
                     {onViewStore && (
                       <button

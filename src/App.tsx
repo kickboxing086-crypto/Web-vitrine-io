@@ -74,6 +74,7 @@ import { LandingPage } from './components/LandingPage';
 import { LandingHeroModal } from './components/LandingHeroModal';
 import { StoreHoursModal } from './components/StoreHoursModal';
 import { ShareProductModal } from './components/ShareProductModal';
+import { ShareSystemModal } from './components/ShareSystemModal';
 import { PaymentSuccessModal } from './components/PaymentSuccessModal';
 import { AppEntranceAnimation } from './components/AppEntranceAnimation';
 import { InstallFloatingBar } from './components/InstallFloatingBar';
@@ -162,6 +163,9 @@ export default function App() {
   // View state: 'store' (Vitrine do Cliente) | 'landing' (Página Oficial) | 'admin' (Painel do Dono) | 'super_admin' (Painel SaaS)
   const [activeView, setActiveView] = useState<'store' | 'admin' | 'super_admin' | 'landing' | 'vulnerability_admin'>(() => {
     const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('sistema') === '1' || urlParams.get('page') === 'landing') {
+      return 'landing';
+    }
     if (urlParams.get('page') === 'admin' || urlParams.get('admin') === '1') {
       return 'store'; // Will trigger login modal in useEffect
     }
@@ -365,6 +369,7 @@ export default function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [sharingProduct, setSharingProduct] = useState<Product | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isShareSystemModalOpen, setIsShareSystemModalOpen] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isStoreSetupOpen, setIsStoreSetupOpen] = useState(false);
   const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] = useState(false);
@@ -532,8 +537,13 @@ export default function App() {
       return null;
     };
     
+    const initialSearchParams = new URLSearchParams(window.location.search);
+    const isExplicitSystemLanding =
+      initialSearchParams.get('sistema') === '1' ||
+      initialSearchParams.get('page') === 'landing';
+
     // Check for client store username (from subdomain or param)
-    const lojaParam = getStoreUsernameFromUrl();
+    const lojaParam = !isExplicitSystemLanding ? getStoreUsernameFromUrl() : null;
     if (lojaParam) {
       import('./lib/firestoreService').then(async (module) => {
         const client = await module.getClientByUsername(lojaParam);
@@ -1145,7 +1155,14 @@ export default function App() {
   if (activeView === 'super_admin') {
     return (
       <>
-        <SuperAdminPanel onLogout={handleLogout} />
+        <SuperAdminPanel
+          onLogout={handleLogout}
+          onShareSystem={() => setIsShareSystemModalOpen(true)}
+        />
+        <ShareSystemModal
+          isOpen={isShareSystemModalOpen}
+          onClose={() => setIsShareSystemModalOpen(false)}
+        />
         <PaymentSuccessModal
           isOpen={paymentSuccessInfo.isOpen}
           planTitle={paymentSuccessInfo.planTitle}
@@ -1177,6 +1194,11 @@ export default function App() {
           onEnterStore={handleEnterStore}
           onAdminLogin={() => setIsLoginModalOpen(true)}
           onOpenRegister={() => setIsRegisterModalOpen(true)}
+          onShareSystem={() => setIsShareSystemModalOpen(true)}
+        />
+        <ShareSystemModal
+          isOpen={isShareSystemModalOpen}
+          onClose={() => setIsShareSystemModalOpen(false)}
         />
         {/* Admin Login Modal */}
         <LoginModal
@@ -1585,6 +1607,7 @@ export default function App() {
             onLogout={handleLogout}
             onViewStore={() => setActiveView('store')}
             onShareProduct={handleShareProduct}
+            onShareSystem={() => setIsShareSystemModalOpen(true)}
           />
         )}
       </main>
@@ -1595,6 +1618,7 @@ export default function App() {
         onOpenAdmin={() => handleToggleView('admin')}
         onOpenLanding={() => setActiveView('landing')}
         onOpenPrivacyPolicy={() => setIsPrivacyPolicyModalOpen(true)}
+        onShareSystem={() => setIsShareSystemModalOpen(true)}
       />
 
       {/* Store Hours Status Modal */}
@@ -1611,6 +1635,7 @@ export default function App() {
         onOpenLogin={() => setIsLoginModalOpen(true)}
         onOpenRegister={() => setIsRegisterModalOpen(true)}
         onEnterStore={handleEnterStore}
+        onShareSystem={() => setIsShareSystemModalOpen(true)}
       />
 
       {/* Admin Login Modal */}
@@ -1679,6 +1704,12 @@ export default function App() {
         currentClient={currentClient}
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
+      />
+
+      {/* Share System Modal */}
+      <ShareSystemModal
+        isOpen={isShareSystemModalOpen}
+        onClose={() => setIsShareSystemModalOpen(false)}
       />
 
       {/* Cart / Order Drawer */}

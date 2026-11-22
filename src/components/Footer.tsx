@@ -1,6 +1,6 @@
 import React from 'react';
 import { StoreSettings } from '../types';
-import { Instagram, MapPin, Clock, ShieldCheck, Crown, Building2, Truck, MessageCircle } from 'lucide-react';
+import { Instagram, MapPin, Clock, ShieldCheck, Crown, Building2, Truck, MessageCircle, Share2 } from 'lucide-react';
 import { formatPhone, cleanPhoneForWhatsapp } from '../lib/formatters';
 
 interface FooterProps {
@@ -8,9 +8,10 @@ interface FooterProps {
   onOpenAdmin: () => void;
   onOpenLanding?: () => void;
   onOpenPrivacyPolicy?: () => void;
+  onShareSystem?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ settings, onOpenAdmin, onOpenLanding, onOpenPrivacyPolicy }) => {
+export const Footer: React.FC<FooterProps> = ({ settings, onOpenAdmin, onOpenLanding, onOpenPrivacyPolicy, onShareSystem }) => {
   const whatsappLink = `https://wa.me/${cleanPhoneForWhatsapp(settings.phoneWhatsapp)}`;
   const instagramUrl = settings.instagramHandle
     ? `https://instagram.com/${settings.instagramHandle.replace('@', '')}`
@@ -150,7 +151,19 @@ export const Footer: React.FC<FooterProps> = ({ settings, onOpenAdmin, onOpenLan
             © {new Date().getFullYear()} {settings.storeName}. Todos os direitos reservados.
           </p>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+            {onShareSystem && (
+              <button
+                type="button"
+                onClick={onShareSystem}
+                className="inline-flex items-center space-x-1 text-stone-300 hover:text-[#D4AF37] transition-colors cursor-pointer text-[11px] font-medium"
+                id="btn-footer-share-system"
+              >
+                <Share2 className="w-3 h-3 text-[#D4AF37]" />
+                <span>Compartilhar Sistema</span>
+              </button>
+            )}
+
             {onOpenPrivacyPolicy && (
               <button
                 type="button"
