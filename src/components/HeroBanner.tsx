@@ -123,15 +123,15 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
 
       {/* Quick Tag Pills Filter below Banner */}
       <div className="mt-4 flex items-center space-x-2 overflow-x-auto pb-2 no-scrollbar">
-        <span className="text-xs font-bold text-stone-500 uppercase tracking-wider pl-1">
+        <span className="text-xs font-bold text-stone-400 uppercase tracking-wider pl-1">
           Destaques:
         </span>
         <button
           onClick={() => onSelectTag('all')}
           className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
             selectedTag === 'all'
-              ? 'bg-stone-900 text-white shadow-xs'
-              : 'bg-brand-bg-alt hover:bg-brand-bg-alt text-stone-700'
+              ? 'bg-[#D4AF37] text-stone-950 font-bold shadow-xs'
+              : 'bg-[#18181E] hover:bg-[#22222B] text-stone-200 border border-[#27272A]'
           }`}
         >
           Todos os Destaques
@@ -142,8 +142,8 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
             onClick={() => onSelectTag(tag)}
             className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
               selectedTag === tag
-                ? 'bg-stone-900 text-white shadow-xs'
-                : 'bg-brand-bg-alt hover:bg-brand-bg-alt text-stone-700'
+                ? 'bg-[#D4AF37] text-stone-950 font-bold shadow-xs'
+                : 'bg-[#18181E] hover:bg-[#22222B] text-stone-200 border border-[#27272A]'
             }`}
           >
             #{tag}

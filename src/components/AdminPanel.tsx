@@ -934,7 +934,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       </AnimatePresence>
 
       {/* Admin Top Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-stone-200">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-[#27272A]">
         <div className="flex items-center space-x-3">
           {/* Hamburger Menu on the left */}
           <div className="relative" ref={settingsMenuRef}>
@@ -1085,34 +1085,34 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-brand-primary-darker">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#D4AF37]">
                 Painel de Gestão da Boutique
               </span>
               {currentClient && currentClient.username !== 'teste@123' && currentClient.id !== 'client-test-natural' ? (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-800 text-[10px] font-extrabold uppercase tracking-wide">
-                  <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-[10px] font-extrabold uppercase tracking-wide">
+                  <ShieldCheck className="w-3 h-3 text-emerald-400" />
                   Conta Oficial
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 border border-amber-300 text-amber-900 text-[10px] font-extrabold uppercase tracking-wide">
-                  <AlertCircle className="w-3 h-3 text-amber-700" />
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-950/60 border border-amber-500/40 text-amber-300 text-[10px] font-extrabold uppercase tracking-wide">
+                  <AlertCircle className="w-3 h-3 text-amber-400" />
                   Modo de Demonstração
                 </span>
               )}
             </div>
-            <h1 className="text-xl sm:text-3xl font-serif-luxury font-bold text-stone-900">
+            <h1 className="text-xl sm:text-3xl font-serif-luxury font-bold text-white">
               Controle Geral: {settings.storeName}
             </h1>
             {currentClient && currentClient.username !== 'teste@123' && (
-              <p className="text-xs text-stone-500 mt-0.5">
-                Usuário autenticado: <strong className="text-stone-800 font-mono">@{currentClient.username}</strong>
+              <p className="text-xs text-stone-300 mt-0.5">
+                Usuário autenticado: <strong className="text-white font-mono">@{currentClient.username}</strong>
                 {currentClient.dueDate && (() => {
                   const isLifetime = (currentClient && Number(currentClient.planPrice) === 250) || (currentClient.dueDate && (currentClient.dueDate.startsWith('2126') || currentClient.dueDate.startsWith('2099') || currentClient.dueDate.startsWith('212')));
                   if (isLifetime) {
                     return (
                       <span className="flex items-center gap-2 mt-1">
-                        <span>• Plano:</span>
-                        <strong className="text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full text-[11px] font-bold border border-amber-200">Conta Vitalícia</strong>
+                        <span className="text-stone-400">• Plano:</span>
+                        <strong className="text-[#D4AF37] bg-[#D4AF37]/15 px-2.5 py-0.5 rounded-full text-[11px] font-bold border border-[#D4AF37]/40">Conta Vitalícia</strong>
                       </span>
                     );
                   }
@@ -1125,9 +1125,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   
                   return (
                     <span className="flex flex-wrap items-center gap-2 mt-1">
-                      <span>• Vencimento:</span>
-                      <strong className="text-emerald-700">{new Date(currentClient.dueDate + 'T00:00:00').toLocaleDateString('pt-BR')}</strong>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${diffDays <= 5 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                      <span className="text-stone-400">• Vencimento:</span>
+                      <strong className="text-emerald-400">{new Date(currentClient.dueDate + 'T00:00:00').toLocaleDateString('pt-BR')}</strong>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${diffDays <= 5 ? 'bg-rose-950/80 text-rose-300 border border-rose-500/40' : 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/40'}`}>
                         {diffDays < 0 ? `Vencido há ${Math.abs(diffDays)} dias` : diffDays === 0 ? 'Vence hoje!' : `Faltam ${diffDays} dias`}
                       </span>
                       <button
@@ -1226,7 +1226,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       )}
 
       {/* Navigation Tabs */}
-      <div className="flex items-center space-x-2 overflow-x-auto py-4 no-scrollbar border-b border-stone-200/70 mb-6">
+      <div className="flex items-center space-x-2 overflow-x-auto py-4 no-scrollbar border-b border-[#27272A] mb-6">
         {[
           { id: 'dashboard', label: 'Controlador Financeiro & Dashboard', icon: DollarSign },
           { id: 'products', label: `Catálogo de Peças (${products.length})`, icon: Package },
@@ -1247,15 +1247,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                 isActive
-                  ? 'bg-stone-900 text-white shadow-sm'
+                  ? 'bg-[#D4AF37] text-stone-950 shadow-sm'
                   : tab.id === 'plan'
-                  ? 'bg-amber-100/50 hover:bg-amber-100 text-amber-900 border border-amber-300'
-                  : 'bg-white hover:bg-white text-stone-700 border border-stone-200'
+                  ? 'bg-[#1C1A12] hover:bg-[#262216] text-[#E5C378] border border-[#D4AF37]/40'
+                  : 'bg-[#18181E] hover:bg-[#22222B] text-stone-200 border border-[#27272A]'
               }`}
               id={`tab-${tab.id}`}
             >
               <IconComp
-                className={`w-4 h-4 ${isActive ? (tab.id === 'plan' ? 'text-amber-400' : 'text-brand-primary') : (tab.id === 'plan' ? 'text-amber-600' : 'text-stone-500')}`}
+                className={`w-4 h-4 ${isActive ? 'text-stone-950' : tab.id === 'plan' ? 'text-[#D4AF37]' : 'text-stone-400'}`}
               />
               <span>{tab.label}</span>
             </motion.button>
@@ -1616,21 +1616,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           {/* Header & New Product CTA */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h2 className="font-serif-luxury text-xl sm:text-2xl font-bold text-stone-900">
+              <h2 className="font-serif-luxury text-xl sm:text-2xl font-bold text-white">
                 Gerenciamento de Peças do Catálogo
               </h2>
-              <p className="text-xs text-stone-500 mt-0.5">
-                Organize roupas por Tags, configure fotos em Base64 (até 10 fotos por peça), tamanhos e promoções.
+              <p className="text-xs text-stone-300 mt-0.5">
+                Organize roupas por Tags, configure fotos (até 10 fotos por peça), tamanhos e promoções.
               </p>
             </div>
 
             <button
               type="button"
               onClick={handleOpenProductCreate}
-              className="flex items-center justify-center space-x-2 px-5 py-2.5 bg-brand-secondary hover:bg-stone-800 text-brand-primary rounded-xl text-xs font-bold shadow-md transition-all cursor-pointer self-start sm:self-auto"
+              className="flex items-center justify-center space-x-2 px-5 py-2.5 bg-[#D4AF37] hover:bg-[#E5C378] text-stone-950 rounded-xl text-xs font-bold shadow-md transition-all cursor-pointer self-start sm:self-auto"
               id="btn-add-product"
             >
-              <Plus className="w-4 h-4 text-brand-primary" />
+              <Plus className="w-4 h-4 text-stone-950" />
               <span>Cadastrar Nova Peça</span>
             </button>
           </div>
@@ -3324,10 +3324,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-serif-luxury text-xl font-bold text-stone-900">
+              <h2 className="font-serif-luxury text-xl font-bold text-white">
                 Histórico de Pedidos & WhatsApp
               </h2>
-              <p className="text-xs text-stone-500">
+              <p className="text-xs text-stone-300">
                 Acompanhe pedidos enviados pelos clientes e atualize o status em tempo real
               </p>
             </div>
@@ -3533,10 +3533,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       {activeTab === 'tags' && (
         <div className="space-y-6">
           <div>
-            <h2 className="font-serif-luxury text-xl font-bold text-stone-900">
+            <h2 className="font-serif-luxury text-xl font-bold text-white">
               Gestão de Tags & Categorias
             </h2>
-            <p className="text-xs text-stone-500">
+            <p className="text-xs text-stone-300">
               Crie novas categorias de roupas e tags promocionais/exclusivas para organizar sua vitrine
             </p>
           </div>
@@ -3793,10 +3793,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h2 className="font-serif-luxury text-xl font-bold text-stone-900">
+              <h2 className="font-serif-luxury text-xl font-bold text-white">
                 Cupons de Desconto & Ofertas
               </h2>
-              <p className="text-xs text-stone-500">
+              <p className="text-xs text-stone-300">
                 Crie códigos promocionais para enviar aos seus clientes e aumentar suas conversões no WhatsApp
               </p>
             </div>
@@ -3811,10 +3811,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 setCouponMaxUses(0);
                 setIsAddingCoupon(true);
               }}
-              className="flex items-center space-x-2 px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer self-start"
+              className="flex items-center space-x-2 px-4 py-2 bg-[#D4AF37] hover:bg-[#E5C378] text-stone-950 rounded-xl text-xs font-bold shadow-xs cursor-pointer self-start"
               id="btn-add-coupon"
             >
-              <Plus className="w-4 h-4 text-brand-primary" />
+              <Plus className="w-4 h-4 text-stone-950" />
               <span>Criar Novo Cupom</span>
             </button>
           </div>
@@ -4036,11 +4036,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h2 className="font-serif-luxury text-xl font-bold text-stone-900 flex items-center gap-2">
-                  <Sliders className="w-5 h-5 text-brand-primary" />
+                <h2 className="font-serif-luxury text-xl font-bold text-white flex items-center gap-2">
+                  <Sliders className="w-5 h-5 text-[#D4AF37]" />
                   Controle de Estoque Inteligente
                 </h2>
-                <p className="text-xs text-stone-500">
+                <p className="text-xs text-stone-300">
                   Acompanhe os níveis de estoque em tempo real, ajuste quantidades instantaneamente e previna vendas sem estoque na sua vitrine.
                 </p>
               </div>

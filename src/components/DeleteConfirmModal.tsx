@@ -46,13 +46,13 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
           transition={{ duration: 0.2 }}
-          className="relative w-full max-w-md bg-brand-bg rounded-2xl border border-brand-border shadow-2xl p-6 overflow-hidden"
+          className="relative w-full max-w-md bg-[#121215] text-stone-100 rounded-2xl border border-[#27272A] shadow-2xl p-6 overflow-hidden"
           id="delete-modal-container"
         >
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-full transition-colors"
+            className="absolute top-4 right-4 p-2 text-stone-400 hover:text-white hover:bg-stone-800 rounded-full transition-colors cursor-pointer"
             id="btn-close-delete-modal"
           >
             <X className="w-5 h-5" />
@@ -60,41 +60,41 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
 
           {/* Header */}
           <div className="flex items-start space-x-4 mb-4">
-            <div className="p-3 bg-red-100 text-red-700 rounded-xl">
+            <div className="p-3 bg-red-950/60 border border-red-500/30 text-red-400 rounded-xl">
               <AlertTriangle className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-xs font-semibold uppercase tracking-wider text-red-600">
+              <span className="text-xs font-semibold uppercase tracking-wider text-red-400">
                 Confirmação de 2 Etapas
               </span>
-              <h3 className="text-xl font-serif-luxury font-semibold text-stone-900">
+              <h3 className="text-xl font-serif-luxury font-semibold text-white">
                 {title}
               </h3>
             </div>
           </div>
 
           {/* Body */}
-          <div className="space-y-3 mb-6 text-sm text-stone-600 leading-relaxed">
+          <div className="space-y-3 mb-6 text-sm text-stone-300 leading-relaxed">
             <p>
               Você está prestes a excluir permanentemente o item:
             </p>
-            <div className="p-3 bg-white rounded-xl border border-brand-border font-medium text-stone-900">
+            <div className="p-3 bg-[#18181E] rounded-xl border border-[#27272A] font-medium text-white">
               "{itemName}"
               {itemDescription && (
-                <span className="block text-xs text-stone-500 mt-1 font-normal">
+                <span className="block text-xs text-stone-400 mt-1 font-normal">
                   {itemDescription}
                 </span>
               )}
             </div>
-            <p className="text-xs text-stone-500">
-              Esta ação é definitiva e não poderá ser desfeita. Por motivos de segurança, digite a palavra <strong className="text-red-700 font-semibold uppercase tracking-wider">apagar</strong> no campo abaixo para habilitar a exclusão.
+            <p className="text-xs text-stone-400">
+              Esta ação é definitiva e não poderá ser desfeita. Por motivos de segurança, digite a palavra <strong className="text-red-400 font-semibold uppercase tracking-wider">apagar</strong> no campo abaixo para habilitar a exclusão.
             </p>
           </div>
 
-          {/* Input field (optional) */}
+          {/* Input field */}
           <div className="mb-6">
-            <label className="block text-xs font-medium text-stone-700 mb-1.5">
-              Digite <span className="font-bold text-red-600">apagar</span> para confirmar (ou clique no botão abaixo):
+            <label className="block text-xs font-medium text-stone-200 mb-1.5">
+              Digite <span className="font-bold text-red-400">apagar</span> para confirmar:
             </label>
             <input
               type="text"
@@ -107,7 +107,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
               }}
               placeholder='Digite "apagar" (opcional)'
               autoFocus
-              className="w-full px-4 py-2.5 bg-white border border-brand-border-dark rounded-xl text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-600 text-sm font-medium"
+              className="w-full px-4 py-2.5 bg-[#141418] border border-[#32323D] rounded-xl text-white placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-500 text-sm font-medium"
               id="input-confirm-apagar"
             />
           </div>
@@ -117,7 +117,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl border border-stone-300 text-stone-700 hover:bg-stone-100 text-sm font-medium transition-colors cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-[#1C1C22] border border-[#32323D] text-stone-200 hover:bg-[#27272F] text-sm font-medium transition-colors cursor-pointer"
               id="btn-cancel-delete"
             >
               Cancelar

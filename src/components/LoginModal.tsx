@@ -249,11 +249,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 15 }}
           transition={{ duration: 0.2 }}
-          className="relative w-full max-w-md bg-brand-bg rounded-3xl shadow-2xl border border-brand-bg-alt overflow-hidden"
+          className="relative w-full max-w-md bg-[#121215] text-stone-100 rounded-3xl shadow-2xl border border-[#27272A] overflow-hidden"
           id="modal-login-container"
         >
           {/* Header Banner */}
-          <div className="bg-stone-900 text-white p-6 pb-7 relative">
+          <div className="bg-[#18181E] border-b border-[#27272A] text-white p-6 pb-7 relative">
             <button
               onClick={onClose}
               className="absolute top-4 right-4 p-2 text-stone-400 hover:text-white rounded-full transition-colors cursor-pointer"
@@ -264,12 +264,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             </button>
 
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-2xl bg-brand-primary-dark flex items-center justify-center text-white shadow-md">
+              <div className="w-10 h-10 rounded-2xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] shadow-md">
                 <Store className="w-5 h-5" />
               </div>
               <div>
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold tracking-wider text-brand-primary uppercase">
-                  <ShieldCheck className="w-3.5 h-3.5 text-brand-primary" />
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold tracking-wider text-[#D4AF37] uppercase">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#D4AF37]" />
                   Sistema Seguro
                 </span>
                 <h2 className="text-xl font-serif-luxury font-bold text-white">
@@ -290,10 +290,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               <motion.div
                 initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs flex items-center gap-2"
+                className="p-3 bg-red-950/60 border border-red-500/40 text-red-200 rounded-xl text-xs flex items-center gap-2"
                 id="login-error-alert"
               >
-                <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-500" />
+                <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-400" />
                 <span>{errorMessage}</span>
               </motion.div>
             )}
@@ -303,9 +303,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold flex items-center gap-2.5"
+                className="p-3.5 bg-emerald-950/60 border border-emerald-500/40 text-emerald-200 rounded-xl text-xs font-semibold flex items-center gap-2.5"
               >
-                <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
                 <span>Autenticado com sucesso! Carregando painel...</span>
               </motion.div>
             )}
@@ -313,7 +313,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Username Input */}
               <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1.5">
+                <label className="block text-xs font-bold text-stone-200 mb-1.5">
                   Usuário ou E-mail da Loja
                 </label>
                 <div className="relative">
@@ -328,7 +328,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                       if (errorMessage) setErrorMessage('');
                     }}
                     placeholder="Ex: minha_loja"
-                    className="w-full pl-10 pr-3.5 py-2.5 bg-white border border-brand-border-dark rounded-xl text-xs text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-brand-primary-dark/30 focus:border-brand-primary-dark shadow-2xs font-medium"
+                    className="w-full pl-10 pr-3.5 py-2.5 bg-[#18181E] border border-[#32323D] rounded-xl text-xs text-white placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] shadow-2xs font-medium"
                     id="input-login-username"
                     autoFocus
                     required
@@ -339,10 +339,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               {/* Password Input */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-bold text-stone-700">
+                  <label className="text-xs font-bold text-stone-200">
                     Senha de Acesso
                   </label>
-                  <span className="text-[11px] font-medium text-stone-500">
+                  <span className="text-[11px] font-medium text-stone-400">
                     {password.length}/8 dígitos
                   </span>
                 </div>
@@ -359,14 +359,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                       if (errorMessage) setErrorMessage('');
                     }}
                     placeholder="Digite a senha (máx 8 dígitos)"
-                    className="w-full pl-10 pr-10 py-2.5 bg-white border border-brand-border-dark rounded-xl text-xs text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-brand-primary-dark/30 focus:border-brand-primary-dark shadow-2xs font-medium tracking-wide"
+                    className="w-full pl-10 pr-10 py-2.5 bg-[#18181E] border border-[#32323D] rounded-xl text-xs text-white placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37] shadow-2xs font-medium tracking-wide"
                     id="input-login-password"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-stone-400 hover:text-stone-700 cursor-pointer"
+                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-stone-400 hover:text-white cursor-pointer"
                     title={showPassword ? 'Ocultar senha' : 'Ver senha'}
                     id="btn-toggle-password-visibility"
                   >
@@ -377,19 +377,19 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     )}
                   </button>
                 </div>
-                <p className="text-[10px] text-stone-500 mt-1">
+                <p className="text-[10px] text-stone-400 mt-1">
                   * A senha possui restrição de até 8 dígitos numéricos/alfanuméricos.
                 </p>
               </div>
 
               {/* Remember checkbox & Forgot Password */}
               <div className="flex items-center justify-between pt-1">
-                <label className="flex items-center gap-2 text-xs text-stone-600 cursor-pointer select-none">
+                <label className="flex items-center gap-2 text-xs text-stone-300 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 text-stone-900 rounded border-stone-300 focus:ring-brand-primary-dark accent-stone-900"
+                    className="w-4 h-4 rounded border-stone-600 focus:ring-[#D4AF37] accent-[#D4AF37]"
                     id="checkbox-remember-login"
                   />
                   <span>Lembrar login</span>
@@ -413,17 +413,17 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               <button
                 type="submit"
                 disabled={isLoading || isSuccess}
-                className="w-full py-3 px-4 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed mt-2"
+                className="w-full py-3 px-4 bg-[#D4AF37] hover:bg-[#E5C378] text-stone-950 rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed mt-2"
                 id="btn-submit-login"
               >
                 {isLoading ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-stone-950/30 border-t-stone-950 rounded-full animate-spin" />
                     <span>Validando acesso...</span>
                   </>
                 ) : isSuccess ? (
                   <>
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    <CheckCircle2 className="w-4 h-4 text-emerald-700" />
                     <span>Acesso Autorizado!</span>
                   </>
                 ) : (
@@ -436,13 +436,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             </form>
 
             {/* Autonomous Self-Service Store Creation */}
-            <div className="pt-3 border-t border-brand-border space-y-2">
-              <div className="p-3 bg-amber-50/60 border border-amber-200/80 rounded-2xl space-y-1.5 text-center">
-                <span className="text-[11px] font-bold text-amber-900 block">
+            <div className="pt-3 border-t border-[#27272A] space-y-2">
+              <div className="p-3.5 bg-[#18181E] border border-[#D4AF37]/30 rounded-2xl space-y-1.5 text-center">
+                <span className="text-[11px] font-bold text-[#D4AF37] block">
                   Ainda não tem conta para a sua loja?
                 </span>
-                <p className="text-[10px] text-stone-600 leading-tight">
-                  Cadastre sua loja em 1 minuto e ganhe <strong>5 dias de acesso grátis</strong> sem precisar falar no WhatsApp!
+                <p className="text-[11px] text-stone-300 leading-tight">
+                  Cadastre sua loja em 1 minuto e ganhe <strong className="text-white">5 dias de acesso grátis</strong> sem precisar falar no WhatsApp!
                 </p>
                 <button
                   type="button"
@@ -450,7 +450,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     onClose();
                     if (onOpenRegister) onOpenRegister();
                   }}
-                  className="mt-2 inline-flex items-center justify-center space-x-1.5 w-full py-2.5 px-3 bg-stone-900 hover:bg-stone-800 text-[#D4AF37] border border-[#D4AF37]/40 rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer"
+                  className="mt-2 inline-flex items-center justify-center space-x-1.5 w-full py-2.5 px-3 bg-[#121215] hover:bg-[#1E1E26] text-[#D4AF37] border border-[#D4AF37]/40 rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer"
                   id="btn-register-store-login-modal"
                 >
                   <span>Criar Minha Loja Grátis (5 Dias)</span>

@@ -6,7 +6,6 @@ import {
   Instagram,
   MapPin,
   Clock,
-  CreditCard,
   Truck,
   Building2,
   Save,
@@ -17,10 +16,8 @@ import {
   Image as ImageIcon,
   Trash2,
   Pencil,
-  Edit2,
   Info,
   Palette,
-  Type,
   Coffee,
   Check,
   Crown,
@@ -176,23 +173,26 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
     setTimeout(() => setCopiedInvite(false), 2500);
   };
 
+  const inputClass =
+    'w-full px-3.5 py-2.5 bg-[#141418] border border-[#32323D] rounded-xl text-white placeholder:text-stone-500 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37]';
+
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/70 backdrop-blur-xs overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-xs overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, scale: 0.96, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 15 }}
-          className="relative w-full max-w-3xl bg-brand-bg rounded-3xl border border-[#E3D7CA] shadow-2xl overflow-hidden my-auto"
+          className="relative w-full max-w-3xl bg-[#121215] text-stone-100 rounded-3xl border border-[#27272A] shadow-2xl overflow-hidden my-auto"
           id="store-setup-modal-card"
         >
           {/* Header */}
-          <div className="relative px-6 sm:px-8 pt-8 pb-6 bg-gradient-to-r from-brand-secondary to-[#342D26] text-white">
+          <div className="relative px-6 sm:px-8 pt-7 pb-5 bg-gradient-to-r from-[#18181E] to-[#121215] border-b border-[#27272A] text-white">
             {onClose && (
               <button
                 type="button"
                 onClick={onClose}
-                className="absolute top-5 right-5 p-2 text-stone-300 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+                className="absolute top-5 right-5 p-2 text-stone-400 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
                 title="Sair sem salvar"
                 id="btn-close-setup-modal"
               >
@@ -201,14 +201,14 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
             )}
 
             <div className="flex items-center space-x-3 mb-2">
-              <div className="p-2.5 bg-brand-primary-dark/20 text-brand-primary border border-brand-primary-dark/40 rounded-xl">
+              <div className="p-2.5 bg-[#D4AF37]/15 text-[#D4AF37] border border-[#D4AF37]/40 rounded-xl">
                 <Store className="w-6 h-6" />
               </div>
               <div>
-                <span className="text-xs font-semibold tracking-widest text-brand-primary uppercase">
+                <span className="text-xs font-bold tracking-widest text-[#D4AF37] uppercase">
                   {isFirstSetup ? 'Boas-vindas ao seu Espaço' : 'Configurações Gerais'}
                 </span>
-                <h2 className="text-2xl font-serif-luxury font-medium text-white">
+                <h2 className="text-2xl font-serif-luxury font-bold text-white">
                   {isFirstSetup ? 'Configure os Dados da sua Loja' : 'Dados & Atendimento da Loja'}
                 </h2>
               </div>
@@ -221,22 +221,22 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
           </div>
 
           {/* Form */}
-          <form ref={formScrollRef} onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6 max-h-[75vh] overflow-y-auto">
+          <form ref={formScrollRef} onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6 max-h-[75vh] overflow-y-auto text-stone-100">
             {/* Validation Error Alert */}
             {validationError && (
-              <div className="p-3.5 bg-red-50 border border-red-200 text-red-800 rounded-2xl text-xs font-semibold flex items-center gap-2">
-                <Info className="w-4 h-4 text-red-600 shrink-0" />
+              <div className="p-3.5 bg-red-950/60 border border-red-500/40 text-red-200 rounded-2xl text-xs font-semibold flex items-center gap-2">
+                <Info className="w-4 h-4 text-red-400 shrink-0" />
                 <span>{validationError}</span>
               </div>
             )}
 
             {/* Essential Store Setup Checklist */}
-            <div className="p-4 bg-white border border-[#E3D7CA] rounded-2xl space-y-2 shadow-2xs">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-stone-800">
+            <div className="p-4 bg-[#18181E] border border-[#27272A] rounded-2xl space-y-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-white">
                   Configurações Essenciais da Loja
                 </span>
-                <span className="text-[11px] text-stone-500">
+                <span className="text-[11px] text-stone-400">
                   Para sua loja não ficar incompleta
                 </span>
               </div>
@@ -253,11 +253,11 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                     key={item.label}
                     className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border ${
                       item.ok
-                        ? 'bg-emerald-50 border-emerald-200 text-emerald-800 font-semibold'
-                        : 'bg-amber-50/70 border-amber-200 text-amber-900 font-medium'
+                        ? 'bg-emerald-950/50 border-emerald-500/35 text-emerald-300 font-semibold'
+                        : 'bg-amber-950/40 border-amber-500/35 text-amber-300 font-medium'
                     }`}
                   >
-                    <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${item.ok ? 'text-emerald-600' : 'text-amber-500'}`} />
+                    <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${item.ok ? 'text-emerald-400' : 'text-amber-400'}`} />
                     <span className="truncate">{item.label}</span>
                   </div>
                 ))}
@@ -266,16 +266,16 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
 
             {/* Section 1: Identidade da Loja */}
             <div className="space-y-4">
-              <div className="flex items-center space-x-2 text-stone-900 border-b border-brand-border pb-2">
-                <Crown className="w-4 h-4 text-brand-primary-dark" />
-                <h3 className="font-semibold text-sm tracking-wide uppercase text-stone-800">
+              <div className="flex items-center space-x-2 text-white border-b border-[#27272A] pb-2">
+                <Crown className="w-4 h-4 text-[#D4AF37]" />
+                <h3 className="font-semibold text-sm tracking-wide uppercase text-white">
                   1. Identidade & Apresentação
                 </h3>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-stone-700 mb-1">
+                  <label className="block text-xs font-semibold text-stone-200 mb-1.5">
                     Nome da Loja / Boutique *
                   </label>
                   <input
@@ -289,14 +289,14 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                         setStoreSlug(slugifyStoreName(nextName));
                       }
                     }}
-                    placeholder="Ex: Web Vitrine"
-                    className="w-full px-3.5 py-2.5 bg-white border border-brand-border-dark rounded-xl text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary-dark/30 focus:border-brand-primary-dark"
+                    placeholder="Ex: Império Fashion"
+                    className={inputClass}
                     id="input-store-name"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-stone-700 mb-1">
+                  <label className="block text-xs font-semibold text-stone-200 mb-1.5">
                     Slogan / Subtítulo da Vitrine
                   </label>
                   <input
@@ -304,14 +304,14 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                     value={formData.slogan}
                     onChange={(e) => setFormData({ ...formData, slogan: e.target.value })}
                     placeholder="Ex: Alta Costura & Alfaiataria Exclusiva"
-                    className="w-full px-3.5 py-2.5 bg-white border border-brand-border-dark rounded-xl text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary-dark/30 focus:border-brand-primary-dark"
+                    className={inputClass}
                     id="input-store-slogan"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">
+                <label className="block text-xs font-semibold text-stone-200 mb-1.5">
                   Bio / Apresentação da Loja
                 </label>
                 <textarea
@@ -319,24 +319,24 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Conte um pouco sobre suas coleções, tecidos e proposta de valor..."
-                  className="w-full px-3.5 py-2.5 bg-white border border-brand-border-dark rounded-xl text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary-dark/30 focus:border-brand-primary-dark"
+                  className={inputClass}
                   id="input-store-desc"
                 />
               </div>
 
-              {/* Logo da Loja / Foto de Perfil no Estilo Instagram (Grande e Centralizado) */}
+              {/* Logo da Loja / Foto de Perfil */}
               <div className="pt-2">
-                <div className="p-6 bg-white border border-brand-border-dark rounded-3xl space-y-4 text-center shadow-xs">
-                  <div className="flex items-center justify-between border-b border-stone-100 pb-2">
-                    <label className="text-xs font-bold text-stone-800 uppercase tracking-wider flex items-center gap-1.5 mx-auto">
-                      <ImageIcon className="w-4 h-4 text-amber-600" />
+                <div className="p-6 bg-[#18181E] border border-[#27272A] rounded-3xl space-y-4 text-center">
+                  <div className="flex items-center justify-between border-b border-[#27272A] pb-3">
+                    <label className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5 mx-auto">
+                      <ImageIcon className="w-4 h-4 text-[#D4AF37]" />
                       <span>Foto de Perfil & Logo da Loja (Estilo Instagram)</span>
                     </label>
                     {formData.logoUrl && (
                       <button
                         type="button"
                         onClick={() => setFormData({ ...formData, logoUrl: '' })}
-                        className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 font-semibold transition-colors cursor-pointer"
+                        className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 font-semibold transition-colors cursor-pointer"
                       >
                         <Trash2 className="w-3.5 h-3.5" /> Remover
                       </button>
@@ -345,8 +345,8 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
 
                   {/* Big Centered Avatar Preview */}
                   <div className="flex flex-col items-center justify-center py-2">
-                    <div className="relative p-1 bg-gradient-to-tr from-amber-600 via-amber-400 to-amber-200 rounded-full shadow-lg">
-                      <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden bg-stone-100 border-2 border-white flex items-center justify-center relative">
+                    <div className="relative p-1 bg-gradient-to-tr from-[#D4AF37] via-[#FFF3D1] to-[#B8860B] rounded-full shadow-lg">
+                      <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden bg-[#121215] border-2 border-[#121215] flex items-center justify-center relative">
                         {formData.logoUrl ? (
                           <img
                             src={formData.logoUrl}
@@ -355,13 +355,13 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                           />
                         ) : (
                           <div className="flex flex-col items-center justify-center text-stone-400">
-                            <Store className="w-12 h-12 text-stone-300 mb-1" />
-                            <span className="text-[10px] font-bold uppercase">Sem Logo</span>
+                            <Store className="w-12 h-12 text-stone-500 mb-1" />
+                            <span className="text-[10px] font-bold uppercase text-stone-400">Sem Logo</span>
                           </div>
                         )}
                       </div>
                     </div>
-                    <p className="text-[11px] text-stone-500 mt-2">
+                    <p className="text-[11px] text-stone-400 mt-2.5">
                       Essa foto será exibida em destaque no centro da sua vitrine para todos os clientes.
                     </p>
                   </div>
@@ -379,9 +379,9 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                       type="button"
                       onClick={() => logoInputRef.current?.click()}
                       disabled={isUploadingLogo}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-stone-900 hover:bg-stone-800 text-white rounded-2xl text-xs font-bold transition-all shadow-md cursor-pointer"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#D4AF37] hover:bg-[#E5C378] text-stone-950 rounded-2xl text-xs font-bold transition-all shadow-md cursor-pointer"
                     >
-                      <Upload className="w-4 h-4 text-amber-400" />
+                      <Upload className="w-4 h-4 text-stone-950" />
                       <span>{isUploadingLogo ? 'Processando Imagem...' : 'Escolher Foto do Dispositivo (Galeria)'}</span>
                     </button>
                     <input
@@ -389,7 +389,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                       value={(formData.logoUrl || '').startsWith('data:') ? '' : (formData.logoUrl || '')}
                       onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
                       placeholder="ou cole o link da foto de perfil..."
-                      className="w-full px-3.5 py-2 text-xs bg-brand-bg border border-stone-200 rounded-xl text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30 text-center"
+                      className="w-full px-3.5 py-2 text-xs bg-[#141418] border border-[#32323D] rounded-xl text-white placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/30 text-center"
                     />
                   </div>
                 </div>
@@ -398,16 +398,16 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
 
             {/* Section 2: Contato & Redes Sociais */}
             <div className="space-y-4">
-              <div className="flex items-center space-x-2 text-stone-900 border-b border-brand-border pb-2">
-                <Phone className="w-4 h-4 text-brand-primary-dark" />
-                <h3 className="font-semibold text-sm tracking-wide uppercase text-stone-800">
+              <div className="flex items-center space-x-2 text-white border-b border-[#27272A] pb-2">
+                <Phone className="w-4 h-4 text-[#D4AF37]" />
+                <h3 className="font-semibold text-sm tracking-wide uppercase text-white">
                   2. Contato & Redes Sociais
                 </h3>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-stone-700 mb-1">
+                  <label className="block text-xs font-semibold text-stone-200 mb-1.5">
                     WhatsApp de Vendas (com DDD) *
                   </label>
                   <div className="relative">
@@ -422,18 +422,18 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                         })
                       }
                       placeholder="Ex: 11987654321"
-                      className="w-full pl-9 pr-3.5 py-2.5 bg-white border border-brand-border-dark rounded-xl text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary-dark/30 focus:border-brand-primary-dark"
+                      className="w-full pl-9 pr-3.5 py-2.5 bg-[#141418] border border-[#32323D] rounded-xl text-white placeholder:text-stone-500 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37]"
                       id="input-store-whatsapp"
                     />
                     <Phone className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
                   </div>
-                  <span className="text-[11px] text-stone-500 mt-1 block">
+                  <span className="text-[11px] text-stone-400 mt-1 block">
                     Os clientes enviarão os pedidos montados diretamente para este número.
                   </span>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-stone-700 mb-1">
+                  <label className="block text-xs font-semibold text-stone-200 mb-1.5">
                     Instagram da Loja (@)
                   </label>
                   <div className="relative">
@@ -447,7 +447,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                         })
                       }
                       placeholder="sualoja.oficial"
-                      className="w-full pl-9 pr-3.5 py-2.5 bg-white border border-brand-border-dark rounded-xl text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary-dark/30 focus:border-brand-primary-dark"
+                      className="w-full pl-9 pr-3.5 py-2.5 bg-[#141418] border border-[#32323D] rounded-xl text-white placeholder:text-stone-500 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37]"
                       id="input-store-instagram"
                     />
                     <Instagram className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
@@ -458,15 +458,15 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
 
             {/* Section 3: Modalidade de Atendimento & Entrega */}
             <div className="space-y-4">
-              <div className="flex items-center space-x-2 text-stone-900 border-b border-brand-border pb-2">
-                <Truck className="w-4 h-4 text-brand-primary-dark" />
-                <h3 className="font-semibold text-sm tracking-wide uppercase text-stone-800">
+              <div className="flex items-center space-x-2 text-white border-b border-[#27272A] pb-2">
+                <Truck className="w-4 h-4 text-[#D4AF37]" />
+                <h3 className="font-semibold text-sm tracking-wide uppercase text-white">
                   3. Modalidade de Pedidos (Entrega vs Retirada)
                 </h3>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-2">
+                <label className="block text-xs font-semibold text-stone-200 mb-2">
                   Como sua loja aceitará os pedidos dos clientes?
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -499,24 +499,24 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                         key={opt.id}
                         type="button"
                         onClick={() => setFormData({ ...formData, deliveryMode: opt.id })}
-                        className={`p-3.5 text-left rounded-2xl border transition-all ${
+                        className={`p-3.5 text-left rounded-2xl border transition-all cursor-pointer ${
                           isSelected
-                            ? 'bg-brand-bg-alt border-brand-primary-dark text-stone-900 shadow-sm ring-1 ring-brand-primary-dark'
-                            : 'bg-white border-brand-border text-stone-600 hover:border-stone-400'
+                            ? 'bg-[#1E1E26] border-[#D4AF37] text-white shadow-sm ring-1 ring-[#D4AF37]'
+                            : 'bg-[#18181E] border-[#27272A] text-stone-300 hover:border-stone-500'
                         }`}
                         id={`btn-mode-${opt.id}`}
                       >
                         <div className="flex items-center space-x-2 mb-1">
                           <IconComp
                             className={`w-4 h-4 ${
-                              isSelected ? 'text-brand-primary-dark' : 'text-stone-400'
+                              isSelected ? 'text-[#D4AF37]' : 'text-stone-400'
                             }`}
                           />
-                          <span className="text-xs font-bold text-stone-900">
+                          <span className="text-xs font-bold text-white">
                             {opt.title}
                           </span>
                         </div>
-                        <p className="text-[11px] text-stone-500 leading-tight">
+                        <p className="text-[11px] text-stone-400 leading-tight">
                           {opt.desc}
                         </p>
                       </motion.button>
@@ -527,33 +527,33 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
 
               {formData.deliveryMode !== 'pickup' && (
                 <div className="space-y-3 pt-1">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-stone-800">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <label className="text-xs font-semibold text-stone-200">
                       Tipo de Taxa de Entrega:
                     </label>
-                    <div className="flex items-center space-x-2 bg-white p-1 rounded-xl border border-brand-border-dark">
+                    <div className="flex items-center space-x-1.5 bg-[#18181E] p-1 rounded-xl border border-[#27272A]">
                       <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
                         type="button"
                         onClick={() => setFormData({ ...formData, deliveryFeeType: 'flat' })}
-                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                           formData.deliveryFeeType !== 'custom'
-                            ? 'bg-stone-900 text-white shadow-2xs'
-                            : 'text-stone-600 hover:text-stone-900'
+                            ? 'bg-[#D4AF37] text-stone-950 shadow-2xs'
+                            : 'text-stone-300 hover:text-white'
                         }`}
                       >
                         Taxa Única
                       </motion.button>
                       <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
                         type="button"
                         onClick={() => setFormData({ ...formData, deliveryFeeType: 'custom' })}
-                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                           formData.deliveryFeeType === 'custom'
-                            ? 'bg-stone-900 text-white shadow-2xs'
-                            : 'text-stone-600 hover:text-stone-900'
+                            ? 'bg-[#D4AF37] text-stone-950 shadow-2xs'
+                            : 'text-stone-300 hover:text-white'
                         }`}
                       >
                         Por Bairro / Cidade
@@ -562,8 +562,8 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                   </div>
 
                   {formData.deliveryFeeType === 'custom' ? (
-                    <div className="p-3.5 bg-white border border-brand-border-dark rounded-2xl space-y-3">
-                      <span className="text-xs font-bold text-stone-900 block">
+                    <div className="p-4 bg-[#18181E] border border-[#27272A] rounded-2xl space-y-3">
+                      <span className="text-xs font-bold text-white block">
                         Tabela de Taxas Customizadas por Bairro e Cidade
                       </span>
 
@@ -572,13 +572,13 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                         {(formData.customDeliveryRates || []).map((rate, idx) => (
                           <div
                             key={`rate-setup-${idx}`}
-                            className="flex items-center justify-between p-2 bg-brand-bg border border-stone-200 rounded-xl text-xs"
+                            className="flex items-center justify-between p-2.5 bg-[#141418] border border-[#2B2B33] rounded-xl text-xs"
                           >
-                            <span className="font-semibold text-stone-800">
+                            <span className="font-semibold text-stone-100">
                               {rate.neighborhood} ({rate.city} - {rate.state || 'SP'})
                             </span>
                             <div className="flex items-center space-x-2">
-                              <span className="font-bold text-brand-primary-darker">
+                              <span className="font-bold text-[#D4AF37]">
                                 R$ {rate.fee.toFixed(2)}
                               </span>
                               <button
@@ -590,7 +590,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                                   setRateNeighborhood(rate.neighborhood || '');
                                   setRateFee(rate.fee.toString());
                                 }}
-                                className="text-stone-400 hover:text-stone-900 p-1 cursor-pointer transition-colors"
+                                className="text-stone-400 hover:text-white p-1 cursor-pointer transition-colors"
                                 title="Editar Taxa"
                               >
                                 <Pencil className="w-3.5 h-3.5" />
@@ -603,7 +603,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                                   );
                                   setFormData({ ...formData, customDeliveryRates: updated });
                                 }}
-                                className="text-red-500 hover:text-red-700 p-1 cursor-pointer"
+                                className="text-rose-400 hover:text-rose-300 p-1 cursor-pointer"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -616,28 +616,28 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                       </div>
 
                       {/* Form to add/edit rate */}
-                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-2 border-t border-stone-100">
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-2 border-t border-[#27272A]">
                         <input
                           type="text"
                           placeholder="UF (ex: SP)"
                           value={rateState}
                           onChange={(e) => setRateState(e.target.value.toUpperCase())}
                           maxLength={2}
-                          className="px-2.5 py-1.5 bg-brand-bg border border-stone-300 rounded-lg text-xs uppercase"
+                          className="px-2.5 py-2 bg-[#141418] border border-[#32323D] rounded-lg text-xs text-white placeholder:text-stone-500 uppercase"
                         />
                         <input
                           type="text"
                           placeholder="Cidade (ex: São Paulo)"
                           value={rateCity}
                           onChange={(e) => setRateCity(e.target.value)}
-                          className="px-2.5 py-1.5 bg-brand-bg border border-stone-300 rounded-lg text-xs"
+                          className="px-2.5 py-2 bg-[#141418] border border-[#32323D] rounded-lg text-xs text-white placeholder:text-stone-500"
                         />
                         <input
                           type="text"
                           placeholder="Bairro (ex: Jardins)"
                           value={rateNeighborhood}
                           onChange={(e) => setRateNeighborhood(e.target.value)}
-                          className="px-2.5 py-1.5 bg-brand-bg border border-stone-300 rounded-lg text-xs"
+                          className="px-2.5 py-2 bg-[#141418] border border-[#32323D] rounded-lg text-xs text-white placeholder:text-stone-500"
                         />
                         <div className="flex gap-1">
                           <input
@@ -646,7 +646,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                             placeholder="Valor R$"
                             value={rateFee}
                             onChange={(e) => setRateFee(e.target.value)}
-                            className="w-full px-2.5 py-1.5 bg-brand-bg border border-stone-300 rounded-lg text-xs"
+                            className="w-full px-2.5 py-2 bg-[#141418] border border-[#32323D] rounded-lg text-xs text-white placeholder:text-stone-500"
                           />
                           <button
                             type="button"
@@ -654,16 +654,14 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                               const feeNum = parseFloat(rateFee || '0');
                               if (rateNeighborhood && feeNum >= 0) {
                                 if (editingRateId) {
-                                  // Update existing
-                                  const updated = (formData.customDeliveryRates || []).map(r => 
-                                    r.id === editingRateId 
+                                  const updated = (formData.customDeliveryRates || []).map((r) =>
+                                    r.id === editingRateId
                                       ? { ...r, state: rateState || 'SP', city: rateCity || 'Sua Cidade', neighborhood: rateNeighborhood, fee: feeNum }
                                       : r
                                   );
                                   setFormData({ ...formData, customDeliveryRates: updated });
                                   setEditingRateId(null);
                                 } else {
-                                  // Add new
                                   const newRate = {
                                     id: 'rate-' + Date.now(),
                                     state: rateState || formData.cityState || 'SP',
@@ -676,26 +674,25 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                                     customDeliveryRates: [...(formData.customDeliveryRates || []), newRate],
                                   });
                                 }
-                                // Important: We DO NOT clear rateState and rateCity to satisfy user request "ainda permaneça gravado somente esses"
                                 setRateNeighborhood('');
                                 setRateFee('');
                               }
                             }}
-                            className="px-3 py-1.5 bg-stone-900 text-white rounded-lg text-xs font-bold cursor-pointer flex-shrink-0"
+                            className="px-3 py-2 bg-[#D4AF37] hover:bg-[#E5C378] text-stone-950 rounded-lg text-xs font-bold cursor-pointer flex-shrink-0"
                           >
                             {editingRateId ? 'Salvar' : '+ Add'}
                           </button>
                         </div>
                       </div>
                       {editingRateId && (
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           onClick={() => {
                             setEditingRateId(null);
                             setRateNeighborhood('');
                             setRateFee('');
                           }}
-                          className="text-[10px] text-stone-500 hover:text-stone-800 underline mt-1"
+                          className="text-[11px] text-stone-400 hover:text-white underline mt-1 cursor-pointer"
                         >
                           Cancelar Edição
                         </button>
@@ -705,7 +702,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-semibold text-stone-700 mb-1">
+                      <label className="block text-xs font-semibold text-stone-200 mb-1.5">
                         Taxa de Entrega Padrão (R$)
                       </label>
                       <input
@@ -719,13 +716,13 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                             deliveryFee: parseFloat(e.target.value) || 0,
                           })
                         }
-                        className="w-full px-3.5 py-2.5 bg-white border border-brand-border-dark rounded-xl text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary-dark/30 focus:border-brand-primary-dark"
+                        className={inputClass}
                         id="input-delivery-fee"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-stone-700 mb-1">
+                      <label className="block text-xs font-semibold text-stone-200 mb-1.5">
                         Frete Grátis a partir de (R$)
                       </label>
                       <input
@@ -739,7 +736,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                             freeDeliveryThreshold: parseFloat(e.target.value) || 0,
                           })
                         }
-                        className="w-full px-3.5 py-2.5 bg-white border border-brand-border-dark rounded-xl text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary-dark/30 focus:border-brand-primary-dark"
+                        className={inputClass}
                         id="input-free-delivery-threshold"
                       />
                     </div>
@@ -748,17 +745,17 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
               )}
             </div>
 
-            {/* Section 2: Tipografia & Estilo das Letras */}
+            {/* Section 4: Tipografia & Estilo das Letras */}
             <div className="space-y-4">
-              <div className="flex items-center space-x-2 text-stone-900 border-b border-brand-border pb-2">
-                <Palette className="w-4 h-4 text-brand-primary-dark" />
-                <h3 className="font-semibold text-sm tracking-wide uppercase text-stone-800">
-                  2. Tipografia & Estilo das Letras (Fontes Exclusivas)
+              <div className="flex items-center space-x-2 text-white border-b border-[#27272A] pb-2">
+                <Palette className="w-4 h-4 text-[#D4AF37]" />
+                <h3 className="font-semibold text-sm tracking-wide uppercase text-white">
+                  4. Tipografia & Estilo das Letras (Fontes Exclusivas)
                 </h3>
               </div>
 
               {/* Official Brand Colors Badge */}
-              <div className="p-3.5 bg-stone-950 border border-[#D4AF37]/40 rounded-2xl flex items-center justify-between text-white">
+              <div className="p-3.5 bg-[#18181E] border border-[#D4AF37]/40 rounded-2xl flex items-center justify-between text-white">
                 <div className="flex items-center space-x-3">
                   <div className="flex -space-x-1.5">
                     <span className="w-6 h-6 rounded-full bg-[#0D0D0F] border border-[#D4AF37]/60 shadow-md inline-block" />
@@ -768,23 +765,23 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                     <span className="text-xs font-bold text-white block">
                       Cores Oficiais da Vitrine: Preto & Dourado
                     </span>
-                    <span className="text-[10px] text-stone-400">
+                    <span className="text-[11px] text-stone-400">
                       Paleta exclusiva padronizada em alta costura para máxima sofisticação.
                     </span>
                   </div>
                 </div>
-                <div className="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] font-bold">
+                <div className="px-2.5 py-1 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#D4AF37] text-[10px] font-bold shrink-0">
                   Padrão Oficial
                 </div>
               </div>
 
               {/* 10 Luxury Google Fonts */}
-              <div className="p-4 bg-white border border-brand-border-dark rounded-2xl space-y-3">
+              <div className="p-4 bg-[#18181E] border border-[#27272A] rounded-2xl space-y-3">
                 <div>
-                  <span className="text-xs font-bold text-stone-900 block">
+                  <span className="text-xs font-bold text-white block">
                     Escolha o Estilo das Letras (10 Fontes de Luxo)
                   </span>
-                  <span className="text-[11px] text-stone-500">
+                  <span className="text-[11px] text-stone-400">
                     Defina a fonte que compõe os títulos, menus e detalhes do seu catálogo.
                   </span>
                 </div>
@@ -806,31 +803,31 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                         }}
                         className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-start justify-between ${
                           isSelected
-                            ? 'ring-2 ring-stone-900 border-stone-900 bg-stone-50 shadow-sm'
-                            : 'border-stone-200 hover:border-stone-400 bg-white'
+                            ? 'ring-2 ring-[#D4AF37]/50 border-[#D4AF37] bg-[#1E1E26] shadow-sm'
+                            : 'border-[#2B2B33] hover:border-stone-500 bg-[#141418]'
                         }`}
                       >
-                        <div className="space-y-1">
+                        <div className="space-y-1 min-w-0 pr-2">
                           <div className="flex items-center space-x-2">
-                            <span className="text-xs font-bold text-stone-900">
+                            <span className="text-xs font-bold text-white">
                               {font.name}
                             </span>
-                            <span className="text-[9px] px-1.5 py-0.5 bg-stone-100 text-stone-600 rounded font-medium">
+                            <span className="text-[9px] px-1.5 py-0.5 bg-[#27272A] text-stone-300 rounded font-medium">
                               {font.category}
                             </span>
                           </div>
                           <p
-                            className="text-sm text-stone-800 font-semibold"
+                            className="text-sm text-[#E5C378] font-semibold truncate"
                             style={{ fontFamily: font.fontFamily }}
                           >
                             {font.previewText}
                           </p>
-                          <p className="text-[10px] text-stone-500">
+                          <p className="text-[10px] text-stone-400">
                             {font.description}
                           </p>
                         </div>
                         {isSelected && (
-                          <div className="w-5 h-5 rounded-full bg-stone-900 text-white flex items-center justify-center shrink-0 mt-0.5">
+                          <div className="w-5 h-5 rounded-full bg-[#D4AF37] text-stone-950 flex items-center justify-center shrink-0 mt-0.5">
                             <Check className="w-3 h-3" />
                           </div>
                         )}
@@ -841,24 +838,24 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
               </div>
             </div>
 
-            {/* Section 3: Horários de Funcionamento & Intervalo */}
+            {/* Section 5: Horários de Funcionamento & Intervalo */}
             <div className="space-y-4">
-              <div className="flex items-center space-x-2 text-stone-900 border-b border-brand-border pb-2">
-                <Clock className="w-4 h-4 text-brand-primary-dark" />
-                <h3 className="font-semibold text-sm tracking-wide uppercase text-stone-800">
-                  3. Horários de Atendimento & Dias de Abertura
+              <div className="flex items-center space-x-2 text-white border-b border-[#27272A] pb-2">
+                <Clock className="w-4 h-4 text-[#D4AF37]" />
+                <h3 className="font-semibold text-sm tracking-wide uppercase text-white">
+                  5. Horários de Atendimento & Dias de Abertura
                 </h3>
               </div>
 
-              <div className="p-4 bg-white border border-brand-border-dark rounded-2xl space-y-4">
-                {/* Weekly Operating Days Selection (Caixas para marcar todos os dias da semana) */}
+              <div className="p-4 bg-[#18181E] border border-[#27272A] rounded-2xl space-y-4">
+                {/* Weekly Operating Days Selection */}
                 <div className="space-y-2.5">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
-                      <label className="block text-xs font-bold text-stone-900">
+                      <label className="block text-xs font-bold text-white">
                         Dias da Semana de Funcionamento
                       </label>
-                      <span className="text-[11px] text-stone-500">
+                      <span className="text-[11px] text-stone-400">
                         Marque as caixas dos dias em que sua loja física ou atendimento online está aberto.
                       </span>
                     </div>
@@ -875,7 +872,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                             businessDaysLabel: formatBusinessDaysLabel(newDays),
                           });
                         }}
-                        className="px-2 py-1 bg-stone-100 hover:bg-stone-200 text-[10px] font-semibold text-stone-700 rounded-md transition-colors cursor-pointer"
+                        className="px-2.5 py-1 bg-[#25252D] hover:bg-[#32323D] text-[10px] font-semibold text-stone-200 rounded-md transition-colors cursor-pointer"
                       >
                         Seg a Sáb
                       </button>
@@ -889,7 +886,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                             businessDaysLabel: formatBusinessDaysLabel(newDays),
                           });
                         }}
-                        className="px-2 py-1 bg-stone-100 hover:bg-stone-200 text-[10px] font-semibold text-stone-700 rounded-md transition-colors cursor-pointer"
+                        className="px-2.5 py-1 bg-[#25252D] hover:bg-[#32323D] text-[10px] font-semibold text-stone-200 rounded-md transition-colors cursor-pointer"
                       >
                         Seg a Sex
                       </button>
@@ -903,7 +900,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                             businessDaysLabel: formatBusinessDaysLabel(newDays),
                           });
                         }}
-                        className="px-2 py-1 bg-stone-100 hover:bg-stone-200 text-[10px] font-semibold text-stone-700 rounded-md transition-colors cursor-pointer"
+                        className="px-2.5 py-1 bg-[#25252D] hover:bg-[#32323D] text-[10px] font-semibold text-stone-200 rounded-md transition-colors cursor-pointer"
                       >
                         Todos os dias
                       </button>
@@ -923,7 +920,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                         let newDays: number[];
                         if (isChecked) {
                           newDays = currentDays.filter((d) => d !== day.dayIndex);
-                          if (newDays.length === 0) newDays = [day.dayIndex]; // Mantém pelo menos um dia ativo
+                          if (newDays.length === 0) newDays = [day.dayIndex];
                         } else {
                           newDays = [...currentDays, day.dayIndex];
                         }
@@ -940,22 +937,22 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                           onClick={handleToggle}
                           className={`p-2.5 rounded-xl border flex flex-col items-center justify-center space-y-1.5 cursor-pointer select-none transition-all ${
                             isChecked
-                              ? 'bg-stone-900 text-white border-stone-900 shadow-2xs'
-                              : 'bg-brand-bg hover:bg-stone-100 text-stone-700 border-stone-200'
+                              ? 'bg-[#D4AF37] text-stone-950 border-[#D4AF37] shadow-2xs'
+                              : 'bg-[#141418] hover:bg-[#1E1E26] text-stone-300 border-[#2B2B33]'
                           }`}
                         >
                           <div className="flex items-center space-x-1.5">
                             <input
                               type="checkbox"
                               checked={isChecked}
-                              onChange={() => {}} // Controlled by click handler
-                              className="w-3.5 h-3.5 rounded accent-stone-900 cursor-pointer pointer-events-none"
+                              onChange={() => {}}
+                              className="w-3.5 h-3.5 rounded accent-stone-950 cursor-pointer pointer-events-none"
                             />
                             <span className="font-bold text-xs">{day.shortName}</span>
                           </div>
                           <span
                             className={`text-[9px] truncate max-w-full ${
-                              isChecked ? 'text-stone-300' : 'text-stone-500'
+                              isChecked ? 'text-stone-900 font-semibold' : 'text-stone-400'
                             }`}
                           >
                             {day.fullName.replace('-feira', '')}
@@ -967,10 +964,10 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
 
                   {/* Formatted Days Badge */}
                   <div className="flex items-center space-x-2 text-xs pt-1">
-                    <Calendar className="w-3.5 h-3.5 text-brand-primary-dark shrink-0" />
-                    <span className="text-stone-600">
+                    <Calendar className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
+                    <span className="text-stone-300">
                       Resumo da Abertura:{' '}
-                      <strong className="text-stone-900">
+                      <strong className="text-white">
                         {formData.businessDaysLabel ||
                           formatBusinessDaysLabel(formData.businessDays || [1, 2, 3, 4, 5, 6])}
                       </strong>
@@ -979,43 +976,43 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                 </div>
 
                 {/* Operating Hours (Abertura e Fechamento) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-stone-100">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-[#27272A]">
                   <div>
-                    <label className="block text-xs font-semibold text-stone-700 mb-1">
+                    <label className="block text-xs font-semibold text-stone-200 mb-1.5">
                       Horário de Abertura
                     </label>
                     <input
                       type="time"
                       value={formData.openingTime || '08:00'}
                       onChange={(e) => setFormData({ ...formData, openingTime: e.target.value })}
-                      className="w-full px-3 py-2 bg-brand-bg border border-stone-300 rounded-xl text-xs text-stone-900 font-semibold"
+                      className="w-full px-3 py-2 bg-[#141418] border border-[#32323D] rounded-xl text-xs text-white font-semibold [color-scheme:dark]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-stone-700 mb-1">
+                    <label className="block text-xs font-semibold text-stone-200 mb-1.5">
                       Horário de Fechamento
                     </label>
                     <input
                       type="time"
                       value={formData.closingTime || '18:00'}
                       onChange={(e) => setFormData({ ...formData, closingTime: e.target.value })}
-                      className="w-full px-3 py-2 bg-brand-bg border border-stone-300 rounded-xl text-xs text-stone-900 font-semibold"
+                      className="w-full px-3 py-2 bg-[#141418] border border-[#32323D] rounded-xl text-xs text-white font-semibold [color-scheme:dark]"
                     />
                   </div>
                 </div>
 
-                {/* CRITICAL: Pergunta sobre Receber Pedidos Fora dos Dias / Horários de Funcionamento */}
-                <div className="p-4 bg-stone-50 border border-stone-200 rounded-2xl space-y-2.5">
+                {/* Receive Orders Outside Hours */}
+                <div className="p-4 bg-[#141418] border border-[#2B2B33] rounded-2xl space-y-2.5">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                      <span className="text-xs font-bold text-stone-900 block">
+                      <span className="text-xs font-bold text-white block">
                         Deseja também receber pedidos fora dos dias ou horários de funcionamento?
                       </span>
-                      <span className="text-[11px] text-stone-600 leading-tight block mt-1">
+                      <span className="text-[11px] text-stone-300 leading-tight block mt-1">
                         {formData.acceptOrdersOutsideHours ?? true
-                          ? '✅ SIM (Recomendado): O cliente pode montar a sacola e enviar o pedido no WhatsApp a qualquer momento. A vitrine avisa que o pedido foi recebido e será preparado no retorno do expediente.'
-                          : '⏸️ NÃO (Pausar pedidos): A sacola avisa que o atendimento está fechado e os pedidos ficam bloqueados até a reabertura.'}
+                          ? 'SIM (Recomendado): O cliente pode montar a sacola e enviar o pedido no WhatsApp a qualquer momento. A vitrine avisa que o pedido foi recebido e será preparado no retorno do expediente.'
+                          : 'NÃO (Pausar pedidos): A sacola avisa que o atendimento está fechado e os pedidos ficam bloqueados até a reabertura.'}
                       </span>
                     </div>
 
@@ -1026,7 +1023,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                         className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                           formData.acceptOrdersOutsideHours ?? true
                             ? 'bg-emerald-600 text-white shadow-xs'
-                            : 'bg-white border border-stone-200 text-stone-600 hover:bg-stone-100'
+                            : 'bg-[#1E1E26] border border-[#32323D] text-stone-300 hover:text-white'
                         }`}
                       >
                         Sim (Receber)
@@ -1036,8 +1033,8 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                         onClick={() => setFormData({ ...formData, acceptOrdersOutsideHours: false })}
                         className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                           formData.acceptOrdersOutsideHours === false
-                            ? 'bg-stone-900 text-white shadow-xs'
-                            : 'bg-white border border-stone-200 text-stone-600 hover:bg-stone-100'
+                            ? 'bg-rose-600 text-white shadow-xs'
+                            : 'bg-[#1E1E26] border border-[#32323D] text-stone-300 hover:text-white'
                         }`}
                       >
                         Não (Bloquear)
@@ -1047,11 +1044,11 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                 </div>
 
                 {/* Interval / Break Toggle & Configuration */}
-                <div className="p-3.5 bg-amber-50/50 border border-amber-200/80 rounded-2xl space-y-3">
+                <div className="p-3.5 bg-[#141418] border border-[#D4AF37]/30 rounded-2xl space-y-3">
                   <label className="flex items-center justify-between cursor-pointer">
                     <div className="flex items-center space-x-2">
-                      <Coffee className="w-4 h-4 text-amber-700" />
-                      <span className="text-xs font-bold text-stone-900">
+                      <Coffee className="w-4 h-4 text-[#D4AF37]" />
+                      <span className="text-xs font-bold text-white">
                         A loja possui Intervalo / Pausa de Almoço?
                       </span>
                     </div>
@@ -1061,15 +1058,15 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                       onChange={(e) =>
                         setFormData({ ...formData, hasBreakInterval: e.target.checked })
                       }
-                      className="w-4 h-4 text-amber-700 rounded focus:ring-amber-600 accent-stone-900"
+                      className="w-4 h-4 rounded accent-[#D4AF37] cursor-pointer"
                     />
                   </label>
 
                   {(formData.hasBreakInterval ?? true) && (
-                    <div className="space-y-3 pt-2 border-t border-amber-200/60">
+                    <div className="space-y-3 pt-2 border-t border-[#27272A]">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                          <label className="block text-[11px] font-semibold text-stone-200 mb-1">
                             Início do Intervalo
                           </label>
                           <input
@@ -1078,12 +1075,12 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                             onChange={(e) =>
                               setFormData({ ...formData, breakStartTime: e.target.value })
                             }
-                            className="w-full px-3 py-1.5 bg-white border border-stone-300 rounded-xl text-xs font-semibold text-stone-900"
+                            className="w-full px-3 py-1.5 bg-[#18181E] border border-[#32323D] rounded-xl text-xs font-semibold text-white [color-scheme:dark]"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                          <label className="block text-[11px] font-semibold text-stone-200 mb-1">
                             Fim do Intervalo (Retorno)
                           </label>
                           <input
@@ -1092,25 +1089,24 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                             onChange={(e) =>
                               setFormData({ ...formData, breakEndTime: e.target.value })
                             }
-                            className="w-full px-3 py-1.5 bg-white border border-stone-300 rounded-xl text-xs font-semibold text-stone-900"
+                            className="w-full px-3 py-1.5 bg-[#18181E] border border-[#32323D] rounded-xl text-xs font-semibold text-white [color-scheme:dark]"
                           />
                         </div>
                       </div>
 
-                      {/* CRITICAL: Highlighted question whether to receive orders during break */}
-                      <div className="p-3 bg-white border border-amber-300 rounded-xl space-y-2">
-                        <div className="flex items-start justify-between">
+                      <div className="p-3 bg-[#18181E] border border-[#2B2B33] rounded-xl space-y-2">
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                           <div>
-                            <span className="text-xs font-bold text-amber-950 block">
+                            <span className="text-xs font-bold text-[#E5C378] block">
                               Deseja receber pedidos durante o intervalo de almoço?
                             </span>
-                            <span className="text-[11px] text-stone-600 leading-tight block mt-0.5">
+                            <span className="text-[11px] text-stone-300 leading-tight block mt-0.5">
                               {formData.acceptOrdersDuringBreak ?? true
                                 ? 'SIM: Os clientes podem enviar pedidos normalmente. Será avisado que o preparo inicia no retorno.'
-                                : 'NÃO: O cliente verá aviso de pausa no atendimento e envio será processado após o intervalo.'}
+                                : 'NÃO: O cliente verá aviso de pausa no atendimento e o envio será processado após o intervalo.'}
                             </span>
                           </div>
-                          <div className="flex items-center space-x-2 shrink-0 ml-3">
+                          <div className="flex items-center space-x-2 shrink-0">
                             <button
                               type="button"
                               onClick={() =>
@@ -1119,7 +1115,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                                 formData.acceptOrdersDuringBreak ?? true
                                   ? 'bg-emerald-600 text-white shadow-xs'
-                                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                                  : 'bg-[#141418] border border-[#32323D] text-stone-300 hover:text-white'
                               }`}
                             >
                               Sim (Receber)
@@ -1131,8 +1127,8 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                               }
                               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                                 formData.acceptOrdersDuringBreak === false
-                                  ? 'bg-stone-900 text-white shadow-xs'
-                                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                                  ? 'bg-rose-600 text-white shadow-xs'
+                                  : 'bg-[#141418] border border-[#32323D] text-stone-300 hover:text-white'
                               }`}
                             >
                               Não (Pausa)
@@ -1146,18 +1142,18 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
               </div>
             </div>
 
-            {/* Section 4: Endereço & Pagamento */}
-            <div className="space-y-4 pt-4 border-t border-stone-100">
-              <div className="flex items-center space-x-2 text-stone-900 border-b border-brand-border pb-2">
-                <MapPin className="w-4 h-4 text-brand-primary-dark" />
-                <h3 className="font-semibold text-sm tracking-wide uppercase text-stone-800">
-                  4. Localização Física & Pagamento
+            {/* Section 6: Endereço & Pagamento */}
+            <div className="space-y-4 pt-4 border-t border-[#27272A]">
+              <div className="flex items-center space-x-2 text-white border-b border-[#27272A] pb-2">
+                <MapPin className="w-4 h-4 text-[#D4AF37]" />
+                <h3 className="font-semibold text-sm tracking-wide uppercase text-white">
+                  6. Localização Física & Horários Resumidos
                 </h3>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-stone-700 mb-1">
+                  <label className="block text-xs font-semibold text-stone-200 mb-1.5">
                     Endereço & Bairro Completo da Loja *
                   </label>
                   <input
@@ -1166,13 +1162,13 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     placeholder="Ex: Rua Oscar Freire, 1420 - Jardins"
-                    className="w-full px-3.5 py-2.5 bg-white border border-brand-border-dark rounded-xl text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary-dark/30 focus:border-brand-primary-dark"
+                    className={inputClass}
                     id="input-store-address"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-stone-700 mb-1">
+                  <label className="block text-xs font-semibold text-stone-200 mb-1.5">
                     Cidade / Estado *
                   </label>
                   <input
@@ -1181,7 +1177,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                     value={formData.cityState}
                     onChange={(e) => setFormData({ ...formData, cityState: e.target.value })}
                     placeholder="Ex: São Paulo - SP"
-                    className="w-full px-3.5 py-2.5 bg-white border border-brand-border-dark rounded-xl text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary-dark/30 focus:border-brand-primary-dark"
+                    className={inputClass}
                     id="input-store-city-state"
                   />
                 </div>
@@ -1189,8 +1185,8 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
 
               <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-stone-700 mb-1">
-                    Horários de Atendimento
+                  <label className="block text-xs font-semibold text-stone-200 mb-1.5">
+                    Horários de Atendimento (Texto Exibido na Vitrine)
                   </label>
                   <div className="relative">
                     <input
@@ -1198,7 +1194,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                       value={formData.openingHours}
                       onChange={(e) => setFormData({ ...formData, openingHours: e.target.value })}
                       placeholder="Ex: Seg a Sáb: 10h às 20h"
-                      className="w-full pl-9 pr-3.5 py-2.5 bg-white border border-brand-border-dark rounded-xl text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary-dark/30 focus:border-brand-primary-dark"
+                      className="w-full pl-9 pr-3.5 py-2.5 bg-[#141418] border border-[#32323D] rounded-xl text-white placeholder:text-stone-500 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37]"
                       id="input-store-hours"
                     />
                     <Clock className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
@@ -1207,24 +1203,24 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
               </div>
             </div>
 
-            {/* Section 5: Link da Loja para Clientes */}
-            <div className="p-4 bg-brand-bg-alt border border-brand-border-dark rounded-2xl">
+            {/* Section 7: Link da Loja para Clientes */}
+            <div className="p-4 bg-[#18181E] border border-[#27272A] rounded-2xl">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center space-x-2">
-                  <Share2 className="w-4 h-4 text-brand-primary-dark" />
-                  <span className="text-xs font-bold text-stone-900 uppercase tracking-wide">
+                  <Share2 className="w-4 h-4 text-[#D4AF37]" />
+                  <span className="text-xs font-bold text-white uppercase tracking-wide">
                     Link da Loja (Para Clientes)
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={copyInviteLink}
-                  className="flex items-center space-x-1 px-3 py-1 bg-stone-900 hover:bg-stone-800 text-white rounded-lg text-xs font-medium transition-colors"
+                  className="flex items-center space-x-1.5 px-3 py-1.5 bg-[#D4AF37] hover:bg-[#E5C378] text-stone-950 rounded-lg text-xs font-bold transition-colors cursor-pointer"
                   id="btn-copy-invite-link"
                 >
                   {copiedInvite ? (
                     <>
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
                       <span>Copiado!</span>
                     </>
                   ) : (
@@ -1236,11 +1232,11 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                 </button>
               </div>
               <div className="mb-4">
-                <p className="text-xs text-stone-600 mb-2">
+                <p className="text-xs text-stone-300 mb-2">
                   Gerado automaticamente a partir do nome da sua loja. Você pode personalizar o final do link que será enviado para os seus clientes.
                 </p>
                 <div className="flex items-center">
-                  <span className="px-3 py-2 bg-stone-100 border border-r-0 border-brand-border-dark rounded-l-xl text-stone-500 text-xs sm:text-sm font-mono truncate max-w-[200px] sm:max-w-[280px]">
+                  <span className="px-3 py-2 bg-[#121215] border border-r-0 border-[#32323D] rounded-l-xl text-stone-400 text-xs sm:text-sm font-mono truncate max-w-[200px] sm:max-w-[280px]">
                     {typeof window !== 'undefined' ? `${window.location.origin}/?loja=` : '/?loja='}
                   </span>
                   <input
@@ -1252,29 +1248,29 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                       setIsSlugCustom(Boolean(val && val !== slugifyStoreName(formData.storeName)));
                     }}
                     placeholder="nome-da-sua-loja"
-                    className="flex-1 px-3 py-2 bg-white border border-brand-border-dark rounded-r-xl text-stone-900 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-primary-dark/30 focus:border-brand-primary-dark"
+                    className="flex-1 px-3 py-2 bg-[#141418] border border-[#32323D] rounded-r-xl text-white placeholder:text-stone-500 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/30 focus:border-[#D4AF37]"
                   />
                 </div>
               </div>
-              
-              <p className="text-xs text-stone-600 mt-4">
+
+              <p className="text-xs text-stone-300 mt-4">
                 Código VIP de Convite (Interno):{' '}
                 <input
                   type="text"
                   value={formData.inviteCode}
                   onChange={(e) => setFormData({ ...formData, inviteCode: e.target.value.toUpperCase() })}
-                  className="inline-block px-2 py-0.5 bg-white border border-brand-border-dark rounded font-mono text-xs font-bold text-stone-900 ml-1"
+                  className="inline-block px-2.5 py-1 bg-[#141418] border border-[#32323D] rounded-lg font-mono text-xs font-bold text-[#D4AF37] ml-1 focus:outline-none focus:border-[#D4AF37]"
                 />
               </p>
             </div>
 
             {/* Footer Buttons */}
-            <div className="flex items-center justify-end space-x-3 pt-4 border-t border-brand-border">
+            <div className="flex items-center justify-end space-x-3 pt-4 border-t border-[#27272A]">
               {onClose && (
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-5 py-2.5 rounded-xl border border-stone-300 text-stone-700 hover:bg-stone-100 text-sm font-medium transition-colors cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl bg-[#1C1C22] border border-[#32323D] text-stone-200 hover:bg-[#27272F] text-sm font-medium transition-colors cursor-pointer"
                   id="btn-cancel-store-setup"
                 >
                   Sair sem salvar
@@ -1282,10 +1278,10 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
               )}
               <button
                 type="submit"
-                className="flex items-center space-x-2 px-6 py-2.5 bg-stone-900 hover:bg-[#2C2723] text-white rounded-xl text-sm font-semibold shadow-md shadow-stone-900/10 transition-all cursor-pointer"
+                className="flex items-center space-x-2 px-6 py-2.5 bg-[#D4AF37] hover:bg-[#E5C378] text-stone-950 rounded-xl text-sm font-bold shadow-md transition-all cursor-pointer"
                 id="btn-save-store-setup"
               >
-                <Save className="w-4 h-4 text-brand-primary" />
+                <Save className="w-4 h-4 text-stone-950" />
                 <span>{isFirstSetup ? 'Confirmar Alterações e Abrir Vitrine' : 'Salvar Alterações'}</span>
               </button>
             </div>
