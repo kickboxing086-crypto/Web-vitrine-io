@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   X,
@@ -18,11 +18,16 @@ import {
   EyeOff,
   AlertCircle,
   Crown,
+  Upload,
+  Camera,
+  Trash2,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { CredentialChecklist } from './CredentialChecklist';
 import { saveClient, getClientByUsername } from '../lib/firestoreService';
 import { getDefaultTrialDueDate } from '../lib/mercadoPagoService';
+import { slugifyStoreName } from '../lib/formatters';
+import { fileToBase64 } from '../lib/imageUtils';
 
 interface RegisterStoreModalProps {
   isOpen: boolean;
@@ -42,8 +47,13 @@ export const RegisterStoreModal: React.FC<RegisterStoreModalProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [phoneWhatsapp, setPhoneWhatsapp] = useState('');
   const [email, setEmail] = useState('');
+  const [address, setAddress] = useState('');
+  const [neighborhood, setNeighborhood] = useState('');
   const [cityState, setCityState] = useState('');
   const [segment, setSegment] = useState('Moda Feminina');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -51,6 +61,22 @@ export const RegisterStoreModal: React.FC<RegisterStoreModalProps> = ({
   const [copiedLink, setCopiedLink] = useState(false);
 
   if (!isOpen) return null;
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setIsUploadingLogo(true);
+      setErrorMsg(null);
+      const base64 = await fileToBase64(file, 450, 450, 0.85);
+      setLogoUrl(base64);
+    } catch (err) {
+      console.error('Erro ao processar foto de perfil:', err);
+      setErrorMsg('Não foi possível carregar a imagem. Tente outra foto.');
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  };
 
   // Validation rules
   const cleanUsername = username
@@ -73,22 +99,37 @@ export const RegisterStoreModal: React.FC<RegisterStoreModalProps> = ({
     /[0-9]/.test(cleanPass);
 
   const isFormValid =
+    Boolean(logoUrl.trim()) &&
     storeName.trim().length >= 2 &&
+    ownerName.trim().length >= 2 &&
     cleanUsername.length >= 2 &&
     isPasswordValid &&
-    phoneWhatsapp.replace(/\D/g, '').length >= 10;
+    phoneWhatsapp.replace(/\D/g, '').length >= 10 &&
+    address.trim().length >= 3 &&
+    neighborhood.trim().length >= 2 &&
+    cityState.trim().length >= 2;
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
 
-    if (!storeName.trim()) {
+    if (!logoUrl.trim()) {
+      setErrorMsg('Adicione a foto de perfil / logo da sua loja antes de criar a conta.');
+      return;
+    }
+
+    if (storeName.trim().length < 2) {
       setErrorMsg('Por favor, informe o nome da sua loja.');
       return;
     }
 
+    if (ownerName.trim().length < 2) {
+      setErrorMsg('Por favor, informe seu nome completo (responsável pela loja).');
+      return;
+    }
+
     if (cleanUsername.length < 2) {
-      setErrorMsg('O link/usuário da loja deve ter entre 2 e 8 caracteres alfanuméricos.');
+      setErrorMsg('O usuário da loja deve ter entre 2 e 8 caracteres alfanuméricos.');
       return;
     }
 
@@ -103,30 +144,50 @@ export const RegisterStoreModal: React.FC<RegisterStoreModalProps> = ({
       return;
     }
 
+    if (address.trim().length < 3) {
+      setErrorMsg('Informe o endereço da loja (Rua e Número).');
+      return;
+    }
+
+    if (neighborhood.trim().length < 2) {
+      setErrorMsg('Informe o bairro onde a loja está localizada.');
+      return;
+    }
+
+    if (cityState.trim().length < 2) {
+      setErrorMsg('Informe a cidade e o estado (UF) da sua loja.');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       // Check if username is already taken
       const existing = await getClientByUsername(cleanUsername);
-      if (existing) {
-        setErrorMsg(`O usuário e link "${cleanUsername}" já está em uso por outra loja. Escolha outro.`);
+      if (existing && existing.username === cleanUsername) {
+        setErrorMsg(`O usuário "${cleanUsername}" já está em uso por outra loja. Escolha outro.`);
         setIsLoading(false);
         return;
       }
 
       const clientId = `client-${Date.now()}`;
       const trialDueDate = getDefaultTrialDueDate(); // 5 free days
+      const storeSlugFromName = slugifyStoreName(storeName) || cleanUsername;
+      const fullAddress = `${address.trim()} - ${neighborhood.trim()}`;
 
       const newClient = {
         id: clientId,
         username: cleanUsername,
-        storeSlug: cleanUsername,
+        storeSlug: storeSlugFromName,
         password: cleanPass,
         storeName: storeName.trim(),
         name: ownerName.trim() || storeName.trim(),
+        logoUrl: logoUrl.trim(),
         phoneWhatsapp: phoneWhatsapp.trim(),
         email: email.trim() || undefined,
-        cityState: cityState.trim() || 'Brasil',
+        address: fullAddress,
+        neighborhood: neighborhood.trim(),
+        cityState: cityState.trim(),
         segment: segment,
         storeType: 'clothing',
         dueDate: trialDueDate,
@@ -160,9 +221,10 @@ export const RegisterStoreModal: React.FC<RegisterStoreModalProps> = ({
   };
 
   const storeOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://seusite.com';
+  const storeSlugFromName = slugifyStoreName(storeName);
   const liveStoreUrl = createdClient
-    ? `${storeOrigin}/?loja=${encodeURIComponent(createdClient.storeSlug || createdClient.username)}`
-    : `${storeOrigin}/?loja=${cleanUsername || 'sualoja'}`;
+    ? `${storeOrigin}/?loja=${encodeURIComponent(createdClient.storeSlug || slugifyStoreName(createdClient.storeName) || createdClient.username)}`
+    : `${storeOrigin}/?loja=${storeSlugFromName || 'nome-da-sua-loja'}`;
 
   const handleCopyLink = () => {
     if (navigator.clipboard) {
@@ -310,6 +372,68 @@ export const RegisterStoreModal: React.FC<RegisterStoreModalProps> = ({
                 </div>
               )}
 
+              {/* Required Store Profile Photo Upload */}
+              <div className="p-4 bg-[#18181E] border border-[#2B2B33] rounded-2xl flex flex-col sm:flex-row items-center gap-4">
+                <div className="relative shrink-0">
+                  <div className={`w-20 h-20 rounded-full overflow-hidden border-2 flex items-center justify-center bg-[#121215] ${logoUrl ? 'border-[#D4AF37]' : 'border-dashed border-stone-600'}`}>
+                    {logoUrl ? (
+                      <img src={logoUrl} alt="Foto da Loja" className="w-full h-full object-cover" />
+                    ) : (
+                      <Camera className="w-7 h-7 text-stone-500" />
+                    )}
+                  </div>
+                  {logoUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setLogoUrl('')}
+                      className="absolute -top-1 -right-1 p-1 rounded-full bg-red-600 text-white hover:bg-red-700 shadow-md cursor-pointer"
+                      title="Remover foto"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex-1 text-center sm:text-left space-y-2">
+                  <div>
+                    <span className="text-xs font-bold text-white flex items-center justify-center sm:justify-start gap-1.5">
+                      <span>Foto de Perfil / Logo da Loja *</span>
+                      {!logoUrl && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-[#D4AF37] border border-[#D4AF37]/30 font-semibold">
+                          Obrigatório
+                        </span>
+                      )}
+                    </span>
+                    <p className="text-[11px] text-stone-400 mt-0.5">
+                      Escolha a foto oficial da sua loja para exibir na vitrine e evitar que a loja fique sem identidade.
+                    </p>
+                  </div>
+                  <input
+                    type="file"
+                    ref={logoInputRef}
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    className="hidden"
+                    id="register-logo-file-input"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => logoInputRef.current?.click()}
+                    disabled={isUploadingLogo}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 border border-[#D4AF37]/50 text-[#D4AF37] rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>
+                      {isUploadingLogo
+                        ? 'Carregando foto...'
+                        : logoUrl
+                        ? 'Trocar Foto da Loja'
+                        : 'Selecionar Foto da Loja'}
+                    </span>
+                  </button>
+                </div>
+              </div>
+
               {/* Basic Store Info */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="sm:col-span-2">
@@ -339,16 +463,23 @@ export const RegisterStoreModal: React.FC<RegisterStoreModalProps> = ({
                       className="w-full pl-9 pr-3 py-2.5 bg-[#1C1C22] border border-[#2B2B33] rounded-xl text-xs text-white placeholder:text-stone-500 focus:outline-none focus:border-[#D4AF37]"
                     />
                   </div>
+                  <p className="text-[11px] text-stone-400 mt-1.5">
+                    Link de compartilhamento da loja:{' '}
+                    <span className="text-[#D4AF37] font-mono font-semibold">
+                      {storeOrigin}/?loja={storeSlugFromName || 'nome-da-sua-loja'}
+                    </span>
+                  </p>
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-stone-300 mb-1">
-                    Seu Nome Completo (CEO)
+                    Seu Nome Completo (CEO) *
                   </label>
                   <div className="relative">
                     <User className="w-4 h-4 text-stone-500 absolute left-3 top-3 pointer-events-none" />
                     <input
                       type="text"
+                      required
                       value={ownerName}
                       onChange={(e) => setOwnerName(e.target.value)}
                       placeholder="Ex: Maria Silva"
@@ -381,11 +512,11 @@ export const RegisterStoreModal: React.FC<RegisterStoreModalProps> = ({
                 </div>
               </div>
 
-              {/* Username & URL Box */}
+              {/* Username Box (Login Only) */}
               <div className="p-3.5 bg-[#18181E] rounded-2xl border border-stone-800 space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-white">
-                    Link da Loja & Usuário de Login *
+                    Usuário de Login (Acesso ao Painel) *
                   </label>
                   <span className="text-[11px] font-mono text-[#D4AF37]">
                     {cleanUsername.length}/8 caracteres
@@ -403,10 +534,7 @@ export const RegisterStoreModal: React.FC<RegisterStoreModalProps> = ({
                   />
                 </div>
                 <p className="text-[11px] text-stone-400">
-                  Sua vitrine pública será:{' '}
-                  <span className="text-[#D4AF37] font-mono font-semibold">
-                    {storeOrigin}/?loja={cleanUsername || 'sua_loja'}
-                  </span>
+                  Usado apenas para você entrar no seu painel. O link público enviado aos clientes usa o <strong className="text-stone-200">Nome da Loja</strong>.
                 </p>
               </div>
 
@@ -479,20 +607,80 @@ export const RegisterStoreModal: React.FC<RegisterStoreModalProps> = ({
                   </div>
                 </div>
 
-                <div className="sm:col-span-2">
+                <div>
                   <label className="block text-xs font-bold text-stone-300 mb-1">
-                    Cidade / Estado
+                    Endereço (Rua e Número) *
                   </label>
                   <div className="relative">
                     <MapPin className="w-4 h-4 text-stone-500 absolute left-3 top-3 pointer-events-none" />
                     <input
                       type="text"
+                      required
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      placeholder="Ex: Av. Paulista, 1000"
+                      className="w-full pl-9 pr-3 py-2.5 bg-[#1C1C22] border border-[#2B2B33] rounded-xl text-xs text-white placeholder:text-stone-500 focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-stone-300 mb-1">
+                    Bairro *
+                  </label>
+                  <div className="relative">
+                    <MapPin className="w-4 h-4 text-stone-500 absolute left-3 top-3 pointer-events-none" />
+                    <input
+                      type="text"
+                      required
+                      value={neighborhood}
+                      onChange={(e) => setNeighborhood(e.target.value)}
+                      placeholder="Ex: Centro / Jardins"
+                      className="w-full pl-9 pr-3 py-2.5 bg-[#1C1C22] border border-[#2B2B33] rounded-xl text-xs text-white placeholder:text-stone-500 focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-stone-300 mb-1">
+                    Cidade / Estado *
+                  </label>
+                  <div className="relative">
+                    <MapPin className="w-4 h-4 text-stone-500 absolute left-3 top-3 pointer-events-none" />
+                    <input
+                      type="text"
+                      required
                       value={cityState}
                       onChange={(e) => setCityState(e.target.value)}
                       placeholder="Ex: São Paulo - SP"
                       className="w-full pl-9 pr-3 py-2.5 bg-[#1C1C22] border border-[#2B2B33] rounded-xl text-xs text-white placeholder:text-stone-500 focus:outline-none focus:border-[#D4AF37]"
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* Essential Requirements Summary Checklist */}
+              <div className="p-3 bg-[#18181E] border border-stone-800 rounded-2xl space-y-1.5">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#D4AF37] block">
+                  Configurações Obrigatórias da Loja
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[11px]">
+                  {[
+                    { label: 'Foto de Perfil', ok: Boolean(logoUrl.trim()) },
+                    { label: 'Nome da Loja', ok: storeName.trim().length >= 2 },
+                    { label: 'Nome do CEO', ok: ownerName.trim().length >= 2 },
+                    { label: 'WhatsApp', ok: phoneWhatsapp.replace(/\D/g, '').length >= 10 },
+                    { label: 'Endereço e Bairro', ok: address.trim().length >= 3 && neighborhood.trim().length >= 2 },
+                    { label: 'Cidade / UF', ok: cityState.trim().length >= 2 },
+                  ].map((req) => (
+                    <div
+                      key={req.label}
+                      className={`flex items-center gap-1.5 ${req.ok ? 'text-emerald-400' : 'text-stone-400'}`}
+                    >
+                      <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${req.ok ? 'text-emerald-400' : 'text-stone-600'}`} />
+                      <span>{req.label}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
 

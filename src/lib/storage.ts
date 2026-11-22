@@ -30,19 +30,50 @@ const KEYS = {
   AUTH_SESSION: 'vitrine_auth_session_v1',
 };
 
-export const getStoredSettings = (): StoreSettings => {
+export const hasStoredSettings = (clientId?: string): boolean => {
   try {
-    const item = localStorage.getItem(KEYS.SETTINGS);
-    return item ? JSON.parse(item) : initialStoreSettings;
-  } catch (e) {
-    console.error('Failed to load settings', e);
-    return initialStoreSettings;
+    const key = clientId ? `${KEYS.SETTINGS}_${clientId}` : KEYS.SETTINGS;
+    return Boolean(localStorage.getItem(key));
+  } catch {
+    return false;
   }
 };
 
-export const saveStoredSettings = (settings: StoreSettings): void => {
+export const getStoredSettings = (clientId?: string): StoreSettings => {
   try {
-    localStorage.setItem(KEYS.SETTINGS, JSON.stringify(settings));
+    const key = clientId ? `${KEYS.SETTINGS}_${clientId}` : KEYS.SETTINGS;
+    const item = localStorage.getItem(key);
+    if (item) {
+      return JSON.parse(item);
+    }
+    if (clientId) {
+      return {
+        ...initialStoreSettings,
+        storeName: '',
+        logoUrl: '',
+        bannerUrl: '',
+        customDeliveryRates: [],
+      };
+    }
+    return initialStoreSettings;
+  } catch (e) {
+    console.error('Failed to load settings', e);
+    return clientId
+      ? {
+          ...initialStoreSettings,
+          storeName: '',
+          logoUrl: '',
+          bannerUrl: '',
+          customDeliveryRates: [],
+        }
+      : initialStoreSettings;
+  }
+};
+
+export const saveStoredSettings = (settings: StoreSettings, clientId?: string): void => {
+  try {
+    const key = clientId ? `${KEYS.SETTINGS}_${clientId}` : KEYS.SETTINGS;
+    localStorage.setItem(key, JSON.stringify(settings));
   } catch (e) {
     console.error('Failed to save settings', e);
   }

@@ -12,6 +12,8 @@ import {
 } from './types';
 import {
   getStoredSettings,
+  saveStoredSettings,
+  hasStoredSettings,
   getStoredProducts,
   getStoredCategories,
   getStoredTags,
@@ -23,6 +25,7 @@ import {
   saveAuthSession,
   resetAllToDefault,
 } from './lib/storage';
+import { initialStoreSettings } from './data/initialData';
 import {
   seedInitialDataIfEmpty,
   subscribeToSettings,
@@ -76,8 +79,33 @@ import { formatCurrency, cleanPhoneForWhatsapp } from './lib/formatters';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function App() {
-  // Application Data States (initial fallback from local cache)
-  const [settings, setSettings] = useState<StoreSettings>(getStoredSettings);
+  // Application Data States (initial fallback isolated per client)
+  const [currentClient, setCurrentClient] = useState<any>(() => {
+    try {
+      const saved = localStorage.getItem('store_current_client');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [settings, setSettings] = useState<StoreSettings>(() => {
+    try {
+      const saved = localStorage.getItem('store_current_client');
+      const parsed = saved ? JSON.parse(saved) : null;
+      return getStoredSettings(parsed?.id);
+    } catch {
+      return getStoredSettings();
+    }
+  });
+  const [hasSyncedSettings, setHasSyncedSettings] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('store_current_client');
+      const parsed = saved ? JSON.parse(saved) : null;
+      return !parsed?.id || hasStoredSettings(parsed.id);
+    } catch {
+      return true;
+    }
+  });
   const [products, setProducts] = useState<Product[]>(getStoredProducts);
   const [categories, setCategories] = useState<TagCategory[]>(getStoredCategories);
   const [tags, setTags] = useState<TagCategory[]>(getStoredTags);
@@ -138,10 +166,6 @@ export default function App() {
     // Default to landing page for test account or visitors
     return 'landing';
   });
-  const [currentClient, setCurrentClient] = useState<any>(() => {
-    const saved = localStorage.getItem('store_current_client');
-    return saved ? JSON.parse(saved) : null;
-  });
 
   const isOfficialStore = Boolean(
     currentClient &&
@@ -173,16 +197,20 @@ export default function App() {
         ...client,
         isOfficial,
       };
+      const hasCache = hasStoredSettings(enrichedClient.id);
+      const clientCached = getStoredSettings(enrichedClient.id);
+      setHasSyncedSettings(hasCache);
+      setIsCloudSyncing(true);
       setCurrentClient(enrichedClient);
       localStorage.setItem('store_current_client', JSON.stringify(enrichedClient));
-      if (client.storeName) {
-        setSettings((prev) => ({
-          ...prev,
-          storeName: client.storeName,
-          phoneWhatsapp: client.phoneWhatsapp || prev.phoneWhatsapp,
-          storeType: client.storeType || prev.storeType || 'clothing',
-        }));
-      }
+      setSettings({
+        ...clientCached,
+        storeName: clientCached.storeName || client.storeName || '',
+        logoUrl: clientCached.logoUrl || '',
+        bannerUrl: clientCached.bannerUrl || '',
+        phoneWhatsapp: clientCached.phoneWhatsapp || client.phoneWhatsapp || '',
+        storeType: client.storeType || clientCached.storeType || 'clothing',
+      });
     }
     if (type === 'super_admin') {
       setActiveView('super_admin');
@@ -202,22 +230,36 @@ export default function App() {
     setCoupons([]);
     setOrders([]);
     setFinance([]);
+    const { logoUrl: regLogoUrl, ...clientWithoutHeavyLogo } = newClient || {};
     const enrichedClient = {
-      ...newClient,
+      ...clientWithoutHeavyLogo,
       isOfficial: true,
     };
+    const combinedAddress =
+      newClient.address && newClient.neighborhood
+        ? `${newClient.address} - ${newClient.neighborhood}`
+        : newClient.address || newClient.neighborhood || '';
+    const newTenantSettings: StoreSettings = {
+      ...initialStoreSettings,
+      customDeliveryRates: [],
+      storeName: newClient.storeName || 'Minha Loja',
+      logoUrl: regLogoUrl || '',
+      bannerUrl: '',
+      phoneWhatsapp: newClient.phoneWhatsapp || '',
+      address: combinedAddress,
+      cityState: newClient.cityState || '',
+      storeType: newClient.storeType || 'clothing',
+      isFirstSetupDone: true,
+      showAnnouncementBanner: true,
+      announcementBannerText: `💎 Bem-vindo à vitrine oficial da ${newClient.storeName || 'Minha Loja'}! Explore o catálogo e faça seu pedido direto pelo WhatsApp.`,
+    };
+    saveStoredSettings(newTenantSettings, enrichedClient.id);
+    setSettings(newTenantSettings);
+    setHasSyncedSettings(true);
     setCurrentClient(enrichedClient);
     localStorage.setItem('store_current_client', JSON.stringify(enrichedClient));
-    if (newClient.storeName) {
-      setSettings((prev) => ({
-        ...prev,
-        storeName: newClient.storeName,
-        phoneWhatsapp: newClient.phoneWhatsapp || prev.phoneWhatsapp,
-        storeType: newClient.storeType || prev.storeType || 'clothing',
-        cityState: newClient.cityState || prev.cityState,
-      }));
-    }
     setActiveView('admin');
+    setIsFirstOnboarding(true);
     setIsStoreSetupOpen(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -227,6 +269,8 @@ export default function App() {
     setCurrentClient(null);
     localStorage.removeItem('store_current_client');
     saveAuthSession(false);
+    setSettings(getStoredSettings());
+    setHasSyncedSettings(true);
     setProducts([]);
     setCategories([]);
     setTags([]);
@@ -252,6 +296,10 @@ export default function App() {
           isOfficial: false,
           status: 'active'
         };
+        const clientCached = getStoredSettings(testClient.id);
+        setHasSyncedSettings(hasStoredSettings(testClient.id));
+        setIsCloudSyncing(true);
+        setSettings({ ...clientCached, storeName: clientCached.storeName || testClient.storeName });
         setCurrentClient(testClient);
         localStorage.setItem('store_current_client', JSON.stringify(testClient));
       } else {
@@ -260,6 +308,15 @@ export default function App() {
         if (client) {
           const isOfficial = client.username !== 'teste@123' && client.id !== 'client-test-natural';
           const enriched = { ...client, isOfficial };
+          const clientCached = getStoredSettings(enriched.id);
+          setHasSyncedSettings(hasStoredSettings(enriched.id));
+          setIsCloudSyncing(true);
+          setSettings({
+            ...clientCached,
+            storeName: clientCached.storeName || enriched.storeName || '',
+            logoUrl: clientCached.logoUrl || '',
+            bannerUrl: clientCached.bannerUrl || '',
+          });
           setCurrentClient(enriched);
           localStorage.setItem('store_current_client', JSON.stringify(enriched));
         }
@@ -478,15 +535,23 @@ export default function App() {
 
   // Real-time Cloud Firestore synchronization
   useEffect(() => {
+    const targetClientId = currentClient?.id;
+    const hasCache = !targetClientId || hasStoredSettings(targetClientId);
     setIsCloudSyncing(true);
+    setHasSyncedSettings(hasCache);
 
-    if (currentClient && currentClient.storeName) {
-      setSettings((prev) => ({
-        ...prev,
-        storeName: currentClient.storeName,
-        phoneWhatsapp: currentClient.phoneWhatsapp || prev.phoneWhatsapp,
-        storeType: currentClient.storeType || prev.storeType || 'clothing',
-      }));
+    const clientCached = getStoredSettings(targetClientId);
+    if (currentClient) {
+      setSettings({
+        ...clientCached,
+        storeName: clientCached.storeName || currentClient.storeName || '',
+        logoUrl: clientCached.logoUrl || '',
+        bannerUrl: clientCached.bannerUrl || '',
+        phoneWhatsapp: clientCached.phoneWhatsapp || currentClient.phoneWhatsapp || '',
+        storeType: currentClient.storeType || clientCached.storeType || 'clothing',
+      });
+    } else {
+      setSettings(clientCached);
     }
 
     // Clear local states immediately to prevent flashing data from previous client
@@ -502,6 +567,7 @@ export default function App() {
 
     const unsubSettings = subscribeToSettings((data) => {
       setSettings(data);
+      setHasSyncedSettings(true);
       setIsCloudSyncing(false);
     }, currentClient?.id, currentClient?.storeName);
 
@@ -991,8 +1057,11 @@ export default function App() {
     );
   }
 
-  // Speed Optimization: Only show full-screen blocking loader if there is no cache whatsoever and entrance is not playing
-  if (isCloudSyncing && !settings.storeName && products.length === 0 && !showEntranceAnimation) {
+  // Wait for tenant settings sync when switching to an uncached account so no stale photo ever flashes
+  if (
+    ((isCloudSyncing && !hasSyncedSettings) || (isCloudSyncing && !settings.storeName && products.length === 0)) &&
+    !showEntranceAnimation
+  ) {
     return (
       <div className="min-h-screen bg-[#0B0A0C] flex items-center justify-center p-4">
         <div className="text-center space-y-3">
@@ -1417,6 +1486,7 @@ export default function App() {
       <ShareProductModal
         product={sharingProduct}
         settings={settings}
+        currentClient={currentClient}
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
       />
@@ -1441,13 +1511,20 @@ export default function App() {
         isOpen={isStoreSetupOpen}
         isFirstSetup={isFirstOnboarding}
         settings={settings}
-        onUpdateClientSlug={async (newSlug) => {
+        onUpdateClientSlug={async (newSlug, newStoreName) => {
           if (currentClient) {
-            const updatedClient = { ...currentClient, storeSlug: newSlug };
+            const updatedClient = {
+              ...currentClient,
+              storeSlug: newSlug,
+              ...(newStoreName ? { storeName: newStoreName } : {}),
+            };
             setCurrentClient(updatedClient);
             localStorage.setItem('store_current_client', JSON.stringify(updatedClient));
             await saveClient(updatedClient);
           }
+        }}
+        onAutoSave={(newSettings) => {
+          handleUpdateSettings(newSettings);
         }}
         onSave={(newSettings) => {
           handleUpdateSettings(newSettings);

@@ -21,6 +21,7 @@ import {
   TagCategory,
   AdminUser,
 } from '../types';
+import { slugifyStoreName } from './formatters';
 import {
   initialStoreSettings,
   initialProducts,
@@ -225,17 +226,21 @@ export const subscribeToSettings = (
         if (clientStoreName && (data.storeName === 'Web Vitrine' || data.storeName === 'Minha Loja' || !data.storeName)) {
           data.storeName = clientStoreName;
         }
+        saveStoredSettings(data, clientId);
         callback(data);
-        if (!clientId) saveStoredSettings(data);
       } else {
-        // Fallback: create settings doc with specific client store name
+        // Fallback: create settings doc with specific client store name without inheriting another store's logo
         const defaultSettings: StoreSettings = { 
-          ...initialStoreSettings, 
+          ...initialStoreSettings,
+          logoUrl: '',
+          bannerUrl: '',
+          customDeliveryRates: clientId ? [] : initialStoreSettings.customDeliveryRates,
           storeName: clientStoreName || 'Minha Loja',
           isFirstSetupDone: true,
           announcementBannerText: clientStoreName ? `💎 Bem-vindo à vitrine oficial da ${clientStoreName}!` : initialStoreSettings.announcementBannerText,
         };
         setDoc(settingsRef, defaultSettings).catch(console.error);
+        saveStoredSettings(defaultSettings, clientId);
         callback(defaultSettings);
       }
     },
@@ -247,7 +252,7 @@ export const subscribeToSettings = (
 
 export const saveSettingsToDb = async (settings: StoreSettings, clientId?: string): Promise<void> => {
   try {
-    if (!clientId) saveStoredSettings(settings);
+    saveStoredSettings(settings, clientId);
     const settingsRef = getDocRef(COLLECTIONS.SETTINGS, SETTINGS_DOC_ID, clientId);
     await setDoc(settingsRef, settings, { merge: true });
   } catch (error) {
@@ -678,13 +683,15 @@ export const authenticateClient = async (username: string, password: string): Pr
           (storedHash && storedHash === inputPasswordHash);
 
         if (isPasswordMatch) {
+          const nameSlug = slugifyStoreName(decrypted.storeName || decrypted.name || '');
+          const effectiveSlug = (s && s !== u ? s : '') || nameSlug || u;
           return {
             id: docSnap.id,
             isOfficial: true,
             ...decrypted,
             storeName: decrypted.storeName || decrypted.name || 'Minha Loja',
             username: u,
-            storeSlug: s || u,
+            storeSlug: effectiveSlug,
           };
         }
       }
@@ -706,13 +713,18 @@ export const getClients = (callback: (clients: any[]) => void) => {
         const decryptedPromises = snapshot.docs.map(async (docSnap) => {
           const rawData = docSnap.data();
           const decrypted = await decryptClientData(rawData);
+          const u = (decrypted.username || '').toString().trim().toLowerCase().replace(/^@+/, '');
+          const s = (decrypted.storeSlug || '').toString().trim().toLowerCase().replace(/^@+/, '');
+          const resolvedStoreName = decrypted.storeName || decrypted.name || 'Minha Loja';
+          const nameSlug = slugifyStoreName(resolvedStoreName);
+          const effectiveSlug = (s && s !== u ? s : '') || nameSlug || u;
           return {
             id: docSnap.id,
             isOfficial: true,
             ...decrypted,
-            storeName: decrypted.storeName || decrypted.name || 'Minha Loja',
-            username: (decrypted.username || '').toString().trim().toLowerCase().replace(/^@+/, ''),
-            storeSlug: (decrypted.storeSlug || decrypted.username || '').toString().trim().toLowerCase().replace(/^@+/, ''),
+            storeName: resolvedStoreName,
+            username: u,
+            storeSlug: effectiveSlug,
           };
         });
         const items = await Promise.all(decryptedPromises);
@@ -732,18 +744,37 @@ export const getClients = (callback: (clients: any[]) => void) => {
 export const saveClient = async (clientData: any) => {
   try {
     const cleanUsername = (clientData.username || '').toString().trim().toLowerCase().replace(/^@+/, '');
-    const cleanSlug = (clientData.storeSlug || cleanUsername).trim().toLowerCase().replace(/^@+/, '');
+    const storeNameClean = (clientData.storeName || 'Minha Loja').trim();
+    const generatedNameSlug = slugifyStoreName(storeNameClean);
+    const rawProvidedSlug = (clientData.storeSlug || '').toString().trim().toLowerCase().replace(/^@+/, '');
+    const cleanSlug =
+      (rawProvidedSlug && rawProvidedSlug !== cleanUsername ? slugifyStoreName(rawProvidedSlug) : '') ||
+      generatedNameSlug ||
+      cleanUsername;
     const clientId = clientData.id || `client-${Date.now()}`;
     const rawPhone = (clientData.phoneWhatsapp || '').toString().trim();
 
+    const initialLogoUrl = (clientData.logoUrl || '').toString().trim();
+    const clientAddress = (clientData.address || '').toString().trim();
+    const clientNeighborhood = (clientData.neighborhood || '').toString().trim();
+    const combinedAddress = clientAddress && clientNeighborhood
+      ? `${clientAddress} - ${clientNeighborhood}`
+      : clientAddress || clientNeighborhood;
+    const clientCityState = (clientData.cityState || '').toString().trim();
+
+    const { logoUrl: _omitLogo, ...clientWithoutHeavyLogo } = clientData;
+
     const normalizedClient = {
-      ...clientData,
+      ...clientWithoutHeavyLogo,
       id: clientId,
       username: cleanUsername,
       storeSlug: cleanSlug,
       isOfficial: true,
-      storeName: (clientData.storeName || 'Minha Loja').trim(),
+      storeName: storeNameClean,
       phoneWhatsapp: rawPhone,
+      ...(clientNeighborhood ? { neighborhood: clientNeighborhood } : {}),
+      ...(combinedAddress ? { address: combinedAddress } : {}),
+      ...(clientCityState ? { cityState: clientCityState } : {}),
     };
 
     // Encrypt sensitive fields (password, phoneWhatsapp, notes) before writing to Firestore
@@ -760,15 +791,21 @@ export const saveClient = async (clientData: any) => {
 
       const initialTenantSettings: StoreSettings = {
         ...initialStoreSettings,
+        customDeliveryRates: [],
         ...currentSettings,
         storeName: normalizedClient.storeName,
+        logoUrl: initialLogoUrl || currentSettings.logoUrl || '',
+        bannerUrl: currentSettings.bannerUrl || '',
         phoneWhatsapp: rawPhone || currentSettings.phoneWhatsapp || initialStoreSettings.phoneWhatsapp,
+        address: combinedAddress || currentSettings.address || '',
+        cityState: clientCityState || currentSettings.cityState || '',
         storeType: normalizedClient.storeType || 'clothing',
         isFirstSetupDone: true,
         showAnnouncementBanner: true,
         announcementBannerText: `💎 Bem-vindo à vitrine oficial da ${normalizedClient.storeName}! Explore o catálogo e faça seu pedido direto pelo WhatsApp.`,
       };
       await setDoc(tenantSettingsRef, initialTenantSettings, { merge: true });
+      saveStoredSettings(initialTenantSettings, clientId);
     } catch (tenantErr) {
       console.warn('Could not initialize tenant settings:', tenantErr);
     }
@@ -805,13 +842,17 @@ export const getClientByUsername = async (slugOrUsername: string): Promise<any |
       return null;
     }
 
+    let fallbackMatch: any | null = null;
+
     for (const docSnap of snapshot.docs) {
       const rawData = docSnap.data();
       const decrypted = await decryptClientData(rawData);
 
       const u = (decrypted.username || '').toString().trim().toLowerCase().replace(/^@+/, '');
       const s = (decrypted.storeSlug || '').toString().trim().toLowerCase().replace(/^@+/, '');
-      const name = (decrypted.storeName || decrypted.name || '').toString().trim().toLowerCase();
+      const resolvedStoreName = decrypted.storeName || decrypted.name || 'Minha Loja';
+      const name = resolvedStoreName.toString().trim().toLowerCase();
+      const nameSlug = slugifyStoreName(resolvedStoreName);
       const id = (docSnap.id || '').toString().trim().toLowerCase();
       const email = (decrypted.email || '').toString().trim().toLowerCase();
 
@@ -820,29 +861,39 @@ export const getClientByUsername = async (slugOrUsername: string): Promise<any |
       const nameNorm = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
       const emailPrefix = email.split('@')[0].normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
 
-      const isMatch =
-        u === rawClean ||
+      const effectiveSlug = (s && s !== u ? s : '') || nameSlug || u;
+      const clientObj = {
+        id: docSnap.id,
+        isOfficial: true,
+        ...decrypted,
+        storeName: resolvedStoreName,
+        username: u,
+        storeSlug: effectiveSlug,
+      };
+
+      const isStoreLinkMatch =
         s === rawClean ||
+        nameSlug === rawClean ||
+        sNorm === normalizedQuery ||
+        nameNorm === normalizedQuery;
+
+      if (isStoreLinkMatch) {
+        return clientObj;
+      }
+
+      const isFallbackMatch =
+        u === rawClean ||
         id === rawClean ||
         id === `client-${rawClean}` ||
         uNorm === normalizedQuery ||
-        sNorm === normalizedQuery ||
-        nameNorm === normalizedQuery ||
         emailPrefix === normalizedQuery;
 
-      if (isMatch) {
-        return {
-          id: docSnap.id,
-          isOfficial: true,
-          ...decrypted,
-          storeName: decrypted.storeName || decrypted.name || 'Minha Loja',
-          username: u,
-          storeSlug: s || u,
-        };
+      if (isFallbackMatch && !fallbackMatch) {
+        fallbackMatch = clientObj;
       }
     }
 
-    return null;
+    return fallbackMatch;
   } catch (error) {
     console.error('Error fetching client by username/slug:', error);
     return null;

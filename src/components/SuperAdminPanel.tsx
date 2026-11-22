@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { StoreClient } from '../types';
 import { getClients, saveClient, deleteClient } from '../lib/firestoreService';
+import { slugifyStoreName } from '../lib/formatters';
 import { CredentialChecklist } from './CredentialChecklist';
 
 interface SuperAdminPanelProps {
@@ -272,12 +273,13 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
 
     const cleanUsername = formData.username.trim().toLowerCase().replace(/\s+/g, '');
     const priceNum = typeof formData.planPrice === 'string' ? parseFloat(formData.planPrice.replace(',', '.')) : Number(formData.planPrice);
+    const derivedStoreSlug = slugifyStoreName(formData.storeName.trim()) || cleanUsername;
 
     const clientToSave: StoreClient = {
       id: formData.id || `client-${Date.now()}`,
       storeName: formData.storeName.trim(),
       username: cleanUsername,
-      storeSlug: cleanUsername,
+      storeSlug: derivedStoreSlug,
       password: formData.password.trim(),
       planPrice: isNaN(priceNum) ? 29.99 : priceNum,
       dueDate: formData.dueDate || getDefaultDueDate(5),
@@ -377,8 +379,15 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const getEffectiveSlug = (client: StoreClient) => {
+    const s = slugifyStoreName(client.storeSlug);
+    const u = slugifyStoreName(client.username);
+    const n = slugifyStoreName(client.storeName);
+    return (s && s !== u ? s : '') || n || s || client.username;
+  };
+
   const handleCopyFullAccessMessage = (client: StoreClient) => {
-    const slug = client.storeSlug || client.username;
+    const slug = getEffectiveSlug(client);
     const storeLink = `${window.location.origin}/?loja=${slug}`;
     const adminLink = `${window.location.origin}/?loja=${slug}&admin=1`;
     const msg = `👑 *ACESSO À SUA WEB VITRINE*\n\nOlá! Aqui estão as credenciais exclusivas da sua loja:\n\n🏬 *Loja:* ${client.storeName}\n👤 *Usuário:* ${client.username}\n🔑 *Senha:* ${client.password}\n\n🌐 *Link da sua Vitrine:* ${storeLink}\n⚙️ *Painel de Gestão da Loja:* ${adminLink}\n📅 *Vencimento do Plano:* ${formatDateBr(client.dueDate)}\n💵 *Valor:* R$ ${(Number(client.planPrice) || 0).toFixed(2).replace('.', ',')}/mês\n\nQualquer dúvida, estamos à disposição na Gestão Web Vitrine! ✨`;
@@ -389,7 +398,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
   const handleSendWhatsappReminder = (client: StoreClient) => {
     const dueInfo = getDueStatus(client.dueDate);
     const priceFormatted = `R$ ${(Number(client.planPrice) || 0).toFixed(2).replace('.', ',')}`;
-    const slug = client.storeSlug || client.username;
+    const slug = getEffectiveSlug(client);
     const storeLink = `${window.location.origin}/?loja=${slug}`;
     
     let msg = '';
@@ -785,7 +794,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                             
                           </div>
                           <div className="text-[11px] text-stone-500 mt-0.5 flex items-center gap-2">
-                            <span>Link: <code className="text-stone-900/80">/?loja={client.storeSlug || client.username}</code></span>
+                            <span>Link: <code className="text-stone-900/80">/?loja={getEffectiveSlug(client)}</code></span>
                           </div>
                         </td>
 
@@ -913,7 +922,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
 
                             {/* Direct Open Store Showcase */}
                             <a
-                              href={`/?loja=${client.storeSlug || client.username}`}
+                              href={`/?loja=${getEffectiveSlug(client)}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="p-2 bg-stone-100 hover:bg-emerald-100 text-stone-600 hover:text-emerald-600 rounded-xl border border-stone-200 hover:border-emerald-500/40 transition-colors inline-flex items-center"
@@ -1027,7 +1036,9 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                       />
                     </div>
                     <CredentialChecklist value={formData.username} label="Requisitos do Usuário" />
-                    <p className="text-[11px] text-stone-400 mt-1">Link da loja: <code>/?loja={formData.username || 'nome'}</code></p>
+                    <p className="text-[11px] text-stone-400 mt-1">
+                      Link da loja: <code>/?loja={slugifyStoreName(formData.storeName) || 'nome-da-loja'}</code>
+                    </p>
                   </div>
 
                   {/* Senha */}

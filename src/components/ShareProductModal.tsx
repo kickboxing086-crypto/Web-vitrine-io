@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Product, StoreSettings } from '../types';
-import { formatCurrency } from '../lib/formatters';
+import { formatCurrency, getStoreShareUrl } from '../lib/formatters';
 import {
   X,
   Share2,
@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from 'motion/react';
 interface ShareProductModalProps {
   product: Product | null;
   settings: StoreSettings;
+  currentClient?: any;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -27,6 +28,7 @@ interface ShareProductModalProps {
 export const ShareProductModal: React.FC<ShareProductModalProps> = ({
   product,
   settings,
+  currentClient,
   isOpen,
   onClose,
 }) => {
@@ -40,13 +42,10 @@ export const ShareProductModal: React.FC<ShareProductModalProps> = ({
       ? product.promotionalPrice
       : product.price;
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : '';
-  const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
-  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
-  const loja = searchParams.get('loja') || searchParams.get('store') || searchParams.get('u');
-  const shareUrl = loja 
-    ? `${origin}${pathname}?loja=${encodeURIComponent(loja)}&produto=${encodeURIComponent(product.id)}`
-    : `${origin}${pathname}?produto=${encodeURIComponent(product.id)}`;
+  const storeBaseUrl = getStoreShareUrl(settings, currentClient);
+  const shareUrl = storeBaseUrl.includes('?loja=')
+    ? `${storeBaseUrl}&produto=${encodeURIComponent(product.id)}`
+    : `${storeBaseUrl}?produto=${encodeURIComponent(product.id)}`;
 
   const shareMessage = `*${settings.storeName}*\n\n*${product.name}*\nPor apenas *${formatCurrency(currentPrice)}*\n\n${shareUrl}`;
 

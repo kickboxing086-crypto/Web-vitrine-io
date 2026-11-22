@@ -150,21 +150,33 @@ export const copyToClipboardSafe = async (text: string): Promise<boolean> => {
   }
 };
 
+export const slugifyStoreName = (name?: string): string => {
+  if (!name) return '';
+  return name
+    .toString()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+};
+
 export const getStoreShareUrl = (settings?: StoreSettings, client?: any): string => {
   if (typeof window === 'undefined') return '';
   const origin = window.location.origin;
+
+  const nameSlugFromSettings = slugifyStoreName(settings?.storeName);
+  const nameSlugFromClient = slugifyStoreName(client?.storeName);
+  const customSlug = slugifyStoreName(client?.storeSlug);
+  const usernameSlug = slugifyStoreName(client?.username);
+
+  const preferredNameSlug = nameSlugFromSettings || nameSlugFromClient;
   const activeSlug =
-    client?.storeSlug ||
-    client?.username ||
-    (settings?.storeName
-      ? settings.storeName
-          .toLowerCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/[^a-z0-9]/g, '-')
-          .replace(/-+/g, '-')
-          .replace(/^-|-$/g, '')
-      : '');
+    (customSlug && customSlug !== usernameSlug ? customSlug : '') ||
+    preferredNameSlug ||
+    customSlug ||
+    usernameSlug;
 
   if (activeSlug) {
     return `${origin}/?loja=${encodeURIComponent(activeSlug)}`;

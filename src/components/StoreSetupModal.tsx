@@ -29,7 +29,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { fileToBase64 } from '../lib/imageUtils';
 import { STORE_FONTS, WEEK_DAYS, formatBusinessDaysLabel, applyStoreTheme } from '../lib/themeUtils';
-import { getStoreShareUrl, copyToClipboardSafe } from '../lib/formatters';
+import { getStoreShareUrl, copyToClipboardSafe, slugifyStoreName } from '../lib/formatters';
 
 interface StoreSetupModalProps {
   currentClient?: any;
@@ -37,7 +37,8 @@ interface StoreSetupModalProps {
   isFirstSetup?: boolean;
   settings: StoreSettings;
   onSave: (newSettings: StoreSettings) => void;
-  onUpdateClientSlug?: (newSlug: string) => void;
+  onAutoSave?: (newSettings: StoreSettings) => void;
+  onUpdateClientSlug?: (newSlug: string, newStoreName?: string) => void;
   onClose?: () => void;
 }
 
@@ -47,11 +48,13 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
   isFirstSetup = false,
   settings,
   onSave,
+  onAutoSave,
   onUpdateClientSlug,
   onClose,
 }) => {
   const [formData, setFormData] = useState<StoreSettings>({ ...settings });
-  const [storeSlug, setStoreSlug] = useState(currentClient?.storeSlug || currentClient?.username || '');
+  const [storeSlug, setStoreSlug] = useState('');
+  const [isSlugCustom, setIsSlugCustom] = useState(false);
   const [copiedInvite, setCopiedInvite] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [editingRateId, setEditingRateId] = useState<string | null>(null);
@@ -59,26 +62,49 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
   const [rateCity, setRateCity] = useState('');
   const [rateNeighborhood, setRateNeighborhood] = useState('');
   const [rateFee, setRateFee] = useState('');
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const formScrollRef = useRef<HTMLFormElement>(null);
+  const wasOpenRef = useRef(false);
+  const initialSnapshotRef = useRef<string>('');
 
   useEffect(() => {
-    if (isOpen) {
-      setFormData({ ...settings });
-      setStoreSlug(currentClient?.storeSlug || currentClient?.username || '');
+    if (isOpen && !wasOpenRef.current) {
+      const nextFormData = { ...settings };
+      setFormData(nextFormData);
+      const nameSlug = slugifyStoreName(settings.storeName || currentClient?.storeName || '');
+      const clientSlug = slugifyStoreName(currentClient?.storeSlug || '');
+      const clientUserSlug = slugifyStoreName(currentClient?.username || '');
+      const initialSlug =
+        (clientSlug && clientSlug !== clientUserSlug ? clientSlug : '') ||
+        nameSlug ||
+        clientSlug ||
+        '';
+      setStoreSlug(initialSlug);
+      setIsSlugCustom(Boolean(clientSlug && clientSlug !== clientUserSlug && clientSlug !== nameSlug));
+      setValidationError(null);
+      initialSnapshotRef.current = JSON.stringify({ formData: nextFormData, storeSlug: initialSlug });
     }
+    wasOpenRef.current = isOpen;
   }, [isOpen, settings, currentClient]);
 
-  // Real-time auto-save as the CEO types/edits
+  // Real-time auto-save as the CEO types/edits (without closing the modal)
   useEffect(() => {
     if (!isOpen) return;
+    const currentSnapshot = JSON.stringify({ formData, storeSlug });
+    if (currentSnapshot === initialSnapshotRef.current) return;
+
     const timer = setTimeout(() => {
-      onSave({
+      initialSnapshotRef.current = currentSnapshot;
+      const saveFn = onAutoSave || onSave;
+      saveFn({
         ...formData,
         isFirstSetupDone: true,
       });
-      if (onUpdateClientSlug && storeSlug.trim()) {
-        onUpdateClientSlug(storeSlug.trim().replace(/\s+/g, '').toLowerCase());
+      const resolvedSlug = slugifyStoreName(storeSlug || formData.storeName);
+      if (onUpdateClientSlug && resolvedSlug) {
+        onUpdateClientSlug(resolvedSlug, formData.storeName);
       }
     }, 700);
     return () => clearTimeout(timer);
@@ -102,20 +128,49 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setValidationError(null);
+
+    if (!formData.logoUrl?.trim()) {
+      setValidationError('Adicione a Foto de Perfil / Logo da sua loja para finalizar a configuração.');
+      formScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    if (!formData.storeName?.trim()) {
+      setValidationError('Informe o Nome da Loja / Boutique.');
+      formScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    if (!formData.phoneWhatsapp || formData.phoneWhatsapp.replace(/\D/g, '').length < 10) {
+      setValidationError('Informe um WhatsApp válido com DDD para receber pedidos.');
+      formScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    if (!formData.address?.trim() || formData.address.trim() === 'Centro') {
+      setValidationError('Informe o Endereço Completo e Bairro onde sua loja atende.');
+      formScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    if (!formData.cityState?.trim()) {
+      setValidationError('Informe a Cidade e o Estado (UF) da sua loja.');
+      formScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     applyStoreTheme(formData);
     onSave({
       ...formData,
       isFirstSetupDone: true,
     });
-    if (onUpdateClientSlug && storeSlug.trim()) {
-      onUpdateClientSlug(storeSlug.trim().replace(/\s+/g, '').toLowerCase());
+    const resolvedSlug = slugifyStoreName(storeSlug || formData.storeName);
+    if (onUpdateClientSlug && resolvedSlug) {
+      onUpdateClientSlug(resolvedSlug, formData.storeName);
     }
     if (onClose) onClose();
   };
 
   const copyInviteLink = async () => {
-    const activeSlug = storeSlug.trim().replace(/\s+/g, '').toLowerCase() || currentClient?.storeSlug || currentClient?.username;
-    const inviteUrl = getStoreShareUrl(formData, { ...currentClient, storeSlug: activeSlug });
+    const activeSlug = slugifyStoreName(storeSlug || formData.storeName);
+    const inviteUrl = getStoreShareUrl(formData, { ...currentClient, storeSlug: activeSlug, storeName: formData.storeName });
     await copyToClipboardSafe(inviteUrl);
     setCopiedInvite(true);
     setTimeout(() => setCopiedInvite(false), 2500);
@@ -166,7 +221,49 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6 max-h-[75vh] overflow-y-auto">
+          <form ref={formScrollRef} onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6 max-h-[75vh] overflow-y-auto">
+            {/* Validation Error Alert */}
+            {validationError && (
+              <div className="p-3.5 bg-red-50 border border-red-200 text-red-800 rounded-2xl text-xs font-semibold flex items-center gap-2">
+                <Info className="w-4 h-4 text-red-600 shrink-0" />
+                <span>{validationError}</span>
+              </div>
+            )}
+
+            {/* Essential Store Setup Checklist */}
+            <div className="p-4 bg-white border border-[#E3D7CA] rounded-2xl space-y-2 shadow-2xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-stone-800">
+                  Configurações Essenciais da Loja
+                </span>
+                <span className="text-[11px] text-stone-500">
+                  Para sua loja não ficar incompleta
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs pt-1">
+                {[
+                  { label: 'Foto de Perfil / Logo *', ok: Boolean(formData.logoUrl?.trim()) },
+                  { label: 'Nome da Loja *', ok: Boolean(formData.storeName?.trim()) },
+                  { label: 'WhatsApp *', ok: (formData.phoneWhatsapp || '').replace(/\D/g, '').length >= 10 },
+                  { label: 'Endereço & Bairro *', ok: Boolean(formData.address?.trim() && formData.address.trim().length >= 4) },
+                  { label: 'Cidade / Estado *', ok: Boolean(formData.cityState?.trim() && formData.cityState.trim().length >= 2) },
+                  { label: 'Bio ou Slogan', ok: Boolean(formData.slogan?.trim() || formData.description?.trim()) },
+                ].map((item) => (
+                  <div
+                    key={item.label}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border ${
+                      item.ok
+                        ? 'bg-emerald-50 border-emerald-200 text-emerald-800 font-semibold'
+                        : 'bg-amber-50/70 border-amber-200 text-amber-900 font-medium'
+                    }`}
+                  >
+                    <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${item.ok ? 'text-emerald-600' : 'text-amber-500'}`} />
+                    <span className="truncate">{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* Section 1: Identidade da Loja */}
             <div className="space-y-4">
               <div className="flex items-center space-x-2 text-stone-900 border-b border-brand-border pb-2">
@@ -185,7 +282,13 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                     type="text"
                     required
                     value={formData.storeName}
-                    onChange={(e) => setFormData({ ...formData, storeName: e.target.value })}
+                    onChange={(e) => {
+                      const nextName = e.target.value;
+                      setFormData({ ...formData, storeName: nextName });
+                      if (!isSlugCustom) {
+                        setStoreSlug(slugifyStoreName(nextName));
+                      }
+                    }}
                     placeholder="Ex: Web Vitrine"
                     className="w-full px-3.5 py-2.5 bg-white border border-brand-border-dark rounded-xl text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary-dark/30 focus:border-brand-primary-dark"
                     id="input-store-name"
@@ -1055,10 +1158,11 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-stone-700 mb-1">
-                    Endereço Completo da Loja
+                    Endereço & Bairro Completo da Loja *
                   </label>
                   <input
                     type="text"
+                    required
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     placeholder="Ex: Rua Oscar Freire, 1420 - Jardins"
@@ -1069,10 +1173,11 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
 
                 <div>
                   <label className="block text-xs font-semibold text-stone-700 mb-1">
-                    Cidade / Estado
+                    Cidade / Estado *
                   </label>
                   <input
                     type="text"
+                    required
                     value={formData.cityState}
                     onChange={(e) => setFormData({ ...formData, cityState: e.target.value })}
                     placeholder="Ex: São Paulo - SP"
@@ -1132,17 +1237,21 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
               </div>
               <div className="mb-4">
                 <p className="text-xs text-stone-600 mb-2">
-                  Personalize o final do link que será enviado para os seus clientes. Use um nome curto, sem espaços ou caracteres especiais.
+                  Gerado automaticamente a partir do nome da sua loja. Você pode personalizar o final do link que será enviado para os seus clientes.
                 </p>
                 <div className="flex items-center">
-                  <span className="px-3 py-2 bg-stone-100 border border-r-0 border-brand-border-dark rounded-l-xl text-stone-500 text-sm font-mono">
-                    vitrine.com/?loja=
+                  <span className="px-3 py-2 bg-stone-100 border border-r-0 border-brand-border-dark rounded-l-xl text-stone-500 text-xs sm:text-sm font-mono truncate max-w-[200px] sm:max-w-[280px]">
+                    {typeof window !== 'undefined' ? `${window.location.origin}/?loja=` : '/?loja='}
                   </span>
                   <input
                     type="text"
                     value={storeSlug}
-                    onChange={(e) => setStoreSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                    placeholder="nomedasuamarca"
+                    onChange={(e) => {
+                      const val = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                      setStoreSlug(val);
+                      setIsSlugCustom(Boolean(val && val !== slugifyStoreName(formData.storeName)));
+                    }}
+                    placeholder="nome-da-sua-loja"
                     className="flex-1 px-3 py-2 bg-white border border-brand-border-dark rounded-r-xl text-stone-900 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-primary-dark/30 focus:border-brand-primary-dark"
                   />
                 </div>
