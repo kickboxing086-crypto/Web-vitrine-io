@@ -207,7 +207,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       return {
         productId: item.product.id,
         productName: item.product.name,
-        productImage: item.product.images[0] || '',
+        productImage: item.product.images?.[0] || '',
         selectedSize: item.selectedSize,
         selectedColorName: item.selectedColor.name,
         quantity: item.quantity,
@@ -409,7 +409,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                             >
                               <div className="w-16 h-20 sm:w-20 sm:h-24 rounded-xl overflow-hidden bg-black border border-[#27272A] shrink-0">
                                 <img
-                                  src={item.product.images[0]}
+                                  src={item.product.images?.[0] || ''}
                                   alt={item.product.name}
                                   className="w-full h-full object-cover"
                                 />

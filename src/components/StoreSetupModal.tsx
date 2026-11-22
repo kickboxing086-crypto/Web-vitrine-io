@@ -386,7 +386,7 @@ export const StoreSetupModal: React.FC<StoreSetupModalProps> = ({
                     </button>
                     <input
                       type="text"
-                      value={formData.logoUrl.startsWith('data:') ? '' : formData.logoUrl}
+                      value={(formData.logoUrl || '').startsWith('data:') ? '' : (formData.logoUrl || '')}
                       onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
                       placeholder="ou cole o link da foto de perfil..."
                       className="w-full px-3.5 py-2 text-xs bg-brand-bg border border-stone-200 rounded-xl text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30 text-center"

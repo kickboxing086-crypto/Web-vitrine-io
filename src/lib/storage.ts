@@ -33,40 +33,46 @@ const KEYS = {
 export const hasStoredSettings = (clientId?: string): boolean => {
   try {
     const key = clientId ? `${KEYS.SETTINGS}_${clientId}` : KEYS.SETTINGS;
-    return Boolean(localStorage.getItem(key));
+    const item = localStorage.getItem(key);
+    if (!item) return false;
+    const parsed = JSON.parse(item);
+    return Boolean(parsed && typeof parsed === 'object');
   } catch {
     return false;
   }
 };
 
 export const getStoredSettings = (clientId?: string): StoreSettings => {
+  const tenantFallback: StoreSettings = {
+    ...initialStoreSettings,
+    storeName: '',
+    logoUrl: '',
+    bannerUrl: '',
+    customDeliveryRates: [],
+  };
   try {
     const key = clientId ? `${KEYS.SETTINGS}_${clientId}` : KEYS.SETTINGS;
     const item = localStorage.getItem(key);
     if (item) {
-      return JSON.parse(item);
+      const parsed = JSON.parse(item);
+      if (parsed && typeof parsed === 'object') {
+        return {
+          ...(clientId ? tenantFallback : initialStoreSettings),
+          ...parsed,
+          logoUrl: parsed.logoUrl || '',
+          bannerUrl: parsed.bannerUrl || '',
+          customDeliveryRates: Array.isArray(parsed.customDeliveryRates)
+            ? parsed.customDeliveryRates
+            : clientId
+            ? []
+            : initialStoreSettings.customDeliveryRates,
+        };
+      }
     }
-    if (clientId) {
-      return {
-        ...initialStoreSettings,
-        storeName: '',
-        logoUrl: '',
-        bannerUrl: '',
-        customDeliveryRates: [],
-      };
-    }
-    return initialStoreSettings;
+    return clientId ? tenantFallback : initialStoreSettings;
   } catch (e) {
     console.error('Failed to load settings', e);
-    return clientId
-      ? {
-          ...initialStoreSettings,
-          storeName: '',
-          logoUrl: '',
-          bannerUrl: '',
-          customDeliveryRates: [],
-        }
-      : initialStoreSettings;
+    return clientId ? tenantFallback : initialStoreSettings;
   }
 };
 

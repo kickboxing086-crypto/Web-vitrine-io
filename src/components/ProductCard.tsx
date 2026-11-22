@@ -33,7 +33,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   const mainImage =
     (activeColor?.imageUrl && activeColor.imageUrl.trim()) ||
-    product.images[0] ||
+    product.images?.[0] ||
     '';
 
   const handleWhatsappClick = (e: React.MouseEvent) => {
@@ -41,8 +41,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     const encoded = generateWhatsappDirectProductMessage(
       product.name,
       currentPrice,
-      product.sizes[0],
-      activeColor?.name || product.colors[0]?.name,
+      product.sizes?.[0] || 'Único',
+      activeColor?.name || product.colors?.[0]?.name || 'Padrão',
       settings
     );
     const phone = cleanPhoneForWhatsapp(settings.phoneWhatsapp);

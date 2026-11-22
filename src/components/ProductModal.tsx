@@ -36,17 +36,17 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   onOpenCart,
   onShareProduct,
 }) => {
-  if (!isOpen || !product) return null;
-
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
-  const [selectedSize, setSelectedSize] = useState<string>(product.sizes[0] || 'M');
+  const [selectedSize, setSelectedSize] = useState<string>(product?.sizes?.[0] || 'M');
   const [selectedColor, setSelectedColor] = useState<{ name: string; hex: string; imageUrl?: string }>(
-    product.colors && product.colors[0] ? product.colors[0] : { name: 'Padrão', hex: '#111111' }
+    product?.colors && product.colors[0] ? product.colors[0] : { name: 'Padrão', hex: '#111111' }
   );
   const [quantity, setQuantity] = useState(1);
   const [showSizeGuide, setShowSizeGuide] = useState(false);
   const [addedAnimation, setAddedAnimation] = useState(false);
+
+  if (!isOpen || !product) return null;
 
   const stockVal = product.stock !== undefined ? product.stock : 10;
   const hasColorVariants = product.hasColors !== false && Array.isArray(product.colors) && product.colors.length > 0;
@@ -205,7 +205,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                   <span className="text-xs font-semibold uppercase tracking-wider text-[#D4AF37]">
                     {product.category}
                   </span>
-                  {product.tags.map((t, i) => (
+                  {(product.tags || []).map((t, i) => (
                     <span
                       key={i}
                       className="text-[10px] font-medium bg-[#1C1C22] border border-[#2B2B33] text-stone-300 px-2 py-0.5 rounded-full"

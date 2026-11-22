@@ -156,9 +156,11 @@ export default function App() {
       const saved = localStorage.getItem('store_current_client');
       if (saved) {
         const client = JSON.parse(saved);
-        const isOfficial = client.username !== 'teste@123' && client.id !== 'client-test-natural' && client.isOfficial !== false;
-        if (isOfficial) {
-          return 'store';
+        if (client && typeof client === 'object') {
+          const isOfficial = client.username !== 'teste@123' && client.id !== 'client-test-natural' && client.isOfficial !== false;
+          if (isOfficial) {
+            return 'store';
+          }
         }
       }
     } catch (e) {}
@@ -854,8 +856,8 @@ export default function App() {
   const handleQuickAddToCart = (product: Product) => {
     handleAddToCart(
       product,
-      product.sizes[0] || 'M',
-      product.colors[0] || { name: 'Padrão', hex: '#111111' },
+      product.sizes?.[0] || 'M',
+      product.colors?.[0] || { name: 'Padrão', hex: '#111111' },
       1
     );
     setAddedItemToast({ name: product.name, timestamp: Date.now() });
@@ -930,16 +932,16 @@ export default function App() {
       return false;
     }
     // Tag filter
-    if (selectedTag !== 'all' && !p.tags.includes(selectedTag)) {
+    if (selectedTag !== 'all' && !(p.tags || []).includes(selectedTag)) {
       return false;
     }
     // Search query filter
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      const matchName = p.name.toLowerCase().includes(q);
-      const matchCat = p.category.toLowerCase().includes(q);
-      const matchDesc = p.description.toLowerCase().includes(q);
-      const matchTags = p.tags.some((t) => t.toLowerCase().includes(q));
+      const matchName = (p.name || '').toLowerCase().includes(q);
+      const matchCat = (p.category || '').toLowerCase().includes(q);
+      const matchDesc = (p.description || '').toLowerCase().includes(q);
+      const matchTags = (p.tags || []).some((t) => (t || '').toLowerCase().includes(q));
       if (!matchName && !matchCat && !matchDesc && !matchTags) {
         return false;
       }

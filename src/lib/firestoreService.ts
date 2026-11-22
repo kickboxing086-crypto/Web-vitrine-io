@@ -33,6 +33,7 @@ import {
   initialAdminUser,
 } from '../data/initialData';
 import {
+  getStoredSettings,
   saveStoredSettings,
   saveStoredProducts,
   saveStoredCategories,
@@ -222,7 +223,14 @@ export const subscribeToSettings = (
     settingsRef,
     (snapshot) => {
       if (snapshot.exists()) {
-        const data = snapshot.data() as StoreSettings;
+        const raw = (snapshot.data() || {}) as Partial<StoreSettings>;
+        const data: StoreSettings = {
+          ...initialStoreSettings,
+          customDeliveryRates: clientId ? [] : initialStoreSettings.customDeliveryRates,
+          ...raw,
+          logoUrl: raw.logoUrl || '',
+          bannerUrl: raw.bannerUrl || '',
+        };
         if (clientStoreName && (data.storeName === 'Web Vitrine' || data.storeName === 'Minha Loja' || !data.storeName)) {
           data.storeName = clientStoreName;
         }
@@ -246,6 +254,11 @@ export const subscribeToSettings = (
     },
     (error) => {
       console.error('Error listening to settings in Firestore:', error);
+      const fallback = getStoredSettings(clientId);
+      if (clientStoreName && !fallback.storeName) {
+        fallback.storeName = clientStoreName;
+      }
+      callback(fallback);
     }
   );
 };

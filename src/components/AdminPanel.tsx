@@ -1426,14 +1426,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         >
                           <div className="relative w-24 h-32 flex-shrink-0">
                             <img
-                              src={p.images[0]}
+                              src={p.images?.[0] || ''}
                               alt={p.name}
                               className="w-full h-full rounded-xl object-cover object-top bg-stone-100"
                             />
-                            {p.images.length > 1 && (
+                            {(p.images?.length || 0) > 1 && (
                               <span className="absolute bottom-1 right-1 px-1.5 py-0.5 bg-black/70 backdrop-blur-xs text-white text-[9px] font-bold rounded-md flex items-center gap-0.5">
                                 <ImageIcon className="w-2.5 h-2.5" />
-                                {p.images.length}
+                                {p.images?.length}
                               </span>
                             )}
                           </div>
@@ -1557,14 +1557,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         >
                           <div className="relative w-24 h-32 flex-shrink-0">
                             <img
-                              src={p.images[0]}
+                              src={p.images?.[0] || ''}
                               alt={p.name}
                               className="w-full h-full rounded-xl object-cover object-top bg-stone-100"
                             />
-                            {p.images.length > 1 && (
+                            {(p.images?.length || 0) > 1 && (
                               <span className="absolute bottom-1 right-1 px-1.5 py-0.5 bg-black/70 backdrop-blur-xs text-white text-[9px] font-bold rounded-md flex items-center gap-0.5">
                                 <ImageIcon className="w-2.5 h-2.5" />
-                                {p.images.length}
+                                {p.images?.length}
                               </span>
                             )}
                           </div>
@@ -1656,7 +1656,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   >
                     <div className="relative w-24 h-32 flex-shrink-0">
                       <img
-                        src={p.images[0]}
+                        src={p.images?.[0] || ''}
                         alt={p.name}
                         className="w-full h-full rounded-xl object-cover object-top bg-stone-100"
                       />
@@ -3719,7 +3719,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           <td className="py-3 px-4">
                             <div className="flex items-center space-x-3">
                               <img
-                                src={prod.images[0] || ''}
+                                src={prod.images?.[0] || ''}
                                 alt={prod.name}
                                 className="w-10 h-10 object-cover rounded-xl border border-stone-200"
                                 referrerPolicy="no-referrer"

@@ -32,10 +32,10 @@ export const ShareProductModal: React.FC<ShareProductModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  if (!isOpen || !product) return null;
-
   const [copied, setCopied] = useState(false);
   const [copiedText, setCopiedText] = useState(false);
+
+  if (!isOpen || !product) return null;
 
   const currentPrice =
     product.isOnSale && product.promotionalPrice
@@ -186,7 +186,7 @@ export const ShareProductModal: React.FC<ShareProductModalProps> = ({
           <div className="flex items-center space-x-3.5 p-3.5 bg-[#18181E] rounded-2xl border border-[#27272A] mb-5">
             <div className="w-14 h-16 rounded-xl overflow-hidden bg-black shrink-0 border border-[#27272A]">
               <img
-                src={product.images[0] || ''}
+                src={product.images?.[0] || ''}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
