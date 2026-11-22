@@ -10,6 +10,7 @@ import {
   Unsubscribe,
   query,
   where,
+  arrayUnion,
 } from 'firebase/firestore';
 import { db, auth } from './firebase';
 import {
@@ -20,6 +21,7 @@ import {
   FinancialRecord,
   TagCategory,
   AdminUser,
+  SystemNotification,
 } from '../types';
 import { slugifyStoreName } from './formatters';
 import {
@@ -106,6 +108,7 @@ const COLLECTIONS = {
   FINANCE: 'financial_transactions',
   ADMIN_AUTH: 'admin_auth',
   CLIENTS: 'clients',
+  SYSTEM_NOTIFICATIONS: 'system_notifications',
 };
 
 const SETTINGS_DOC_ID = 'store_settings';
@@ -910,5 +913,109 @@ export const getClientByUsername = async (slugOrUsername: string): Promise<any |
   } catch (error) {
     console.error('Error fetching client by username/slug:', error);
     return null;
+  }
+};
+
+// ======================= SYSTEM NOTIFICATIONS =======================
+
+export const subscribeToSystemNotifications = (
+  callback: (notifications: SystemNotification[]) => void,
+  clientId?: string
+): Unsubscribe => {
+  const notifCol = collection(db, COLLECTIONS.SYSTEM_NOTIFICATIONS);
+  return onSnapshot(
+    notifCol,
+    (snapshot) => {
+      const all = snapshot.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...(docSnap.data() as Omit<SystemNotification, 'id'>),
+      })) as SystemNotification[];
+
+      const filtered = clientId
+        ? all.filter(
+            (n) =>
+              n.targetType === 'all' ||
+              (n.targetType === 'individual' && n.targetClientId === clientId)
+          )
+        : all;
+
+      filtered.sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      callback(filtered);
+    },
+    (error) => {
+      console.error('Error listening to system notifications:', error);
+      callback([]);
+    }
+  );
+};
+
+export const saveSystemNotification = async (notification: SystemNotification) => {
+  try {
+    const cleanPayload: SystemNotification = {
+      id: notification.id || `sysnotif-${Date.now()}`,
+      senderName: 'Notificação do Sistema',
+      title: (notification.title || 'Aviso do Sistema').trim(),
+      message: (notification.message || '').trim(),
+      targetType: notification.targetType === 'individual' ? 'individual' : 'all',
+      ...(notification.targetClientId ? { targetClientId: notification.targetClientId } : {}),
+      ...(notification.targetClientName ? { targetClientName: notification.targetClientName } : {}),
+      ...(notification.targetUsername ? { targetUsername: notification.targetUsername } : {}),
+      priority: notification.priority || 'normal',
+      createdAt: notification.createdAt || new Date().toISOString(),
+      readByClientIds: Array.isArray(notification.readByClientIds)
+        ? notification.readByClientIds
+        : [],
+    };
+    const docRef = doc(db, COLLECTIONS.SYSTEM_NOTIFICATIONS, cleanPayload.id);
+    await setDoc(docRef, cleanPayload, { merge: true });
+    return cleanPayload;
+  } catch (error) {
+    console.error('Error saving system notification:', error);
+    throw error;
+  }
+};
+
+export const markSystemNotificationAsRead = async (notificationId: string, clientId: string) => {
+  if (!notificationId || !clientId) return;
+  try {
+    const docRef = doc(db, COLLECTIONS.SYSTEM_NOTIFICATIONS, notificationId);
+    await setDoc(
+      docRef,
+      {
+        readByClientIds: arrayUnion(clientId),
+      },
+      { merge: true }
+    );
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+  }
+};
+
+export const markAllSystemNotificationsAsRead = async (
+  notificationIds: string[],
+  clientId: string
+) => {
+  if (!clientId || !notificationIds.length) return;
+  try {
+    const batch = writeBatch(db);
+    notificationIds.forEach((id) => {
+      const docRef = doc(db, COLLECTIONS.SYSTEM_NOTIFICATIONS, id);
+      batch.set(docRef, { readByClientIds: arrayUnion(clientId) }, { merge: true });
+    });
+    await batch.commit();
+  } catch (error) {
+    console.error('Error marking all notifications as read:', error);
+  }
+};
+
+export const deleteSystemNotification = async (notificationId: string) => {
+  try {
+    const docRef = doc(db, COLLECTIONS.SYSTEM_NOTIFICATIONS, notificationId);
+    await deleteDoc(docRef);
+  } catch (error) {
+    console.error('Error deleting system notification:', error);
+    throw error;
   }
 };

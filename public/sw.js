@@ -1,4 +1,4 @@
-const CACHE_NAME = 'web-vitrine-v7';
+const CACHE_NAME = 'web-vitrine-v8';
 const STATIC_ASSETS = [
   '/manifest.json',
   '/icon-192.png',
@@ -60,6 +60,62 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((cached) => {
       return cached || fetch(event.request);
+    })
+  );
+});
+
+// Handle Web Push events
+self.addEventListener('push', (event) => {
+  let payload = {
+    title: 'Notificação do Sistema',
+    body: 'Você recebeu uma nova atualização na sua vitrine.',
+    tag: 'system-push-' + Date.now(),
+    url: '/?page=admin',
+  };
+
+  if (event.data) {
+    try {
+      const parsed = event.data.json();
+      payload = { ...payload, ...parsed };
+    } catch {
+      const text = event.data.text();
+      if (text) payload.body = text;
+    }
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title, {
+      body: payload.body,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      vibrate: [200, 100, 200],
+      tag: payload.tag,
+      data: { url: payload.url || '/?page=admin' },
+    })
+  );
+});
+
+// Focus or open app window when user clicks a push notification
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || '/?page=admin';
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if ('focus' in client) {
+          client.focus();
+          if ('navigate' in client && targetUrl) {
+            try {
+              client.navigate(targetUrl);
+            } catch {}
+          }
+          return;
+        }
+      }
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(targetUrl);
+      }
     })
   );
 });

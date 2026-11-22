@@ -30,9 +30,20 @@ import {
   ChevronDown,
   ExternalLink,
   ShieldCheck,
+  Bell,
+  Megaphone,
+  Send,
+  Users,
 } from 'lucide-react';
-import { StoreClient } from '../types';
-import { getClients, saveClient, deleteClient } from '../lib/firestoreService';
+import { StoreClient, SystemNotification } from '../types';
+import {
+  getClients,
+  saveClient,
+  deleteClient,
+  subscribeToSystemNotifications,
+  saveSystemNotification,
+  deleteSystemNotification,
+} from '../lib/firestoreService';
 import { slugifyStoreName } from '../lib/formatters';
 import { CredentialChecklist } from './CredentialChecklist';
 
@@ -84,14 +95,104 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
 
   const [renewTargetClient, setRenewTargetClient] = useState<StoreClient | null>(null);
 
+  // System Notification Modal & History State ("Notificação do Sistema")
+  const [systemNotifications, setSystemNotifications] = useState<SystemNotification[]>([]);
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
+  const [notifTargetType, setNotifTargetType] = useState<'all' | 'individual'>('all');
+  const [notifTargetClientId, setNotifTargetClientId] = useState('');
+  const [notifPriority, setNotifPriority] = useState<'normal' | 'important' | 'urgent'>('normal');
+  const [notifTitle, setNotifTitle] = useState('');
+  const [notifMessage, setNotifMessage] = useState('');
+  const [isSendingNotif, setIsSendingNotif] = useState(false);
+
   useEffect(() => {
     const unsubscribe = getClients((data) => {
       setClients(Array.isArray(data) ? data : []);
     });
+    const unsubNotifs = subscribeToSystemNotifications((items) => {
+      setSystemNotifications(items);
+    });
     return () => {
       if (typeof unsubscribe === 'function') unsubscribe();
+      if (typeof unsubNotifs === 'function') unsubNotifs();
     };
   }, []);
+
+  const handleOpenNotificationModal = (specificClient?: StoreClient) => {
+    if (specificClient) {
+      setNotifTargetType('individual');
+      setNotifTargetClientId(specificClient.id);
+    } else {
+      setNotifTargetType('all');
+      setNotifTargetClientId(clients[0]?.id || '');
+    }
+    setNotifPriority('normal');
+    setNotifTitle('');
+    setNotifMessage('');
+    setIsNotificationModalOpen(true);
+  };
+
+  const handleSendSystemNotification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!notifMessage.trim()) {
+      showToast('Digite a mensagem da notificação antes de enviar.', 'error');
+      return;
+    }
+    if (notifTargetType === 'individual' && !notifTargetClientId) {
+      showToast('Selecione a loja/usuário destinatário.', 'error');
+      return;
+    }
+
+    setIsSendingNotif(true);
+    try {
+      const targetClient =
+        notifTargetType === 'individual'
+          ? clients.find((c) => c.id === notifTargetClientId)
+          : undefined;
+
+      const payload: SystemNotification = {
+        id: `sysnotif-${Date.now()}`,
+        senderName: 'Notificação do Sistema',
+        title: notifTitle.trim() || (notifTargetType === 'all' ? 'Comunicado Geral' : 'Aviso para sua Loja'),
+        message: notifMessage.trim(),
+        targetType: notifTargetType,
+        ...(targetClient
+          ? {
+              targetClientId: targetClient.id,
+              targetClientName: targetClient.storeName,
+              targetUsername: targetClient.username,
+            }
+          : {}),
+        priority: notifPriority,
+        createdAt: new Date().toISOString(),
+        readByClientIds: [],
+      };
+
+      await saveSystemNotification(payload);
+      setNotifTitle('');
+      setNotifMessage('');
+      showToast(
+        notifTargetType === 'all'
+          ? 'Notificação do Sistema enviada para todas as lojas!'
+          : `Notificação do Sistema enviada para ${targetClient?.storeName || 'a loja'}!`,
+        'success'
+      );
+    } catch (err) {
+      console.error('Error sending system notification:', err);
+      showToast('Erro ao enviar notificação. Tente novamente.', 'error');
+    } finally {
+      setIsSendingNotif(false);
+    }
+  };
+
+  const handleDeleteSentNotification = async (id: string) => {
+    try {
+      await deleteSystemNotification(id);
+      showToast('Notificação removida do histórico.', 'info');
+    } catch {
+      showToast('Erro ao remover notificação.', 'error');
+    }
+  };
 
   function showToast(message: string, type: 'success' | 'info' | 'error' = 'success') {
     setFeedbackToast({ message, type });
@@ -503,12 +604,24 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
             </div>
 
             {/* Top Right Action & Logout */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => handleOpenNotificationModal()}
+                className="flex items-center space-x-2 px-3.5 sm:px-4 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 font-bold rounded-xl text-xs sm:text-sm shadow-sm transition-all cursor-pointer"
+                id="btn-gestor-send-notification"
+              >
+                <Bell className="w-4 h-4 text-amber-700" />
+                <span className="hidden sm:inline">Enviar Notificação</span>
+                <span className="sm:hidden">Avisos</span>
+              </motion.button>
+
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleOpenAddModal}
-                className="flex items-center space-x-2 px-4 sm:px-5 py-2.5 bg-gradient-to-r   hover: hover: text-white font-bold rounded-xl text-xs sm:text-sm shadow-lg shadow-stone-200 transition-all cursor-pointer"
+                className="flex items-center space-x-2 px-4 sm:px-5 py-2.5 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-xl text-xs sm:text-sm shadow-lg shadow-stone-200 transition-all cursor-pointer"
                 id="btn-gestor-new-store"
               >
                 <Plus className="w-4 h-4" />
@@ -918,6 +1031,16 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                               title="Enviar Acesso ou Lembrete pelo WhatsApp"
                             >
                               <MessageCircle className="w-4 h-4" />
+                            </button>
+
+                            {/* Send Individual System Notification */}
+                            <button
+                              onClick={() => handleOpenNotificationModal(client)}
+                              className="p-2 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-xl border border-amber-300 transition-colors cursor-pointer"
+                              title="Enviar Notificação do Sistema para esta Loja"
+                              id={`btn-notify-client-${client.id}`}
+                            >
+                              <Bell className="w-4 h-4" />
                             </button>
 
                             {/* Direct Open Store Showcase */}
@@ -1529,6 +1652,248 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                     </div>
                   </motion.div>
                 )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal: Enviar "Notificação do Sistema" (Geral ou Individual) */}
+      <AnimatePresence>
+        {isNotificationModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/80 backdrop-blur-md overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="relative w-full max-w-2xl bg-white border border-stone-300 rounded-3xl shadow-2xl overflow-hidden my-8"
+              id="modal-superadmin-system-notifications"
+            >
+              {/* Header */}
+              <div className="bg-stone-900 text-white p-6 border-b border-stone-800 relative">
+                <button
+                  type="button"
+                  onClick={() => setIsNotificationModalOpen(false)}
+                  className="absolute top-5 right-5 p-2 text-stone-400 hover:text-white rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+                <div className="flex items-center space-x-3">
+                  <div className="w-11 h-11 rounded-2xl bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40 flex items-center justify-center">
+                    <Megaphone className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#D4AF37]">
+                      Push & Avisos no Painel
+                    </span>
+                    <h3 className="text-xl font-bold text-white">
+                      Enviar Notificação do Sistema
+                    </h3>
+                    <p className="text-xs text-stone-300">
+                      Nome exibido ao cliente: <strong className="text-[#D4AF37]">Notificação do Sistema</strong>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+                <form onSubmit={handleSendSystemNotification} className="space-y-4">
+                  {/* Target Mode Selection */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider">
+                      Destinatário do Aviso *
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setNotifTargetType('all')}
+                        className={`p-3.5 rounded-2xl border-2 text-left transition-all flex items-center gap-3 cursor-pointer ${
+                          notifTargetType === 'all'
+                            ? 'border-stone-900 bg-stone-900 text-white shadow-md'
+                            : 'border-stone-200 bg-stone-50 text-stone-700 hover:bg-stone-100'
+                        }`}
+                      >
+                        <Users className={`w-5 h-5 shrink-0 ${notifTargetType === 'all' ? 'text-[#D4AF37]' : 'text-stone-500'}`} />
+                        <div>
+                          <span className="text-xs font-bold block">Modo Geral (Todos)</span>
+                          <span className={`text-[11px] ${notifTargetType === 'all' ? 'text-stone-300' : 'text-stone-500'}`}>
+                            Todos os clientes recebem
+                          </span>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNotifTargetType('individual');
+                          if (!notifTargetClientId && clients[0]?.id) {
+                            setNotifTargetClientId(clients[0].id);
+                          }
+                        }}
+                        className={`p-3.5 rounded-2xl border-2 text-left transition-all flex items-center gap-3 cursor-pointer ${
+                          notifTargetType === 'individual'
+                            ? 'border-stone-900 bg-stone-900 text-white shadow-md'
+                            : 'border-stone-200 bg-stone-50 text-stone-700 hover:bg-stone-100'
+                        }`}
+                      >
+                        <User className={`w-5 h-5 shrink-0 ${notifTargetType === 'individual' ? 'text-[#D4AF37]' : 'text-stone-500'}`} />
+                        <div>
+                          <span className="text-xs font-bold block">Modo Individual</span>
+                          <span className={`text-[11px] ${notifTargetType === 'individual' ? 'text-stone-300' : 'text-stone-500'}`}>
+                            Para uma pessoa/loja específica
+                          </span>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Individual Client Dropdown */}
+                  {notifTargetType === 'individual' && (
+                    <div>
+                      <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
+                        Selecionar Loja / Cliente *
+                      </label>
+                      <select
+                        value={notifTargetClientId}
+                        onChange={(e) => setNotifTargetClientId(e.target.value)}
+                        required
+                        className="w-full px-4 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs sm:text-sm text-stone-900 font-semibold focus:outline-none focus:border-stone-900"
+                      >
+                        <option value="">-- Selecione o cliente --</option>
+                        {clients.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.storeName} (@{c.username})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Priority & Title */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
+                        Prioridade
+                      </label>
+                      <select
+                        value={notifPriority}
+                        onChange={(e) => setNotifPriority(e.target.value as any)}
+                        className="w-full px-3 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs font-semibold text-stone-900 focus:outline-none focus:border-stone-900"
+                      >
+                        <option value="normal">Informativo</option>
+                        <option value="important">Importante</option>
+                        <option value="urgent">Urgente</option>
+                      </select>
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
+                        Assunto / Título do Aviso
+                      </label>
+                      <input
+                        type="text"
+                        value={notifTitle}
+                        onChange={(e) => setNotifTitle(e.target.value)}
+                        placeholder="Ex: Nova atualização disponível / Aviso de vencimento"
+                        className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs sm:text-sm text-stone-900 focus:outline-none focus:border-stone-900"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Message */}
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
+                      Mensagem do Aviso *
+                    </label>
+                    <textarea
+                      rows={3}
+                      required
+                      value={notifMessage}
+                      onChange={(e) => setNotifMessage(e.target.value)}
+                      placeholder="Escreva a mensagem que chegará via Push e na conta do cliente como Notificação do Sistema..."
+                      className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded-xl text-xs sm:text-sm text-stone-900 focus:outline-none focus:border-stone-900"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSendingNotif}
+                    className="w-full py-3 px-4 bg-stone-900 hover:bg-stone-800 text-[#D4AF37] font-bold rounded-xl text-xs sm:text-sm shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                    id="btn-submit-system-notification"
+                  >
+                    {isSendingNotif ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span>Enviando Notificação...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        <span>
+                          Enviar Notificação do Sistema (
+                          {notifTargetType === 'all' ? 'Para Todos' : 'Individual'})
+                        </span>
+                      </>
+                    )}
+                  </button>
+                </form>
+
+                {/* Sent Notifications History */}
+                <div className="pt-4 border-t border-stone-200 space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-stone-500">
+                    Histórico de Avisos Enviados ({systemNotifications.length})
+                  </h4>
+
+                  {systemNotifications.length === 0 ? (
+                    <p className="text-xs text-stone-400 italic py-4 text-center">
+                      Nenhum aviso enviado até o momento.
+                    </p>
+                  ) : (
+                    <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
+                      {systemNotifications.map((item) => (
+                        <div
+                          key={item.id}
+                          className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200 flex items-start justify-between gap-3"
+                        >
+                          <div className="space-y-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="px-2 py-0.5 rounded-full bg-stone-900 text-[#D4AF37] text-[10px] font-bold">
+                                {item.senderName || 'Notificação do Sistema'}
+                              </span>
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                                  item.targetType === 'all'
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                    : 'bg-amber-50 text-amber-800 border-amber-200'
+                                }`}
+                              >
+                                {item.targetType === 'all'
+                                  ? 'Geral (Todas as Lojas)'
+                                  : `Individual: ${item.targetClientName || item.targetUsername || 'Cliente'}`}
+                              </span>
+                              <span className="text-[10px] text-stone-400">
+                                {new Date(item.createdAt).toLocaleString('pt-BR')}
+                              </span>
+                            </div>
+                            <p className="text-xs font-bold text-stone-900">{item.title}</p>
+                            <p className="text-xs text-stone-600 whitespace-pre-line">{item.message}</p>
+                            <span className="text-[10px] text-stone-400 block">
+                              Lido por {item.readByClientIds?.length || 0} loja(s)
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteSentNotification(item.id)}
+                            className="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer shrink-0"
+                            title="Excluir aviso"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </motion.div>
           </div>

@@ -54,7 +54,6 @@ export const RegisterStoreModal: React.FC<RegisterStoreModalProps> = ({
   const [address, setAddress] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
   const [cityState, setCityState] = useState('');
-  const [segment, setSegment] = useState('Moda Feminina');
   const [logoUrl, setLogoUrl] = useState('');
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -181,7 +180,6 @@ export const RegisterStoreModal: React.FC<RegisterStoreModalProps> = ({
         address: fullAddress,
         neighborhood: neighborhood.trim(),
         cityState: cityState.trim(),
-        segment: segment,
         storeType: 'clothing',
         dueDate: trialDueDate,
         status: 'active',
@@ -443,7 +441,7 @@ export const RegisterStoreModal: React.FC<RegisterStoreModalProps> = ({
                   </p>
                 </div>
 
-                <div>
+                <div className="sm:col-span-2">
                   <label className="block text-xs font-bold text-stone-300 mb-1">
                     Seu Nome Completo (CEO) *
                   </label>
@@ -457,29 +455,6 @@ export const RegisterStoreModal: React.FC<RegisterStoreModalProps> = ({
                       placeholder="Ex: Maria Silva"
                       className="w-full pl-9 pr-3 py-2.5 bg-[#1C1C22] border border-[#2B2B33] rounded-xl text-xs text-white placeholder:text-stone-500 focus:outline-none focus:border-[#D4AF37]"
                     />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-stone-300 mb-1">
-                    Segmento da Loja
-                  </label>
-                  <div className="relative">
-                    <Tag className="w-4 h-4 text-stone-500 absolute left-3 top-3 pointer-events-none" />
-                    <select
-                      value={segment}
-                      onChange={(e) => setSegment(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 bg-[#1C1C22] border border-[#2B2B33] rounded-xl text-xs text-white focus:outline-none focus:border-[#D4AF37]"
-                    >
-                      <option value="Moda Feminina">Moda Feminina</option>
-                      <option value="Moda Masculina">Moda Masculina</option>
-                      <option value="Calçados & Bolsas">Calçados & Bolsas</option>
-                      <option value="Moda Praia & Fitness">Moda Praia & Fitness</option>
-                      <option value="Lingerie & Pijamas">Lingerie & Pijamas</option>
-                      <option value="Acessórios & Semijoias">Acessórios & Semijoias</option>
-                      <option value="Moda Infantil">Moda Infantil</option>
-                      <option value="Variedades">Variedades</option>
-                    </select>
                   </div>
                 </div>
               </div>

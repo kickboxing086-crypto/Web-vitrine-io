@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StoreSettings,
   Product,
@@ -9,6 +9,7 @@ import {
   CartItem,
   OrderStatus,
   AdminUser,
+  SystemNotification,
 } from './types';
 import {
   getStoredSettings,
@@ -50,7 +51,11 @@ import {
   deleteFinanceFromDb,
   resetDatabaseToDefaults,
   saveClient,
+  subscribeToSystemNotifications,
+  markSystemNotificationAsRead,
+  markAllSystemNotificationsAsRead,
 } from './lib/firestoreService';
+import { sendBrowserPushNotification } from './lib/pushNotifications';
 import { Navbar } from './components/Navbar';
 import { ProductCard } from './components/ProductCard';
 import { ProductModal } from './components/ProductModal';
@@ -73,7 +78,7 @@ import { PaymentSuccessModal } from './components/PaymentSuccessModal';
 import { AppEntranceAnimation } from './components/AppEntranceAnimation';
 import { InstallFloatingBar } from './components/InstallFloatingBar';
 import { CartFloatingBar } from './components/CartFloatingBar';
-import { SlidersHorizontal, AlertCircle, Tag as TagIcon, ShoppingBag, ArrowLeft, MessageCircle, ChevronDown, Check, Instagram, MapPin, Clock, ExternalLink } from 'lucide-react';
+import { SlidersHorizontal, AlertCircle, Tag as TagIcon, ShoppingBag, ArrowLeft, MessageCircle, ChevronDown, Check, Instagram, MapPin, Clock, ExternalLink, Bell, X } from 'lucide-react';
 import { getFontFamilyCss, checkStoreHoursStatus, applyStoreTheme } from './lib/themeUtils';
 import { formatCurrency, cleanPhoneForWhatsapp } from './lib/formatters';
 import { motion, AnimatePresence } from 'motion/react';
@@ -112,6 +117,17 @@ export default function App() {
   const [coupons, setCoupons] = useState<Coupon[]>(getStoredCoupons);
   const [orders, setOrders] = useState<Order[]>(getStoredOrders);
   const [finance, setFinance] = useState<FinancialRecord[]>(getStoredFinance);
+  const [systemNotifications, setSystemNotifications] = useState<SystemNotification[]>([]);
+  const [localReadNotifIds, setLocalReadNotifIds] = useState<string[]>([]);
+  const [livePushToast, setLivePushToast] = useState<{
+    id: string;
+    sender: string;
+    title: string;
+    body: string;
+    kind: 'order' | 'system';
+  } | null>(null);
+  const knownOrderIdsRef = useRef<Set<string> | null>(null);
+  const knownNotifIdsRef = useRef<Set<string> | null>(null);
   const [adminUser] = useState<AdminUser>(getStoredAdminUser);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(getAuthSession);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
@@ -563,6 +579,18 @@ export default function App() {
     setCoupons([]);
     setOrders([]);
     setFinance([]);
+    setSystemNotifications([]);
+    knownOrderIdsRef.current = null;
+    knownNotifIdsRef.current = null;
+
+    // Load locally remembered read notification IDs for this store
+    const readStorageKey = `read_sys_notifs_${targetClientId || 'default'}`;
+    try {
+      const savedReads = localStorage.getItem(readStorageKey);
+      setLocalReadNotifIds(savedReads ? JSON.parse(savedReads) : []);
+    } catch {
+      setLocalReadNotifIds([]);
+    }
 
     // Seed initial data if database collections are empty
     seedInitialDataIfEmpty().catch(console.error);
@@ -591,11 +619,97 @@ export default function App() {
 
     const unsubOrders = subscribeToOrders((data) => {
       setOrders(data);
+
+      // Push notify store owner on newly arriving orders after initial snapshot
+      if (isAdminAuthenticated) {
+        if (knownOrderIdsRef.current === null) {
+          knownOrderIdsRef.current = new Set(data.map((o) => o.id));
+        } else {
+          const newOrders = data.filter((o) => !knownOrderIdsRef.current!.has(o.id));
+          newOrders.forEach((o) => knownOrderIdsRef.current!.add(o.id));
+          if (newOrders.length > 0) {
+            const latest = newOrders[0];
+            const storeLabel = currentClient?.storeName || settings.storeName || 'Sua Loja';
+            const bodyText = `${latest.customerName} enviou um pedido de ${formatCurrency(latest.finalTotal)} (${latest.orderType === 'delivery' ? 'Entrega' : 'Retirada'}).`;
+            sendBrowserPushNotification({
+              title: `Novo Pedido #${latest.orderNumber} — ${storeLabel}`,
+              body: bodyText,
+              tag: `order-${latest.id}`,
+              kind: 'order',
+              requireInteraction: true,
+            });
+            setLivePushToast({
+              id: latest.id,
+              sender: 'Novo Pedido Recebido',
+              title: `Pedido #${latest.orderNumber} (${formatCurrency(latest.finalTotal)})`,
+              body: bodyText,
+              kind: 'order',
+            });
+          }
+        }
+      }
     }, currentClient?.id);
 
     const unsubFinance = subscribeToFinance((data) => {
       setFinance(data);
     }, currentClient?.id);
+
+    let unsubNotifications: (() => void) | undefined;
+    if (isAdminAuthenticated && currentClient?.id) {
+      unsubNotifications = subscribeToSystemNotifications((notifs) => {
+        setSystemNotifications(notifs);
+
+        if (knownNotifIdsRef.current === null) {
+          knownNotifIdsRef.current = new Set(notifs.map((n) => n.id));
+          // Notify once if an unread notification arrived very recently (last 90s)
+          const nowMs = Date.now();
+          const freshUnread = notifs.find((n) => {
+            const ageMs = nowMs - new Date(n.createdAt).getTime();
+            const isRead = n.readByClientIds?.includes(currentClient.id);
+            const notifiedKey = `pushed_sysnotif_${currentClient.id}_${n.id}`;
+            return !isRead && ageMs >= 0 && ageMs < 90000 && !sessionStorage.getItem(notifiedKey);
+          });
+          if (freshUnread) {
+            sessionStorage.setItem(`pushed_sysnotif_${currentClient.id}_${freshUnread.id}`, '1');
+            sendBrowserPushNotification({
+              title: 'Notificação do Sistema',
+              body: freshUnread.title ? `${freshUnread.title}: ${freshUnread.message}` : freshUnread.message,
+              tag: `sysnotif-${freshUnread.id}`,
+              kind: 'system',
+              requireInteraction: freshUnread.priority === 'urgent',
+            });
+            setLivePushToast({
+              id: freshUnread.id,
+              sender: 'Notificação do Sistema',
+              title: freshUnread.title || 'Aviso Geral',
+              body: freshUnread.message,
+              kind: 'system',
+            });
+          }
+        } else {
+          const arriving = notifs.filter((n) => !knownNotifIdsRef.current!.has(n.id));
+          arriving.forEach((n) => knownNotifIdsRef.current!.add(n.id));
+          if (arriving.length > 0) {
+            const latest = arriving[0];
+            sessionStorage.setItem(`pushed_sysnotif_${currentClient.id}_${latest.id}`, '1');
+            sendBrowserPushNotification({
+              title: 'Notificação do Sistema',
+              body: latest.title ? `${latest.title}: ${latest.message}` : latest.message,
+              tag: `sysnotif-${latest.id}`,
+              kind: 'system',
+              requireInteraction: latest.priority === 'urgent',
+            });
+            setLivePushToast({
+              id: latest.id,
+              sender: 'Notificação do Sistema',
+              title: latest.title || 'Aviso do Administrador',
+              body: latest.message,
+              kind: 'system',
+            });
+          }
+        }
+      }, currentClient.id);
+    }
 
     return () => {
       unsubSettings();
@@ -605,8 +719,9 @@ export default function App() {
       unsubCoupons();
       unsubOrders();
       unsubFinance();
+      if (unsubNotifications) unsubNotifications();
     };
-  }, [currentClient]);
+  }, [currentClient, isAdminAuthenticated]);
 
   // Open product modal automatically if product ID is in URL parameters
   useEffect(() => {
@@ -1382,6 +1497,31 @@ export default function App() {
             finance={finance}
             categories={categories}
             tags={tags}
+            systemNotifications={systemNotifications}
+            localReadNotifIds={localReadNotifIds}
+            onMarkNotificationRead={async (notifId: string) => {
+              const targetId = currentClient?.id || 'default';
+              setLocalReadNotifIds((prev) => {
+                const next = Array.from(new Set([...prev, notifId]));
+                localStorage.setItem(`read_sys_notifs_${targetId}`, JSON.stringify(next));
+                return next;
+              });
+              if (currentClient?.id) {
+                await markSystemNotificationAsRead(notifId, currentClient.id);
+              }
+            }}
+            onMarkAllNotificationsRead={async () => {
+              const targetId = currentClient?.id || 'default';
+              const allIds = systemNotifications.map((n) => n.id);
+              setLocalReadNotifIds((prev) => {
+                const next = Array.from(new Set([...prev, ...allIds]));
+                localStorage.setItem(`read_sys_notifs_${targetId}`, JSON.stringify(next));
+                return next;
+              });
+              if (currentClient?.id && allIds.length > 0) {
+                await markAllSystemNotificationsAsRead(allIds, currentClient.id);
+              }
+            }}
             onSaveProduct={handleSaveProduct}
             onRequestDeleteProduct={handleDeleteProduct}
             onUpdateOrderStatus={handleUpdateOrderStatus}
@@ -1639,6 +1779,60 @@ export default function App() {
           onOpenCart={() => setIsCartOpen(true)}
         />
       )}
+
+      {/* Instant Live Notification Toast (Orders & Notificação do Sistema) */}
+      <AnimatePresence>
+        {livePushToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -24, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -24, scale: 0.96 }}
+            transition={{ duration: 0.22 }}
+            className="fixed top-4 right-4 z-[60] max-w-sm w-[calc(100%-2rem)]"
+          >
+            <div
+              className={`p-4 rounded-2xl shadow-2xl backdrop-blur-xl border-2 flex items-start gap-3 ${
+                livePushToast.kind === 'order'
+                  ? 'bg-[#121614]/95 border-emerald-500 text-white'
+                  : 'bg-[#16161A]/95 border-[#D4AF37] text-white'
+              }`}
+            >
+              <div
+                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                  livePushToast.kind === 'order'
+                    ? 'bg-emerald-500/20 text-emerald-400'
+                    : 'bg-[#D4AF37]/20 text-[#D4AF37]'
+                }`}
+              >
+                <Bell className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <span
+                  className={`text-[10px] font-extrabold uppercase tracking-wider block ${
+                    livePushToast.kind === 'order' ? 'text-emerald-400' : 'text-[#D4AF37]'
+                  }`}
+                >
+                  {livePushToast.sender}
+                </span>
+                <p className="text-xs font-bold text-white mt-0.5 truncate">
+                  {livePushToast.title}
+                </p>
+                <p className="text-[11px] text-stone-300 mt-0.5 line-clamp-3 leading-relaxed">
+                  {livePushToast.body}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setLivePushToast(null)}
+                className="p-1 text-stone-400 hover:text-white rounded-lg cursor-pointer"
+                title="Fechar aviso"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Instant Feedback Toast when an item is added to cart */}
       <AnimatePresence>

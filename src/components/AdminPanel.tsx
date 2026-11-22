@@ -8,6 +8,7 @@ import {
   FinancialRecord,
   TagCategory,
   OrderStatus,
+  SystemNotification,
 } from '../types';
 import {
   formatCurrency,
@@ -66,6 +67,10 @@ import {
   AlertCircle,
   Lock,
   RefreshCw,
+  Bell,
+  BellRing,
+  Send,
+  CheckCheck,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -84,6 +89,12 @@ import { SubscriptionManager } from './SubscriptionManager';
 import { ExpiredStoreBlockModal } from './ExpiredStoreBlockModal';
 import { PixRenewalModal } from './PixRenewalModal';
 import { getSubscriptionStatus } from '../lib/mercadoPagoService';
+import {
+  getNotificationPermission,
+  requestPushNotificationPermission,
+  sendBrowserPushNotification,
+  PushPermissionState,
+} from '../lib/pushNotifications';
 
 interface AdminPanelProps {
   currentClient?: any;
@@ -109,6 +120,10 @@ interface AdminPanelProps {
   onLogout?: () => void;
   onViewStore?: () => void;
   onShareProduct?: (product: Product) => void;
+  systemNotifications?: SystemNotification[];
+  localReadNotifIds?: string[];
+  onMarkNotificationRead?: (notifId: string) => void;
+  onMarkAllNotificationsRead?: () => void;
 }
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({
@@ -135,6 +150,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   onLogout,
   onViewStore,
   onShareProduct,
+  systemNotifications = [],
+  localReadNotifIds = [],
+  onMarkNotificationRead,
+  onMarkAllNotificationsRead,
 }) => {
   const [activeTab, setActiveTab] = useState<
     'dashboard' | 'products' | 'orders' | 'tags' | 'coupons' | 'settings' | 'stock' | 'plan'
@@ -144,8 +163,32 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const subStatus = getSubscriptionStatus(currentClient);
 
   const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [pushPermission, setPushPermission] = useState<PushPermissionState>(getNotificationPermission);
   const [refreshSuccessMsg, setRefreshSuccessMsg] = useState(false);
   const settingsMenuRef = useRef<HTMLDivElement>(null);
+
+  const isNotifRead = (n: SystemNotification) =>
+    Boolean(
+      (currentClient?.id && n.readByClientIds?.includes(currentClient.id)) ||
+        localReadNotifIds.includes(n.id)
+    );
+
+  const unreadSystemNotifs = systemNotifications.filter((n) => !isNotifRead(n));
+  const pendingOrdersCount = orders.filter((o) => o.status === 'pending').length;
+
+  const handleEnablePush = async () => {
+    const res = await requestPushNotificationPermission();
+    setPushPermission(res);
+    if (res === 'granted') {
+      await sendBrowserPushNotification({
+        title: 'Notificação do Sistema',
+        body: `Notificações Push ativadas para ${settings.storeName || 'sua loja'}! Você receberá alertas de novos pedidos e avisos importantes.`,
+        tag: 'push-enabled-welcome',
+        kind: 'system',
+      });
+    }
+  };
 
   React.useEffect(() => {
     if (localStorage.getItem('admin_just_refreshed')) {
@@ -823,7 +866,84 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             )}
           </div>
         </div>
+
+        {/* Right Header Actions: Notifications & Push Controls */}
+        <div className="flex items-center gap-2 self-end sm:self-center">
+          {pushPermission !== 'granted' && pushPermission !== 'unsupported' && (
+            <button
+              type="button"
+              onClick={handleEnablePush}
+              className="flex items-center gap-1.5 px-3 py-2 bg-[#D4AF37] hover:bg-[#E5C378] text-stone-950 rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer"
+              id="btn-enable-push-header"
+              title="Ativar notificações Push de pedidos e avisos"
+            >
+              <BellRing className="w-3.5 h-3.5" />
+              <span>Ativar Push</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setIsNotificationsOpen(true)}
+            className="relative flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-stone-100 text-stone-900 border border-stone-300 rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer"
+            id="btn-open-notifications-center"
+          >
+            <Bell className={`w-4 h-4 ${unreadSystemNotifs.length > 0 ? 'text-amber-600 animate-bounce' : 'text-stone-700'}`} />
+            <span>Notificações</span>
+            {unreadSystemNotifs.length > 0 && (
+              <span className="px-1.5 py-0.5 min-w-[18px] text-center bg-rose-600 text-white text-[10px] font-extrabold rounded-full">
+                {unreadSystemNotifs.length}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
+
+      {/* Unread System Notification Highlight Banner */}
+      {unreadSystemNotifs.length > 0 && (
+        <div className="mt-4 p-4 rounded-2xl bg-stone-900 text-white border-2 border-[#D4AF37] shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40 flex items-center justify-center shrink-0 mt-0.5">
+              <BellRing className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#D4AF37] text-stone-950">
+                  Notificação do Sistema
+                </span>
+                <span className="text-[10px] font-semibold text-stone-400">
+                  {unreadSystemNotifs[0].targetType === 'individual' ? 'Mensagem Individual para sua Loja' : 'Aviso Geral'}
+                </span>
+              </div>
+              <h4 className="text-sm font-bold text-white mt-1">
+                {unreadSystemNotifs[0].title}
+              </h4>
+              <p className="text-xs text-stone-300 mt-0.5 leading-relaxed">
+                {unreadSystemNotifs[0].message}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+            {onMarkNotificationRead && (
+              <button
+                type="button"
+                onClick={() => onMarkNotificationRead(unreadSystemNotifs[0].id)}
+                className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+              >
+                Marcar como lida
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setIsNotificationsOpen(true)}
+              className="px-3 py-1.5 bg-[#D4AF37] hover:bg-[#E5C378] text-stone-950 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+            >
+              Ver Todas ({unreadSystemNotifs.length})
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Navigation Tabs */}
       <div className="flex items-center space-x-2 overflow-x-auto py-4 no-scrollbar border-b border-stone-200/70 mb-6">
@@ -3841,6 +3961,219 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           window.location.reload();
         }}
       />
+
+      {/* Notifications Center & Push Settings Modal */}
+      <AnimatePresence>
+        {isNotificationsOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 12 }}
+              className="relative w-full max-w-2xl bg-[#141417] text-stone-100 rounded-3xl border border-[#27272A] shadow-2xl overflow-hidden my-auto"
+              id="admin-notifications-modal"
+            >
+              {/* Header */}
+              <div className="p-5 sm:p-6 bg-[#18181E] border-b border-[#27272A] flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#D4AF37] flex items-center justify-center">
+                    <Bell className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-serif-luxury font-bold text-white">
+                      Central de Notificações & Push
+                    </h3>
+                    <p className="text-xs text-stone-400">
+                      Avisos oficiais (<strong className="text-[#D4AF37]">Notificação do Sistema</strong>) e alertas de novos pedidos
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsNotificationsOpen(false)}
+                  className="p-2 text-stone-400 hover:text-white rounded-full hover:bg-stone-800 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-5 sm:p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+                {/* Push Status Card */}
+                <div className="p-4 rounded-2xl bg-[#18181E] border border-[#2B2B33] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-white">
+                        Notificações Push no Dispositivo
+                      </span>
+                      {pushPermission === 'granted' ? (
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold border border-emerald-500/30">
+                          Ativado
+                        </span>
+                      ) : pushPermission === 'denied' ? (
+                        <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 text-[10px] font-bold border border-rose-500/30">
+                          Bloqueado no Navegador
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-[#D4AF37] text-[10px] font-bold border border-[#D4AF37]/30">
+                          Pendente
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-stone-400">
+                      {pushPermission === 'granted'
+                        ? 'Você receberá notificações instantâneas quando chegarem novos pedidos ou avisos do sistema.'
+                        : pushPermission === 'denied'
+                        ? 'Libere as notificações nas configurações do navegador para receber alertas em segundo plano.'
+                        : 'Ative para ser avisado no celular ou computador assim que um pedido ou aviso chegar.'}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    {pushPermission !== 'granted' && pushPermission !== 'unsupported' && (
+                      <button
+                        type="button"
+                        onClick={handleEnablePush}
+                        className="px-3.5 py-2 bg-[#D4AF37] hover:bg-[#E5C378] text-stone-950 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                      >
+                        Ativar Push Agora
+                      </button>
+                    )}
+                    {pushPermission === 'granted' && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          sendBrowserPushNotification({
+                            title: 'Notificação do Sistema',
+                            body: 'Teste concluído! Seu aparelho está pronto para receber pedidos e avisos.',
+                            tag: `test-push-${Date.now()}`,
+                            kind: 'system',
+                          })
+                        }
+                        className="px-3 py-2 bg-[#22222A] hover:bg-[#2C2C35] text-stone-200 border border-[#353540] rounded-xl text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5"
+                      >
+                        <Send className="w-3.5 h-3.5 text-[#D4AF37]" />
+                        <span>Testar Push</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Quick Orders Summary */}
+                {pendingOrdersCount > 0 && (
+                  <div className="p-3.5 rounded-2xl bg-emerald-950/30 border border-emerald-700/40 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 text-xs">
+                      <ShoppingBag className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span className="text-stone-200">
+                        Você possui <strong className="text-emerald-400">{pendingOrdersCount}</strong>{' '}
+                        {pendingOrdersCount === 1 ? 'pedido pendente' : 'pedidos pendentes'} aguardando atendimento.
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsNotificationsOpen(false);
+                        setActiveTab('orders');
+                      }}
+                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shrink-0"
+                    >
+                      Ver Pedidos
+                    </button>
+                  </div>
+                )}
+
+                {/* System Notifications Header */}
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-stone-400">
+                    Mensagens — Notificação do Sistema ({systemNotifications.length})
+                  </h4>
+                  {unreadSystemNotifs.length > 0 && onMarkAllNotificationsRead && (
+                    <button
+                      type="button"
+                      onClick={onMarkAllNotificationsRead}
+                      className="text-xs font-semibold text-[#D4AF37] hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <CheckCheck className="w-3.5 h-3.5" />
+                      <span>Marcar todas como lidas</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Notifications List */}
+                {systemNotifications.length === 0 ? (
+                  <div className="p-8 rounded-2xl bg-[#18181E] border border-[#27272A] text-center space-y-2">
+                    <Bell className="w-8 h-8 text-stone-600 mx-auto" />
+                    <p className="text-xs font-semibold text-stone-300">
+                      Nenhuma notificação do sistema no momento
+                    </p>
+                    <p className="text-[11px] text-stone-500">
+                      Quando o administrador enviar avisos gerais ou individuais para sua loja, eles aparecerão aqui.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {systemNotifications.map((notif) => {
+                      const read = isNotifRead(notif);
+                      return (
+                        <div
+                          key={notif.id}
+                          className={`p-4 rounded-2xl border transition-all space-y-2 ${
+                            read
+                              ? 'bg-[#18181E] border-[#27272A] opacity-85'
+                              : 'bg-[#1D1C18] border-[#D4AF37]/60 shadow-md'
+                          }`}
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="px-2 py-0.5 rounded-full bg-[#D4AF37] text-stone-950 text-[10px] font-extrabold uppercase tracking-wider">
+                                {notif.senderName || 'Notificação do Sistema'}
+                              </span>
+                              <span className="px-2 py-0.5 rounded-full bg-[#24242C] text-stone-300 text-[10px] font-semibold border border-[#32323C]">
+                                {notif.targetType === 'individual' ? 'Individual' : 'Geral'}
+                              </span>
+                              {notif.priority === 'urgent' && (
+                                <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 text-[10px] font-bold border border-rose-500/30">
+                                  Urgente
+                                </span>
+                              )}
+                              {notif.priority === 'important' && (
+                                <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold border border-amber-500/30">
+                                  Importante
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[10px] text-stone-500">
+                              {new Date(notif.createdAt).toLocaleString('pt-BR')}
+                            </span>
+                          </div>
+
+                          <h5 className="text-sm font-bold text-white">
+                            {notif.title}
+                          </h5>
+                          <p className="text-xs text-stone-300 leading-relaxed whitespace-pre-line">
+                            {notif.message}
+                          </p>
+
+                          {!read && onMarkNotificationRead && (
+                            <div className="pt-1 flex justify-end">
+                              <button
+                                type="button"
+                                onClick={() => onMarkNotificationRead(notif.id)}
+                                className="px-3 py-1 bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 text-[#D4AF37] border border-[#D4AF37]/40 rounded-lg text-[11px] font-bold transition-colors cursor-pointer"
+                              >
+                                Marcar como lida
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

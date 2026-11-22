@@ -198,3 +198,17 @@ export interface AdminUser {
   createdAt: string;
   lastLoginAt?: string;
 }
+
+export interface SystemNotification {
+  id: string;
+  senderName: string; // 'Notificação do Sistema'
+  title: string;
+  message: string;
+  targetType: 'all' | 'individual';
+  targetClientId?: string;
+  targetClientName?: string;
+  targetUsername?: string;
+  priority?: 'normal' | 'important' | 'urgent';
+  createdAt: string;
+  readByClientIds?: string[];
+}

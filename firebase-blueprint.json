@@ -170,6 +170,27 @@
         },
         "required": ["id", "username", "storeName", "createdAt"]
       }
+    },
+    {
+      "name": "system_notifications",
+      "description": "Broadcast and individual system notifications sent by the general administrator",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "senderName": { "type": "string", "maxLength": 80 },
+          "title": { "type": "string", "maxLength": 140 },
+          "message": { "type": "string", "maxLength": 2000 },
+          "targetType": { "type": "string", "enum": ["all", "individual"] },
+          "targetClientId": { "type": "string" },
+          "targetClientName": { "type": "string" },
+          "targetUsername": { "type": "string" },
+          "priority": { "type": "string", "enum": ["normal", "important", "urgent"] },
+          "createdAt": { "type": "string" },
+          "readByClientIds": { "type": "array" }
+        },
+        "required": ["id", "senderName", "message", "targetType", "createdAt"]
+      }
     }
   ]
 }
