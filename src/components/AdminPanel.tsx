@@ -125,6 +125,10 @@ interface AdminPanelProps {
   localReadNotifIds?: string[];
   onMarkNotificationRead?: (notifId: string) => void;
   onMarkAllNotificationsRead?: () => void;
+  requestedTab?: {
+    tab: 'dashboard' | 'products' | 'orders' | 'tags' | 'coupons' | 'settings' | 'stock' | 'plan';
+    seq: number;
+  } | null;
 }
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({
@@ -156,10 +160,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   localReadNotifIds = [],
   onMarkNotificationRead,
   onMarkAllNotificationsRead,
+  requestedTab = null,
 }) => {
   const [activeTab, setActiveTab] = useState<
     'dashboard' | 'products' | 'orders' | 'tags' | 'coupons' | 'settings' | 'stock' | 'plan'
   >('dashboard');
+
+  React.useEffect(() => {
+    if (requestedTab?.tab) {
+      setActiveTab(requestedTab.tab);
+    }
+  }, [requestedTab]);
 
   const [isRenewalModalOpen, setIsRenewalModalOpen] = useState(false);
   const subStatus = getSubscriptionStatus(currentClient);
@@ -178,6 +189,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   const unreadSystemNotifs = systemNotifications.filter((n) => !isNotifRead(n));
   const pendingOrdersCount = orders.filter((o) => o.status === 'pending').length;
+  const totalRedAlertsCount = pendingOrdersCount + unreadSystemNotifs.length;
 
   const handleEnablePush = async () => {
     const res = await requestPushNotificationPermission();
@@ -1182,19 +1194,89 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           <button
             type="button"
             onClick={() => setIsNotificationsOpen(true)}
-            className="relative flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-stone-100 text-stone-900 border border-stone-300 rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer"
+            className={`relative flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer ${
+              pendingOrdersCount > 0
+                ? 'bg-red-600 hover:bg-red-700 text-white border border-red-400 shadow-lg shadow-red-600/25'
+                : 'bg-white hover:bg-stone-100 text-stone-900 border border-stone-300'
+            }`}
             id="btn-open-notifications-center"
           >
-            <Bell className={`w-4 h-4 ${unreadSystemNotifs.length > 0 ? 'text-amber-600 animate-bounce' : 'text-stone-700'}`} />
+            <div className="relative">
+              <Bell
+                className={`w-4 h-4 ${
+                  pendingOrdersCount > 0
+                    ? 'text-white animate-bounce'
+                    : unreadSystemNotifs.length > 0
+                    ? 'text-red-600 animate-bounce'
+                    : 'text-stone-700'
+                }`}
+              />
+              {totalRedAlertsCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-300 opacity-85" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500 border border-white" />
+                </span>
+              )}
+            </div>
             <span>Notificações</span>
-            {unreadSystemNotifs.length > 0 && (
-              <span className="px-1.5 py-0.5 min-w-[18px] text-center bg-rose-600 text-white text-[10px] font-extrabold rounded-full">
-                {unreadSystemNotifs.length}
+            {totalRedAlertsCount > 0 && (
+              <span
+                className={`px-1.5 py-0.5 min-w-[20px] text-center text-[10px] font-extrabold rounded-full ${
+                  pendingOrdersCount > 0
+                    ? 'bg-white text-red-700'
+                    : 'bg-red-600 text-white'
+                }`}
+              >
+                {totalRedAlertsCount}
               </span>
             )}
           </button>
         </div>
       </div>
+
+      {/* Red Notification Banner for Newly Received / Pending Orders */}
+      {pendingOrdersCount > 0 && activeTab !== 'orders' && (
+        <div
+          className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-[#2A0B10] to-[#1A0A0D] text-white border-2 border-red-500 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+          id="banner-pending-orders-alert"
+        >
+          <div className="flex items-start gap-3">
+            <div className="relative w-10 h-10 rounded-xl bg-red-600/25 text-red-400 border border-red-500/60 flex items-center justify-center shrink-0 mt-0.5">
+              <ShoppingBag className="w-5 h-5" />
+              <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-80" />
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border border-[#2A0B10]" />
+              </span>
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-red-600 text-white">
+                  Novo Pedido Recebido
+                </span>
+                <span className="text-[11px] font-bold text-red-300">
+                  {pendingOrdersCount} {pendingOrdersCount === 1 ? 'pedido pendente' : 'pedidos pendentes'}
+                </span>
+              </div>
+              <h4 className="text-sm font-bold text-white mt-1">
+                Você recebeu {pendingOrdersCount} {pendingOrdersCount === 1 ? 'novo pedido na sua vitrine!' : 'novos pedidos na sua vitrine!'}
+              </h4>
+              <p className="text-xs text-red-100/80 mt-0.5 leading-relaxed">
+                Clique em &ldquo;Ver Pedidos&rdquo; para conferir os itens, endereço e atualizar o status do atendimento.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('orders')}
+            className="px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-extrabold shadow-lg transition-colors cursor-pointer shrink-0 self-end sm:self-center flex items-center gap-1.5"
+            id="btn-banner-go-to-orders"
+          >
+            <Bell className="w-3.5 h-3.5" />
+            <span>Ver Pedidos ({pendingOrdersCount})</span>
+          </button>
+        </div>
+      )}
 
       {/* Unread System Notification Highlight Banner */}
       {unreadSystemNotifs.length > 0 && (
@@ -1255,6 +1337,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         ].map((tab) => {
           const IconComp = tab.icon;
           const isActive = activeTab === tab.id;
+          const hasPendingOrdersBadge = tab.id === 'orders' && pendingOrdersCount > 0;
           return (
             <motion.button
               key={tab.id}
@@ -1262,9 +1345,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               whileTap={{ scale: 0.97 }}
               transition={{ type: 'spring', stiffness: 450, damping: 17 }}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+              className={`relative flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                 isActive
                   ? 'bg-[#D4AF37] text-stone-950 shadow-sm'
+                  : hasPendingOrdersBadge
+                  ? 'bg-[#2A0B10] hover:bg-[#3A1017] text-white border border-red-500 shadow-sm'
                   : tab.id === 'plan'
                   ? 'bg-[#1C1A12] hover:bg-[#262216] text-[#E5C378] border border-[#D4AF37]/40'
                   : 'bg-[#18181E] hover:bg-[#22222B] text-stone-200 border border-[#27272A]'
@@ -1272,9 +1357,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               id={`tab-${tab.id}`}
             >
               <IconComp
-                className={`w-4 h-4 ${isActive ? 'text-stone-950' : tab.id === 'plan' ? 'text-[#D4AF37]' : 'text-stone-400'}`}
+                className={`w-4 h-4 ${
+                  isActive
+                    ? 'text-stone-950'
+                    : hasPendingOrdersBadge
+                    ? 'text-red-400'
+                    : tab.id === 'plan'
+                    ? 'text-[#D4AF37]'
+                    : 'text-stone-400'
+                }`}
               />
               <span>{tab.label}</span>
+              {hasPendingOrdersBadge && (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-extrabold shadow-xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                  <span>{pendingOrdersCount}</span>
+                </span>
+              )}
             </motion.button>
           );
         })}
@@ -3366,14 +3465,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                 .map((ord) => {
                   const isDelivery = ord.orderType === 'delivery';
+                  const isPending = ord.status === 'pending';
                   return (
                     <div
                       key={ord.id}
-                      className="bg-white rounded-2xl border border-stone-200 p-5 shadow-xs space-y-4"
+                      className={`bg-white rounded-2xl p-5 shadow-xs space-y-4 ${
+                        isPending
+                          ? 'border-2 border-red-500 ring-2 ring-red-500/15'
+                          : 'border border-stone-200'
+                      }`}
                     >
                   {/* Top line */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-stone-100">
-                    <div className="flex items-center space-x-3">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                      {isPending && (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-extrabold uppercase tracking-wider shadow-xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                          <span>Novo Pedido</span>
+                        </span>
+                      )}
                       <span className="font-mono text-xs font-bold text-brand-primary-darker bg-stone-50 px-2.5 py-1 rounded-lg border border-stone-200">
                         #{ord.orderNumber}
                       </span>
@@ -3407,7 +3517,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                               ? 'bg-amber-50 text-amber-800 border-amber-300'
                               : ord.status === 'cancelled'
                               ? 'bg-red-50 text-red-800 border-red-300'
-                              : 'bg-stone-50 text-stone-800 border-stone-300'
+                              : 'bg-red-50 text-red-700 border-red-400'
                           }`}
                         >
                           <span>
@@ -4472,15 +4582,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </div>
                 </div>
 
-                {/* Quick Orders Summary */}
+                {/* Quick Orders Summary (Red Alert Notification) */}
                 {pendingOrdersCount > 0 && (
-                  <div className="p-3.5 rounded-2xl bg-emerald-950/30 border border-emerald-700/40 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5 text-xs">
-                      <ShoppingBag className="w-4 h-4 text-emerald-400 shrink-0" />
-                      <span className="text-stone-200">
-                        Você possui <strong className="text-emerald-400">{pendingOrdersCount}</strong>{' '}
-                        {pendingOrdersCount === 1 ? 'pedido pendente' : 'pedidos pendentes'} aguardando atendimento.
-                      </span>
+                  <div className="p-4 rounded-2xl bg-[#2A0B10] border-2 border-red-500 flex items-center justify-between gap-3 shadow-lg">
+                    <div className="flex items-center gap-3 text-xs">
+                      <div className="relative w-8 h-8 rounded-xl bg-red-600/25 text-red-400 border border-red-500/60 flex items-center justify-center shrink-0">
+                        <ShoppingBag className="w-4 h-4" />
+                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
+                      </div>
+                      <div>
+                        <span className="inline-block px-2 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-extrabold uppercase tracking-wider mb-1">
+                          Alerta de Pedido
+                        </span>
+                        <p className="text-stone-100">
+                          Você possui <strong className="text-red-400 font-extrabold">{pendingOrdersCount}</strong>{' '}
+                          {pendingOrdersCount === 1 ? 'pedido pendente' : 'pedidos pendentes'} aguardando atendimento.
+                        </p>
+                      </div>
                     </div>
                     <button
                       type="button"
@@ -4488,7 +4606,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         setIsNotificationsOpen(false);
                         setActiveTab('orders');
                       }}
-                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shrink-0"
+                      className="px-3.5 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shrink-0 shadow-sm"
                     >
                       Ver Pedidos
                     </button>

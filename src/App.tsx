@@ -84,10 +84,44 @@ import { getFontFamilyCss, checkStoreHoursStatus, applyStoreTheme } from './lib/
 import { formatCurrency, cleanPhoneForWhatsapp } from './lib/formatters';
 import { motion, AnimatePresence } from 'motion/react';
 
+const hasStoreRouteInBrowserUrl = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('sistema') === '1' || params.get('page') === 'landing') {
+    return false;
+  }
+  if (
+    params.get('loja') ||
+    params.get('u') ||
+    params.get('store') ||
+    params.get('slug') ||
+    params.get('page') === 'store'
+  ) {
+    return true;
+  }
+  if (/^\/loja\/[^/]+/i.test(window.location.pathname)) {
+    return true;
+  }
+  if (window.location.hash) {
+    const hashClean = window.location.hash.replace(/^#\/?/, '');
+    if (hashClean.startsWith('loja/') || /(^|&)loja=|(^|&)u=|(^|&)store=|(^|&)slug=/.test(hashClean)) {
+      return true;
+    }
+  }
+  return false;
+};
+
 export default function App() {
   // Application Data States (initial fallback isolated per client)
   const [currentClient, setCurrentClient] = useState<any>(() => {
     try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const explicitLanding = urlParams.get('sistema') === '1' || urlParams.get('page') === 'landing';
+      if (explicitLanding) return null;
+      if (!hasStoreRouteInBrowserUrl() && !getAuthSession()) {
+        localStorage.removeItem('store_current_client');
+        return null;
+      }
       const saved = localStorage.getItem('store_current_client');
       return saved ? JSON.parse(saved) : null;
     } catch {
@@ -144,6 +178,10 @@ export default function App() {
   const [isStoreHoursModalOpen, setIsStoreHoursModalOpen] = useState<boolean>(false);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState<boolean>(false);
   const [isLandingHeroModalOpen, setIsLandingHeroModalOpen] = useState<boolean>(false);
+  const [adminRequestedTab, setAdminRequestedTab] = useState<{
+    tab: 'dashboard' | 'products' | 'orders' | 'tags' | 'coupons' | 'settings' | 'stock' | 'plan';
+    seq: number;
+  } | null>(null);
   const [isCloudSyncing, setIsCloudSyncing] = useState<boolean>(true);
   const [showEntranceAnimation, setShowEntranceAnimation] = useState<boolean>(() => {
     return !sessionStorage.getItem('app_entered_session');
@@ -169,31 +207,27 @@ export default function App() {
     if (urlParams.get('page') === 'admin' || urlParams.get('admin') === '1') {
       return 'store'; // Will trigger login modal in useEffect
     }
-    if (
-      urlParams.get('page') === 'store' || 
-      urlParams.get('loja') || 
-      urlParams.get('u') || 
-      urlParams.get('store') || 
-      urlParams.get('slug')
-    ) {
+    if (hasStoreRouteInBrowserUrl()) {
       return 'store';
     }
     
-    // If it's an official store account, bypass landing page
+    // Only bypass the landing page if an official store owner is actively authenticated
     try {
-      const saved = localStorage.getItem('store_current_client');
-      if (saved) {
-        const client = JSON.parse(saved);
-        if (client && typeof client === 'object') {
-          const isOfficial = client.username !== 'teste@123' && client.id !== 'client-test-natural' && client.isOfficial !== false;
-          if (isOfficial) {
-            return 'store';
+      if (getAuthSession()) {
+        const saved = localStorage.getItem('store_current_client');
+        if (saved) {
+          const client = JSON.parse(saved);
+          if (client && typeof client === 'object') {
+            const isOfficial = client.username !== 'teste@123' && client.id !== 'client-test-natural' && client.isOfficial !== false;
+            if (isOfficial) {
+              return 'store';
+            }
           }
         }
       }
     } catch (e) {}
 
-    // Default to landing page for test account or visitors
+    // Default to landing page for visitors and shared system links
     return 'landing';
   });
 
@@ -682,11 +716,38 @@ export default function App() {
       if (isAdminAuthenticated) {
         if (knownOrderIdsRef.current === null) {
           knownOrderIdsRef.current = new Set(data.map((o) => o.id));
+          const nowMs = Date.now();
+          const freshPending = data.find((o) => {
+            if (o.status !== 'pending') return false;
+            const ageMs = nowMs - new Date(o.createdAt).getTime();
+            const alertedKey = `pushed_order_${currentClient?.id || 'default'}_${o.id}`;
+            return ageMs >= 0 && ageMs < 180000 && !sessionStorage.getItem(alertedKey);
+          });
+          if (freshPending) {
+            sessionStorage.setItem(`pushed_order_${currentClient?.id || 'default'}_${freshPending.id}`, '1');
+            const storeLabel = currentClient?.storeName || settings.storeName || 'Sua Loja';
+            const bodyText = `${freshPending.customerName} enviou um pedido de ${formatCurrency(freshPending.finalTotal)} (${freshPending.orderType === 'delivery' ? 'Entrega' : 'Retirada'}).`;
+            sendBrowserPushNotification({
+              title: `Novo Pedido #${freshPending.orderNumber} — ${storeLabel}`,
+              body: bodyText,
+              tag: `order-${freshPending.id}`,
+              kind: 'order',
+              requireInteraction: true,
+            });
+            setLivePushToast({
+              id: freshPending.id,
+              sender: 'Novo Pedido Recebido',
+              title: `Pedido #${freshPending.orderNumber} (${formatCurrency(freshPending.finalTotal)})`,
+              body: bodyText,
+              kind: 'order',
+            });
+          }
         } else {
           const newOrders = data.filter((o) => !knownOrderIdsRef.current!.has(o.id));
           newOrders.forEach((o) => knownOrderIdsRef.current!.add(o.id));
           if (newOrders.length > 0) {
             const latest = newOrders[0];
+            sessionStorage.setItem(`pushed_order_${currentClient?.id || 'default'}_${latest.id}`, '1');
             const storeLabel = currentClient?.storeName || settings.storeName || 'Sua Loja';
             const bodyText = `${latest.customerName} enviou um pedido de ${formatCurrency(latest.finalTotal)} (${latest.orderType === 'delivery' ? 'Entrega' : 'Retirada'}).`;
             sendBrowserPushNotification({
@@ -1279,6 +1340,12 @@ export default function App() {
         onOpenStoreHours={() => setIsStoreHoursModalOpen(true)}
         onOpenLandingHero={() => setActiveView('landing')}
         isOfficialStore={isOfficialStore}
+        isAdminAuthenticated={isAdminAuthenticated}
+        pendingOrdersCount={orders.filter((o) => o.status === 'pending').length}
+        onOpenOrders={() => {
+          setAdminRequestedTab((prev) => ({ tab: 'orders', seq: (prev?.seq || 0) + 1 }));
+          handleToggleView('admin');
+        }}
       />
 
       {/* Main Content Body */}
@@ -1608,6 +1675,7 @@ export default function App() {
             onViewStore={() => setActiveView('store')}
             onShareProduct={handleShareProduct}
             onShareSystem={() => setIsShareSystemModalOpen(true)}
+            requestedTab={adminRequestedTab}
           />
         )}
       </main>
@@ -1859,7 +1927,7 @@ export default function App() {
         />
       )}
 
-      {/* Instant Live Notification Toast (Orders & Notificação do Sistema) */}
+      {/* Instant Live Notification Toast (Red Alert for Orders & Gold for Notificação do Sistema) */}
       <AnimatePresence>
         {livePushToast && (
           <motion.div
@@ -1872,23 +1940,29 @@ export default function App() {
             <div
               className={`p-4 rounded-2xl shadow-2xl backdrop-blur-xl border-2 flex items-start gap-3 ${
                 livePushToast.kind === 'order'
-                  ? 'bg-[#121614]/95 border-emerald-500 text-white'
+                  ? 'bg-[#25090E]/95 border-red-500 text-white shadow-red-900/40'
                   : 'bg-[#16161A]/95 border-[#D4AF37] text-white'
               }`}
             >
               <div
-                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                className={`relative w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
                   livePushToast.kind === 'order'
-                    ? 'bg-emerald-500/20 text-emerald-400'
+                    ? 'bg-red-600/25 text-red-400 border border-red-500/40'
                     : 'bg-[#D4AF37]/20 text-[#D4AF37]'
                 }`}
               >
                 <Bell className="w-5 h-5" />
+                {livePushToast.kind === 'order' && (
+                  <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-85" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+                  </span>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <span
                   className={`text-[10px] font-extrabold uppercase tracking-wider block ${
-                    livePushToast.kind === 'order' ? 'text-emerald-400' : 'text-[#D4AF37]'
+                    livePushToast.kind === 'order' ? 'text-red-400' : 'text-[#D4AF37]'
                   }`}
                 >
                   {livePushToast.sender}
@@ -1899,6 +1973,20 @@ export default function App() {
                 <p className="text-[11px] text-stone-300 mt-0.5 line-clamp-3 leading-relaxed">
                   {livePushToast.body}
                 </p>
+                {livePushToast.kind === 'order' && isAdminAuthenticated && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAdminRequestedTab((prev) => ({ tab: 'orders', seq: (prev?.seq || 0) + 1 }));
+                      setActiveView('admin');
+                      setLivePushToast(null);
+                    }}
+                    className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded-lg text-[11px] font-bold transition-colors cursor-pointer"
+                    id="btn-toast-view-orders"
+                  >
+                    <span>Ver Pedido Agora</span>
+                  </button>
+                )}
               </div>
               <button
                 type="button"

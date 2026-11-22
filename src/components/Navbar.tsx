@@ -30,6 +30,9 @@ interface NavbarProps {
   onOpenStoreHours?: () => void;
   onOpenLandingHero?: () => void;
   isOfficialStore?: boolean;
+  isAdminAuthenticated?: boolean;
+  pendingOrdersCount?: number;
+  onOpenOrders?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -48,6 +51,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenStoreHours,
   onOpenLandingHero,
   isOfficialStore = false,
+  isAdminAuthenticated = false,
+  pendingOrdersCount = 0,
+  onOpenOrders,
 }) => {
   const [showSearch, setShowSearch] = useState(false);
   const hoursStatus = checkStoreHoursStatus(settings);
@@ -184,12 +190,31 @@ export const Navbar: React.FC<NavbarProps> = ({
               ) : activeView === 'store' ? (
                 <button
                   type="button"
-                  onClick={() => onToggleView('admin')}
-                  className="inline-flex items-center px-3 py-1.5 text-stone-200 hover:text-white bg-[#16161A] border border-[#27272A] hover:border-[#D4AF37]/50 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                  onClick={() => {
+                    if (isAdminAuthenticated && pendingOrdersCount > 0 && onOpenOrders) {
+                      onOpenOrders();
+                    } else {
+                      onToggleView('admin');
+                    }
+                  }}
+                  className={`relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                    isAdminAuthenticated && pendingOrdersCount > 0
+                      ? 'bg-red-950/60 hover:bg-red-900/70 text-white border border-red-500 shadow-sm'
+                      : 'text-stone-200 hover:text-white bg-[#16161A] border border-[#27272A] hover:border-[#D4AF37]/50'
+                  }`}
                   id="btn-nav-admin"
-                  title="Acessar"
+                  title={
+                    isAdminAuthenticated && pendingOrdersCount > 0
+                      ? `${pendingOrdersCount} pedido(s) pendente(s)`
+                      : 'Acessar'
+                  }
                 >
-                  <span>Acessar</span>
+                  <span>{isAdminAuthenticated ? 'Painel' : 'Acessar'}</span>
+                  {isAdminAuthenticated && pendingOrdersCount > 0 && (
+                    <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-600 text-white text-[10px] font-extrabold shadow-sm animate-pulse">
+                      {pendingOrdersCount}
+                    </span>
+                  )}
                 </button>
               ) : null}
             </div>
