@@ -4,7 +4,7 @@ import { X, KeyRound, User, Store, Phone, ShieldCheck, CheckCircle2, AlertCircle
 import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { decryptClientData, encryptClientData, hashPassword } from '../lib/cryptoUtils';
-import { CredentialChecklist } from './CredentialChecklist';
+import { CredentialChecklist, validatePasswordSecurity } from './CredentialChecklist';
 
 interface ForgotPasswordModalProps {
   isOpen: boolean;
@@ -79,7 +79,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
       }
     } catch (err) {
       console.error('Error verifying identity for password reset:', err);
-      setErrorMessage('Erro ao consultar o banco de dados. Tente novamente.');
+      setErrorMessage('Erro ao consultar os dados. Tente novamente.');
     } finally {
       setIsLoading(false);
     }
@@ -93,8 +93,8 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
       setErrorMessage('Digite e confirme a nova senha.');
       return;
     }
-    if (newPassword.length > 8) {
-      setErrorMessage('A senha deve ter no máximo 8 caracteres.');
+    if (!validatePasswordSecurity(newPassword).isValid) {
+      setErrorMessage('A nova senha precisa cumprir todos os critérios de segurança (6 a 8 caracteres, maiúscula, minúscula, número e sem acentos).');
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -130,7 +130,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
       }, 1500);
     } catch (err) {
       console.error('Error resetting password:', err);
-      setErrorMessage('Erro ao atualizar a senha no banco de dados.');
+      setErrorMessage('Erro ao atualizar a senha. Tente novamente.');
     } finally {
       setIsLoading(false);
     }
@@ -296,7 +296,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
-                  <CredentialChecklist value={newPassword} label="Requisitos da Senha" />
+                  <CredentialChecklist value={newPassword} variant="dark" label="Requisitos da Senha" />
                 </div>
 
                 <div>

@@ -729,7 +729,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         className="w-full flex items-center space-x-3 px-3 py-2.5 hover:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-bold transition-colors cursor-pointer mt-1"
                       >
                         <RefreshCw className="w-4 h-4" />
-                        <span>Atualizar (Sincronizar Plano)</span>
+                        <span>Atualizar Dados do Plano</span>
                       </button>
                     </div>
                   )}
@@ -2813,10 +2813,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <p className="text-xs text-stone-500">
                 Acompanhe pedidos enviados pelos clientes e atualize o status em tempo real
               </p>
-            </div>
-            <div className="flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-bold">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Sincronização Ativa em Tempo Real</span>
             </div>
           </div>
 

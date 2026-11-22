@@ -23,7 +23,11 @@ import {
   Trash2,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { CredentialChecklist } from './CredentialChecklist';
+import {
+  CredentialChecklist,
+  validateUsernameSecurity,
+  validatePasswordSecurity,
+} from './CredentialChecklist';
 import { saveClient, getClientByUsername } from '../lib/firestoreService';
 import { getDefaultTrialDueDate } from '../lib/mercadoPagoService';
 import { slugifyStoreName } from '../lib/formatters';
@@ -79,30 +83,19 @@ export const RegisterStoreModal: React.FC<RegisterStoreModalProps> = ({
   };
 
   // Validation rules
-  const cleanUsername = username
-    .trim()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9_]/g, '')
-    .slice(0, 8);
+  const rawUsername = username.trim().slice(0, 8);
+  const usernameCheck = validateUsernameSecurity(rawUsername);
+  const cleanUsername = rawUsername.toLowerCase().replace(/[^a-z0-9_]/g, '');
 
   const cleanPass = password.trim().slice(0, 8);
-  const cleanPassNoAccents = cleanPass.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-
-  const isPasswordValid =
-    cleanPass.length > 0 &&
-    cleanPass.length <= 8 &&
-    cleanPass === cleanPassNoAccents &&
-    /[A-Z]/.test(cleanPass) &&
-    /[a-z]/.test(cleanPass) &&
-    /[0-9]/.test(cleanPass);
+  const passwordCheck = validatePasswordSecurity(cleanPass);
+  const isPasswordValid = passwordCheck.isValid;
 
   const isFormValid =
     Boolean(logoUrl.trim()) &&
     storeName.trim().length >= 2 &&
     ownerName.trim().length >= 2 &&
-    cleanUsername.length >= 2 &&
+    usernameCheck.isValid &&
     isPasswordValid &&
     phoneWhatsapp.replace(/\D/g, '').length >= 10 &&
     address.trim().length >= 3 &&
@@ -128,13 +121,13 @@ export const RegisterStoreModal: React.FC<RegisterStoreModalProps> = ({
       return;
     }
 
-    if (cleanUsername.length < 2) {
-      setErrorMsg('O usuário da loja deve ter entre 2 e 8 caracteres alfanuméricos.');
+    if (!usernameCheck.isValid) {
+      setErrorMsg('O usuário precisa cumprir todos os critérios de segurança (4 a 8 caracteres, letra, número, sem espaços/acentos e sem nomes genéricos).');
       return;
     }
 
     if (!isPasswordValid) {
-      setErrorMsg('A senha precisa cumprir todos os requisitos do checklist (máx 8 caracteres, maiúscula, minúscula, número, sem acento).');
+      setErrorMsg('A senha precisa cumprir todos os critérios de segurança (6 a 8 caracteres, maiúscula, minúscula, número e sem acento).');
       return;
     }
 
@@ -215,7 +208,7 @@ export const RegisterStoreModal: React.FC<RegisterStoreModalProps> = ({
       });
     } catch (err: any) {
       console.error('Error creating store client:', err);
-      setErrorMsg('Ocorreu um erro ao cadastrar a sua loja no banco de dados. Tente novamente.');
+      setErrorMsg('Ocorreu um erro ao cadastrar a sua loja. Tente novamente.');
       setIsLoading(false);
     }
   };
@@ -355,15 +348,6 @@ export const RegisterStoreModal: React.FC<RegisterStoreModalProps> = ({
             </div>
           ) : (
             <form onSubmit={handleRegister} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
-              {/* Security info banner */}
-              <div className="p-3 bg-stone-900/80 border border-[#D4AF37]/30 rounded-2xl flex items-start gap-2.5 text-xs text-stone-300">
-                <ShieldCheck className="w-5 h-5 text-[#D4AF37] shrink-0 mt-0.5" />
-                <div>
-                  <strong className="text-white block font-medium">Segurança & Criptografia Ativa</strong>
-                  <span>Seus dados são protegidos com hash de segurança e criptografia no banco de dados Firestore.</span>
-                </div>
-              </div>
-
               {/* Error Alert */}
               {errorMsg && (
                 <div className="p-3 bg-red-950/60 border border-red-800 text-red-200 rounded-xl text-xs flex items-center gap-2">
@@ -446,19 +430,7 @@ export const RegisterStoreModal: React.FC<RegisterStoreModalProps> = ({
                       type="text"
                       required
                       value={storeName}
-                      onChange={(e) => {
-                        setStoreName(e.target.value);
-                        if (!username) {
-                          // Auto-suggest slug
-                          const suggested = e.target.value
-                            .toLowerCase()
-                            .normalize('NFD')
-                            .replace(/[\u0300-\u036f]/g, '')
-                            .replace(/[^a-z0-9]/g, '')
-                            .slice(0, 8);
-                          setUsername(suggested);
-                        }
-                      }}
+                      onChange={(e) => setStoreName(e.target.value)}
                       placeholder="Ex: Bella Donna Boutique"
                       className="w-full pl-9 pr-3 py-2.5 bg-[#1C1C22] border border-[#2B2B33] rounded-xl text-xs text-white placeholder:text-stone-500 focus:outline-none focus:border-[#D4AF37]"
                     />
@@ -519,20 +491,27 @@ export const RegisterStoreModal: React.FC<RegisterStoreModalProps> = ({
                     Usuário de Login (Acesso ao Painel) *
                   </label>
                   <span className="text-[11px] font-mono text-[#D4AF37]">
-                    {cleanUsername.length}/8 caracteres
+                    {rawUsername.length}/8 caracteres
                   </span>
                 </div>
                 <div className="relative">
+                  <User className="w-4 h-4 text-stone-500 absolute left-3 top-3 pointer-events-none" />
                   <input
                     type="text"
                     required
                     maxLength={8}
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Ex: bellamod"
-                    className="w-full px-3.5 py-2.5 bg-[#121215] border border-[#2B2B33] rounded-xl text-xs text-white font-mono placeholder:text-stone-600 focus:outline-none focus:border-[#D4AF37]"
+                    placeholder="Ex: bella_01"
+                    className="w-full pl-9 pr-3.5 py-2.5 bg-[#121215] border border-[#2B2B33] rounded-xl text-xs text-white font-mono placeholder:text-stone-600 focus:outline-none focus:border-[#D4AF37]"
                   />
                 </div>
+                <CredentialChecklist
+                  value={rawUsername}
+                  mode="username"
+                  variant="dark"
+                  label="Critérios do Usuário (Segurança)"
+                />
                 <p className="text-[11px] text-stone-400">
                   Usado apenas para você entrar no seu painel. O link público enviado aos clientes usa o <strong className="text-stone-200">Nome da Loja</strong>.
                 </p>
@@ -556,7 +535,7 @@ export const RegisterStoreModal: React.FC<RegisterStoreModalProps> = ({
                     maxLength={8}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Senha de até 8 dígitos"
+                    placeholder="Senha de 6 a 8 dígitos"
                     className="w-full pl-9 pr-10 py-2.5 bg-[#1C1C22] border border-[#2B2B33] rounded-xl text-xs text-white placeholder:text-stone-500 focus:outline-none focus:border-[#D4AF37]"
                   />
                   <button
@@ -569,7 +548,12 @@ export const RegisterStoreModal: React.FC<RegisterStoreModalProps> = ({
                 </div>
 
                 {/* Password validation checklist */}
-                <CredentialChecklist value={cleanPass} label="Critérios da Senha (até 8 dígitos)" />
+                <CredentialChecklist
+                  value={cleanPass}
+                  mode="password"
+                  variant="dark"
+                  label="Critérios da Senha (Segurança)"
+                />
               </div>
 
               {/* Contact Information */}
@@ -695,7 +679,7 @@ export const RegisterStoreModal: React.FC<RegisterStoreModalProps> = ({
                   {isLoading ? (
                     <>
                       <div className="w-4 h-4 border-2 border-stone-950/30 border-t-stone-950 rounded-full animate-spin" />
-                      <span>Criando sua loja no banco de dados seguro...</span>
+                      <span>Criando sua loja...</span>
                     </>
                   ) : (
                     <>

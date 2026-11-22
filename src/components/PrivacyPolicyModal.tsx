@@ -53,10 +53,10 @@ export const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({
             <div className="p-4 bg-[#181716] border border-[#2A2622] rounded-2xl space-y-2">
               <div className="flex items-center gap-2 text-[#D4AF37] font-bold">
                 <Lock className="w-4 h-4" />
-                <span>Proteção de Dados & Criptografia End-to-End</span>
+                <span>Proteção de Dados & Privacidade</span>
               </div>
               <p className="text-stone-400 text-xs">
-                A sua privacidade e a segurança dos dados de sua loja e clientes são prioridades absolutas na Web Vitrine. Em conformidade com a LGPD (Lei Geral de Proteção de Dados), garantimos criptografia avançada e isolamento total entre tenants.
+                A sua privacidade e a segurança dos dados de sua loja e clientes são prioridades absolutas na Web Vitrine. Em conformidade com a LGPD (Lei Geral de Proteção de Dados), garantimos proteção avançada e isolamento total entre as lojas.
               </p>
             </div>
 
@@ -90,7 +90,7 @@ export const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({
               <div>
                 <h3 className="font-bold text-white text-sm mb-1">4. Segurança do Armazenamento</h3>
                 <p>
-                  Utilizamos servidores em nuvem seguros com isolamento por banco de dados e criptografia de ponta a ponta (AES-GCM), prevenindo acessos não autorizados ou vazamentos.
+                  Utilizamos servidores seguros com isolamento por loja e proteção avançada de dados, prevenindo acessos não autorizados ou vazamentos.
                 </p>
               </div>
 

@@ -1035,7 +1035,7 @@ export function SuperAdminPanel({ onLogout }: SuperAdminPanelProps) {
                         id="input-form-username"
                       />
                     </div>
-                    <CredentialChecklist value={formData.username} label="Requisitos do Usuário" />
+                    <CredentialChecklist value={formData.username} mode="username" label="Requisitos do Usuário" />
                     <p className="text-[11px] text-stone-400 mt-1">
                       Link da loja: <code>/?loja={slugifyStoreName(formData.storeName) || 'nome-da-loja'}</code>
                     </p>
