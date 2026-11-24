@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   Clock,
   ShieldCheck,
-  Sparkles,
   Loader2,
   RefreshCw,
   AlertCircle,
@@ -20,9 +19,10 @@ import {
   createMercadoPagoPixPayment,
   checkMercadoPagoPaymentStatus,
   calculateNextRenewalDueDate,
+  getSubscriptionStatus,
   MercadoPagoPixResponse,
 } from '../lib/mercadoPagoService';
-import { saveClient } from '../lib/firestoreService';
+import { saveClient, getClientById } from '../lib/firestoreService';
 
 interface PixRenewalModalProps {
   isOpen: boolean;
@@ -89,8 +89,22 @@ export const PixRenewalModal: React.FC<PixRenewalModalProps> = ({
     if (!isOpen || !pixData?.paymentId || isSuccess || timeLeft === 0) return;
 
     pollingRef.current = setInterval(async () => {
-      const statusRes = await checkMercadoPagoPaymentStatus(pixData.paymentId!);
-      if (statusRes.isApproved) {
+      let isApproved = false;
+      if (pixData.paymentId) {
+        const statusRes = await checkMercadoPagoPaymentStatus(pixData.paymentId);
+        if (statusRes.isApproved) isApproved = true;
+      }
+      if (!isApproved && (currentClient?.id || currentClient?.username)) {
+        try {
+          const fresh = await getClientById(currentClient.id || currentClient.username);
+          if (fresh && !getSubscriptionStatus(fresh).isExpired) {
+            isApproved = true;
+          }
+        } catch {
+          // ignore
+        }
+      }
+      if (isApproved) {
         if (pollingRef.current) clearInterval(pollingRef.current);
         await completeRenewal();
       }
@@ -99,7 +113,7 @@ export const PixRenewalModal: React.FC<PixRenewalModalProps> = ({
     return () => {
       if (pollingRef.current) clearInterval(pollingRef.current);
     };
-  }, [isOpen, pixData?.paymentId, isSuccess, timeLeft]);
+  }, [isOpen, pixData?.paymentId, isSuccess, timeLeft, currentClient]);
 
   const handleGeneratePix = async () => {
     setIsLoadingPix(true);
@@ -126,11 +140,22 @@ export const PixRenewalModal: React.FC<PixRenewalModalProps> = ({
   };
 
   const handleManualCheckPayment = async () => {
-    if (!pixData?.paymentId) return;
+    if (!pixData?.paymentId && !currentClient?.id) return;
     setIsCheckingPayment(true);
     try {
-      const statusRes = await checkMercadoPagoPaymentStatus(pixData.paymentId);
-      if (statusRes.isApproved) {
+      let isApproved = false;
+      if (pixData?.paymentId) {
+        const statusRes = await checkMercadoPagoPaymentStatus(pixData.paymentId);
+        if (statusRes.isApproved) isApproved = true;
+      }
+      if (!isApproved && (currentClient?.id || currentClient?.username)) {
+        const fresh = await getClientById(currentClient.id || currentClient.username);
+        if (fresh && !getSubscriptionStatus(fresh).isExpired) {
+          isApproved = true;
+        }
+      }
+
+      if (isApproved) {
         await completeRenewal();
       } else {
         setErrorMsg('Pagamento ainda não confirmado. Aguarde alguns segundos após pagar no aplicativo do seu banco.');

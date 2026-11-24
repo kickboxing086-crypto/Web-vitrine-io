@@ -8,7 +8,6 @@ import {
   Clock,
   ShieldCheck,
   QrCode,
-  Sparkles,
   ArrowRight,
 } from 'lucide-react';
 import {
@@ -183,7 +182,7 @@ export const SubscriptionManager: React.FC<SubscriptionManagerProps> = ({
               className="w-full sm:w-auto px-8 py-4 bg-[#D4AF37] hover:bg-[#E5C378] text-stone-950 font-extrabold rounded-2xl text-sm transition-all shadow-xl flex items-center justify-center gap-2.5 cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
               id="btn-submanager-renew-pix"
             >
-              <Sparkles className="w-4 h-4 fill-stone-950 text-stone-950" />
+              <QrCode className="w-4 h-4 text-stone-950" />
               <span>Renovar Plano via Pix (R$ 29,99)</span>
               <ArrowRight className="w-4 h-4" />
             </button>

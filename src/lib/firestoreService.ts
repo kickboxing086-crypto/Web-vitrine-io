@@ -951,6 +951,80 @@ export const getClientByUsername = async (slugOrUsername: string): Promise<any |
   }
 };
 
+export const getClientById = async (clientIdOrUsername: string): Promise<any | null> => {
+  try {
+    if (!clientIdOrUsername) return null;
+    const cleanId = String(clientIdOrUsername).trim();
+    const docRef = doc(db, COLLECTIONS.CLIENTS, cleanId);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const rawData = docSnap.data();
+      const decrypted = await decryptClientData(rawData);
+      const u = (decrypted.username || '').toString().trim().toLowerCase().replace(/^@+/, '');
+      const s = (decrypted.storeSlug || '').toString().trim().toLowerCase().replace(/^@+/, '');
+      const resolvedStoreName = decrypted.storeName || decrypted.name || 'Minha Loja';
+      const nameSlug = slugifyStoreName(resolvedStoreName);
+      const effectiveSlug = (s && s !== u ? s : '') || nameSlug || u;
+      return {
+        id: docSnap.id,
+        isOfficial: true,
+        ...decrypted,
+        storeName: resolvedStoreName,
+        username: u,
+        storeSlug: effectiveSlug,
+      };
+    }
+    // Fallback search across collection
+    return await getClientByUsername(cleanId);
+  } catch (error) {
+    console.error('Error in getClientById:', error);
+    return await getClientByUsername(clientIdOrUsername);
+  }
+};
+
+export const subscribeToClient = (
+  clientId: string,
+  callback: (client: any | null) => void
+): Unsubscribe => {
+  if (!clientId) {
+    callback(null);
+    return () => {};
+  }
+  const docRef = doc(db, COLLECTIONS.CLIENTS, clientId);
+  return onSnapshot(
+    docRef,
+    async (docSnap) => {
+      try {
+        if (!docSnap.exists()) {
+          const fallback = await getClientByUsername(clientId);
+          callback(fallback);
+          return;
+        }
+        const rawData = docSnap.data();
+        const decrypted = await decryptClientData(rawData);
+        const u = (decrypted.username || '').toString().trim().toLowerCase().replace(/^@+/, '');
+        const s = (decrypted.storeSlug || '').toString().trim().toLowerCase().replace(/^@+/, '');
+        const resolvedStoreName = decrypted.storeName || decrypted.name || 'Minha Loja';
+        const nameSlug = slugifyStoreName(resolvedStoreName);
+        const effectiveSlug = (s && s !== u ? s : '') || nameSlug || u;
+        callback({
+          id: docSnap.id,
+          isOfficial: true,
+          ...decrypted,
+          storeName: resolvedStoreName,
+          username: u,
+          storeSlug: effectiveSlug,
+        });
+      } catch (err) {
+        console.error('Error decrypting in subscribeToClient:', err);
+      }
+    },
+    (error) => {
+      console.warn('Error in subscribeToClient onSnapshot:', error);
+    }
+  );
+};
+
 // ======================= SYSTEM NOTIFICATIONS =======================
 
 export const subscribeToSystemNotifications = (
@@ -1004,7 +1078,7 @@ export const saveSystemNotification = async (notification: SystemNotification) =
         : [],
     };
     const docRef = doc(db, COLLECTIONS.SYSTEM_NOTIFICATIONS, cleanPayload.id);
-    await setDoc(docRef, cleanPayload, { merge: true });
+    await setDoc(docRef, cleanPayload);
     return cleanPayload;
   } catch (error) {
     console.error('Error saving system notification:', error);

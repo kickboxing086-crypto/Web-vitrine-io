@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Crown, Sparkles } from 'lucide-react';
+import { Crown } from 'lucide-react';
 
 interface AppEntranceAnimationProps {
   storeName?: string;
@@ -67,11 +67,6 @@ export const AppEntranceAnimation: React.FC<AppEntranceAnimationProps> = ({
                 <div className="w-full h-full bg-[#121115] rounded-[22px] flex items-center justify-center">
                   <Crown className="w-10 h-10 sm:w-12 sm:h-12 text-[#D4AF37]" />
                 </div>
-              </div>
-
-              {/* Sparkle badge */}
-              <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#D4AF37] flex items-center justify-center text-stone-950 shadow-md">
-                <Sparkles className="w-3 h-3 fill-stone-950 text-stone-950" />
               </div>
             </motion.div>
 

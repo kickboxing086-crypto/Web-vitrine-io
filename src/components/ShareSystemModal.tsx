@@ -10,7 +10,6 @@ import {
   Twitter,
   Send,
   Mail,
-  Sparkles,
   Crown,
   ExternalLink,
 } from 'lucide-react';
@@ -301,7 +300,7 @@ export const ShareSystemModal: React.FC<ShareSystemModalProps> = ({
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+                  <Copy className="w-4 h-4 text-[#D4AF37]" />
                   <span>Copiar Mensagem</span>
                 </>
               )}

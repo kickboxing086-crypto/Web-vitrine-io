@@ -12,7 +12,6 @@ import {
   Twitter,
   Send,
   Mail,
-  Sparkles,
   ShoppingBag,
   ExternalLink,
 } from 'lucide-react';
@@ -91,7 +90,7 @@ export const ShareProductModal: React.FC<ShareProductModalProps> = ({
 
   const promoLine = hasPromo
     ? `~De ${formatCurrency(basePrice)}~\n🔥 *Por apenas ${formatCurrency(currentPrice)}* (${discountPct}% OFF)\n`
-    : `✨ *Por apenas ${formatCurrency(currentPrice)}*\n`;
+    : `🏷️ *Por apenas ${formatCurrency(currentPrice)}*\n`;
 
   const shareMessage = `🛍️ *${storeDisplayName}*\n\n*${product.name}*\n${promoLine}\n👉 Veja as fotos e peça direto pelo catálogo:\n${shareUrl}`;
 
@@ -360,7 +359,7 @@ export const ShareProductModal: React.FC<ShareProductModalProps> = ({
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+                  <Copy className="w-4 h-4 text-[#D4AF37]" />
                   <span>Copiar Mensagem</span>
                 </>
               )}

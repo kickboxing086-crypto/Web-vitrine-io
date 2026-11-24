@@ -10,7 +10,6 @@ import {
   Clock,
   ExternalLink,
   ShieldCheck,
-  Sparkles,
   Loader2,
   RefreshCw,
 } from 'lucide-react';

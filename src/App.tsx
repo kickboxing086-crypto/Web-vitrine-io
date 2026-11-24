@@ -51,6 +51,8 @@ import {
   deleteFinanceFromDb,
   resetDatabaseToDefaults,
   saveClient,
+  getClientById,
+  subscribeToClient,
   subscribeToSystemNotifications,
   markSystemNotificationAsRead,
   markAllSystemNotificationsAsRead,
@@ -631,6 +633,15 @@ export default function App() {
       } catch (err) {
         console.error('Error checking payment success data:', err);
       }
+
+      if (currentClient?.id) {
+        getClientById(currentClient.id).then((fresh) => {
+          if (fresh && (fresh.dueDate !== currentClient.dueDate || fresh.status !== currentClient.status)) {
+            setCurrentClient((prev: any) => ({ ...prev, ...fresh }));
+            localStorage.setItem('store_current_client', JSON.stringify(fresh));
+          }
+        }).catch(console.error);
+      }
     };
 
     checkPaymentSuccess();
@@ -830,6 +841,28 @@ export default function App() {
       }, currentClient.id);
     }
 
+    let unsubClient: (() => void) | undefined;
+    if (targetClientId) {
+      unsubClient = subscribeToClient(targetClientId, (freshClient) => {
+        if (freshClient) {
+          setCurrentClient((prev: any) => {
+            if (!prev) return freshClient;
+            if (
+              prev.dueDate !== freshClient.dueDate ||
+              prev.status !== freshClient.status ||
+              prev.planPrice !== freshClient.planPrice ||
+              prev.storeName !== freshClient.storeName
+            ) {
+              const merged = { ...prev, ...freshClient };
+              localStorage.setItem('store_current_client', JSON.stringify(merged));
+              return merged;
+            }
+            return prev;
+          });
+        }
+      });
+    }
+
     return () => {
       unsubSettings();
       unsubProducts();
@@ -839,6 +872,7 @@ export default function App() {
       unsubOrders();
       unsubFinance();
       if (unsubNotifications) unsubNotifications();
+      if (unsubClient) unsubClient();
     };
   }, [currentClient, isAdminAuthenticated]);
 

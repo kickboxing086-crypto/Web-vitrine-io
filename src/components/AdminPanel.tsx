@@ -45,7 +45,7 @@ import {
   Building2,
   Printer,
   Share2,
-  Sparkles,
+  QrCode,
   ExternalLink,
   MessageCircle,
   X,
@@ -1165,7 +1165,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#D4AF37] hover:bg-[#E5C378] text-stone-950 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
                         id="btn-admin-header-renew-pix"
                       >
-                        <Sparkles className="w-3 h-3 fill-stone-950" />
+                        <QrCode className="w-3.5 h-3.5 text-stone-950" />
                         <span>Renovar Plano via Pix (R$ 29,99)</span>
                       </button>
                     </span>

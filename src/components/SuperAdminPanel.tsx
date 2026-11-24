@@ -106,6 +106,12 @@ export function SuperAdminPanel({ onLogout, onShareSystem }: SuperAdminPanelProp
   const [notifTitle, setNotifTitle] = useState('');
   const [notifMessage, setNotifMessage] = useState('');
   const [isSendingNotif, setIsSendingNotif] = useState(false);
+  const [editingNotification, setEditingNotification] = useState<SystemNotification | null>(null);
+  const [deleteTargetNotif, setDeleteTargetNotif] = useState<SystemNotification | null>(null);
+  const [deleteNotifStep, setDeleteNotifStep] = useState<1 | 2>(1);
+  const [deleteNotifConfirmInput, setDeleteNotifConfirmInput] = useState('');
+  const [isDeletingNotif, setIsDeletingNotif] = useState(false);
+  const notifModalBodyRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const unsubscribe = getClients((data) => {
@@ -121,6 +127,7 @@ export function SuperAdminPanel({ onLogout, onShareSystem }: SuperAdminPanelProp
   }, []);
 
   const handleOpenNotificationModal = (specificClient?: StoreClient) => {
+    setEditingNotification(null);
     if (specificClient) {
       setNotifTargetType('individual');
       setNotifTargetClientId(specificClient.id);
@@ -132,6 +139,27 @@ export function SuperAdminPanel({ onLogout, onShareSystem }: SuperAdminPanelProp
     setNotifTitle('');
     setNotifMessage('');
     setIsNotificationModalOpen(true);
+  };
+
+  const handleStartEditNotification = (item: SystemNotification) => {
+    setEditingNotification(item);
+    setNotifTargetType(item.targetType === 'individual' ? 'individual' : 'all');
+    setNotifTargetClientId(item.targetClientId || clients[0]?.id || '');
+    setNotifPriority(item.priority || 'normal');
+    setNotifTitle(item.title || '');
+    setNotifMessage(item.message || '');
+    if (notifModalBodyRef.current) {
+      notifModalBodyRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleCancelEditNotification = () => {
+    setEditingNotification(null);
+    setNotifTargetType('all');
+    setNotifTargetClientId(clients[0]?.id || '');
+    setNotifPriority('normal');
+    setNotifTitle('');
+    setNotifMessage('');
   };
 
   const handleSendSystemNotification = async (e: React.FormEvent) => {
@@ -152,8 +180,9 @@ export function SuperAdminPanel({ onLogout, onShareSystem }: SuperAdminPanelProp
           ? clients.find((c) => c.id === notifTargetClientId)
           : undefined;
 
+      const isEditing = Boolean(editingNotification);
       const payload: SystemNotification = {
-        id: `sysnotif-${Date.now()}`,
+        id: editingNotification?.id || `sysnotif-${Date.now()}`,
         senderName: 'Notificação do Sistema',
         title: notifTitle.trim() || (notifTargetType === 'all' ? 'Comunicado Geral' : 'Aviso para sua Loja'),
         message: notifMessage.trim(),
@@ -166,15 +195,19 @@ export function SuperAdminPanel({ onLogout, onShareSystem }: SuperAdminPanelProp
             }
           : {}),
         priority: notifPriority,
-        createdAt: new Date().toISOString(),
-        readByClientIds: [],
+        createdAt: editingNotification?.createdAt || new Date().toISOString(),
+        readByClientIds: editingNotification?.readByClientIds || [],
       };
 
       await saveSystemNotification(payload);
+      setEditingNotification(null);
       setNotifTitle('');
       setNotifMessage('');
+      setNotifPriority('normal');
       showToast(
-        notifTargetType === 'all'
+        isEditing
+          ? 'Notificação do Sistema atualizada com sucesso!'
+          : notifTargetType === 'all'
           ? 'Notificação do Sistema enviada para todas as lojas!'
           : `Notificação do Sistema enviada para ${targetClient?.storeName || 'a loja'}!`,
         'success'
@@ -187,12 +220,29 @@ export function SuperAdminPanel({ onLogout, onShareSystem }: SuperAdminPanelProp
     }
   };
 
-  const handleDeleteSentNotification = async (id: string) => {
+  const handleRequestDeleteNotification = (item: SystemNotification) => {
+    setDeleteTargetNotif(item);
+    setDeleteNotifStep(1);
+    setDeleteNotifConfirmInput('');
+    setIsDeletingNotif(false);
+  };
+
+  const handleConfirmDeleteSentNotification = async () => {
+    if (!deleteTargetNotif) return;
+    setIsDeletingNotif(true);
     try {
-      await deleteSystemNotification(id);
+      await deleteSystemNotification(deleteTargetNotif.id);
+      if (editingNotification?.id === deleteTargetNotif.id) {
+        handleCancelEditNotification();
+      }
+      setDeleteTargetNotif(null);
+      setDeleteNotifStep(1);
+      setDeleteNotifConfirmInput('');
       showToast('Notificação removida do histórico.', 'info');
     } catch {
       showToast('Erro ao remover notificação.', 'error');
+    } finally {
+      setIsDeletingNotif(false);
     }
   };
 
@@ -493,7 +543,7 @@ export function SuperAdminPanel({ onLogout, onShareSystem }: SuperAdminPanelProp
     const slug = getEffectiveSlug(client);
     const storeLink = `${window.location.origin}/?loja=${slug}`;
     const adminLink = `${window.location.origin}/?loja=${slug}&admin=1`;
-    const msg = `👑 *ACESSO À SUA WEB VITRINE*\n\nOlá! Aqui estão as credenciais exclusivas da sua loja:\n\n🏬 *Loja:* ${client.storeName}\n👤 *Usuário:* ${client.username}\n🔑 *Senha:* ${client.password}\n\n🌐 *Link da sua Vitrine:* ${storeLink}\n⚙️ *Painel de Gestão da Loja:* ${adminLink}\n📅 *Vencimento do Plano:* ${formatDateBr(client.dueDate)}\n💵 *Valor:* R$ ${(Number(client.planPrice) || 0).toFixed(2).replace('.', ',')}/mês\n\nQualquer dúvida, estamos à disposição na Gestão Web Vitrine! ✨`;
+    const msg = `👑 *ACESSO À SUA WEB VITRINE*\n\nOlá! Aqui estão as credenciais exclusivas da sua loja:\n\n🏬 *Loja:* ${client.storeName}\n👤 *Usuário:* ${client.username}\n🔑 *Senha:* ${client.password}\n\n🌐 *Link da sua Vitrine:* ${storeLink}\n⚙️ *Painel de Gestão da Loja:* ${adminLink}\n📅 *Vencimento do Plano:* ${formatDateBr(client.dueDate)}\n💵 *Valor:* R$ ${(Number(client.planPrice) || 0).toFixed(2).replace('.', ',')}/mês\n\nQualquer dúvida, estamos à disposição na Gestão Web Vitrine!`;
     
     copyToClipboard(msg, `msg-${client.id}`);
   };
@@ -1689,21 +1739,24 @@ export function SuperAdminPanel({ onLogout, onShareSystem }: SuperAdminPanelProp
               <div className="bg-stone-900 text-white p-6 border-b border-stone-800 relative">
                 <button
                   type="button"
-                  onClick={() => setIsNotificationModalOpen(false)}
+                  onClick={() => {
+                    setEditingNotification(null);
+                    setIsNotificationModalOpen(false);
+                  }}
                   className="absolute top-5 right-5 p-2 text-stone-400 hover:text-white rounded-full hover:bg-white/10 transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
                 <div className="flex items-center space-x-3">
                   <div className="w-11 h-11 rounded-2xl bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40 flex items-center justify-center">
-                    <Megaphone className="w-5 h-5" />
+                    {editingNotification ? <Edit3 className="w-5 h-5" /> : <Megaphone className="w-5 h-5" />}
                   </div>
                   <div>
                     <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#D4AF37]">
-                      Push & Avisos no Painel
+                      {editingNotification ? 'Modo de Edição Ativo' : 'Push & Avisos no Painel'}
                     </span>
                     <h3 className="text-xl font-bold text-white">
-                      Enviar Notificação do Sistema
+                      {editingNotification ? 'Editar Notificação do Sistema' : 'Enviar Notificação do Sistema'}
                     </h3>
                     <p className="text-xs text-stone-300">
                       Nome exibido ao cliente: <strong className="text-[#D4AF37]">Notificação do Sistema</strong>
@@ -1712,7 +1765,25 @@ export function SuperAdminPanel({ onLogout, onShareSystem }: SuperAdminPanelProp
                 </div>
               </div>
 
-              <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+              <div ref={notifModalBodyRef} className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+                {editingNotification && (
+                  <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-300 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 text-xs text-amber-950 min-w-0">
+                      <Edit3 className="w-4 h-4 text-amber-700 shrink-0" />
+                      <span className="truncate">
+                        Editando aviso: <strong>{editingNotification.title}</strong>
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleCancelEditNotification}
+                      className="px-3 py-1 bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-lg text-[11px] font-bold transition-colors cursor-pointer shrink-0"
+                    >
+                      Cancelar Edição
+                    </button>
+                  </div>
+                )}
+
                 <form onSubmit={handleSendSystemNotification} className="space-y-4">
                   {/* Target Mode Selection */}
                   <div className="space-y-2">
@@ -1840,7 +1911,12 @@ export function SuperAdminPanel({ onLogout, onShareSystem }: SuperAdminPanelProp
                     {isSendingNotif ? (
                       <>
                         <RefreshCw className="w-4 h-4 animate-spin" />
-                        <span>Enviando Notificação...</span>
+                        <span>{editingNotification ? 'Salvando Alterações...' : 'Enviando Notificação...'}</span>
+                      </>
+                    ) : editingNotification ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        <span>Salvar Alterações da Notificação</span>
                       </>
                     ) : (
                       <>
@@ -1866,50 +1942,225 @@ export function SuperAdminPanel({ onLogout, onShareSystem }: SuperAdminPanelProp
                     </p>
                   ) : (
                     <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
-                      {systemNotifications.map((item) => (
-                        <div
-                          key={item.id}
-                          className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200 flex items-start justify-between gap-3"
-                        >
-                          <div className="space-y-1 min-w-0">
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              <span className="px-2 py-0.5 rounded-full bg-stone-900 text-[#D4AF37] text-[10px] font-bold">
-                                {item.senderName || 'Notificação do Sistema'}
-                              </span>
-                              <span
-                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                                  item.targetType === 'all'
-                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                    : 'bg-amber-50 text-amber-800 border-amber-200'
-                                }`}
-                              >
-                                {item.targetType === 'all'
-                                  ? 'Geral (Todas as Lojas)'
-                                  : `Individual: ${item.targetClientName || item.targetUsername || 'Cliente'}`}
-                              </span>
-                              <span className="text-[10px] text-stone-400">
-                                {new Date(item.createdAt).toLocaleString('pt-BR')}
+                      {systemNotifications.map((item) => {
+                        const isBeingEdited = editingNotification?.id === item.id;
+                        return (
+                          <div
+                            key={item.id}
+                            className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 transition-colors ${
+                              isBeingEdited
+                                ? 'bg-amber-50/70 border-amber-400 ring-1 ring-amber-300'
+                                : 'bg-stone-50 border-stone-200'
+                            }`}
+                          >
+                            <div className="space-y-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <span className="px-2 py-0.5 rounded-full bg-stone-900 text-[#D4AF37] text-[10px] font-bold">
+                                  {item.senderName || 'Notificação do Sistema'}
+                                </span>
+                                <span
+                                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                                    item.targetType === 'all'
+                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                      : 'bg-amber-50 text-amber-800 border-amber-200'
+                                  }`}
+                                >
+                                  {item.targetType === 'all'
+                                    ? 'Geral (Todas as Lojas)'
+                                    : `Individual: ${item.targetClientName || item.targetUsername || 'Cliente'}`}
+                                </span>
+                                <span className="text-[10px] text-stone-400">
+                                  {new Date(item.createdAt).toLocaleString('pt-BR')}
+                                </span>
+                              </div>
+                              <p className="text-xs font-bold text-stone-900">{item.title}</p>
+                              <p className="text-xs text-stone-600 whitespace-pre-line">{item.message}</p>
+                              <span className="text-[10px] text-stone-400 block">
+                                Lido por {item.readByClientIds?.length || 0} loja(s)
                               </span>
                             </div>
-                            <p className="text-xs font-bold text-stone-900">{item.title}</p>
-                            <p className="text-xs text-stone-600 whitespace-pre-line">{item.message}</p>
-                            <span className="text-[10px] text-stone-400 block">
-                              Lido por {item.readByClientIds?.length || 0} loja(s)
-                            </span>
+
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => handleStartEditNotification(item)}
+                                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                                  isBeingEdited
+                                    ? 'text-amber-700 bg-amber-100'
+                                    : 'text-stone-500 hover:text-amber-700 hover:bg-amber-50'
+                                }`}
+                                title="Editar notificação"
+                                id={`btn-edit-notif-${item.id}`}
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleRequestDeleteNotification(item)}
+                                className="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                                title="Excluir notificação (confirmação em 2 etapas)"
+                                id={`btn-delete-notif-${item.id}`}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteSentNotification(item.id)}
-                            className="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer shrink-0"
-                            title="Excluir aviso"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 2-STEP SAFETY CONFIRMATION MODAL FOR DELETING A SYSTEM NOTIFICATION */}
+      <AnimatePresence>
+        {deleteTargetNotif && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-stone-950/75 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="relative w-full max-w-md bg-white border border-stone-200 rounded-3xl shadow-2xl overflow-hidden"
+              id="modal-delete-notification-2step"
+            >
+              <div className="h-1.5 w-full bg-rose-600" />
+
+              <button
+                type="button"
+                onClick={() => setDeleteTargetNotif(null)}
+                disabled={isDeletingNotif}
+                className="absolute top-4 right-4 p-2 text-stone-400 hover:text-stone-900 rounded-full bg-stone-100 hover:bg-stone-200 transition-colors cursor-pointer"
+                aria-label="Fechar confirmação"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="p-6 space-y-5">
+                <div className="flex items-start space-x-3.5">
+                  <div className="relative flex-shrink-0">
+                    <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center shadow-sm">
+                      <ShieldAlert className="w-6 h-6 text-rose-600" />
+                    </div>
+                    <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-60" />
+                      <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-rose-500 border-2 border-white" />
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-rose-50 text-rose-600 border border-rose-100">
+                      {deleteNotifStep === 1 ? 'Etapa 1 de 2: Segurança' : 'Etapa 2 de 2: Confirmação Final'}
+                    </span>
+                    <h3 className="text-lg font-extrabold text-stone-900 mt-1">
+                      {deleteNotifStep === 1 ? 'Excluir Notificação Enviada?' : 'Confirmar Exclusão Definitiva'}
+                    </h3>
+                    <p className="text-xs text-stone-500 mt-0.5">
+                      {deleteNotifStep === 1
+                        ? 'Revise a mensagem abaixo antes de prosseguir.'
+                        : 'Esta ação removerá a mensagem permanentemente.'}
+                    </p>
+                  </div>
+                </div>
+
+                {deleteNotifStep === 1 ? (
+                  <div className="space-y-4">
+                    <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200 space-y-1.5">
+                      <div className="flex items-center justify-between gap-2 text-[11px]">
+                        <span className="font-bold text-stone-500">Destinatário:</span>
+                        <span className="font-bold text-stone-900">
+                          {deleteTargetNotif.targetType === 'all'
+                            ? 'Geral (Todas as Lojas)'
+                            : deleteTargetNotif.targetClientName || deleteTargetNotif.targetUsername || 'Individual'}
+                        </span>
+                      </div>
+                      <p className="text-xs font-bold text-stone-900 pt-1">
+                        {deleteTargetNotif.title}
+                      </p>
+                      <p className="text-xs text-stone-600 line-clamp-3 whitespace-pre-line">
+                        {deleteTargetNotif.message}
+                      </p>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-rose-50 border border-rose-100 flex items-start space-x-2.5">
+                      <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                      <p className="text-xs text-rose-700 leading-relaxed">
+                        Se confirmar a exclusão, esta notificação deixará de aparecer imediatamente na conta das lojas que ainda não a leram.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2.5 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setDeleteTargetNotif(null)}
+                        className="px-4 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-semibold border border-stone-200 transition-colors cursor-pointer"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDeleteNotifStep(2);
+                          setDeleteNotifConfirmInput('');
+                        }}
+                        className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 transition-colors cursor-pointer"
+                        id="btn-notif-delete-step1-next"
+                      >
+                        <span>Avançar para Etapa 2</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 space-y-2">
+                      <p className="text-xs text-stone-700 leading-relaxed">
+                        Para evitar exclusões acidentais, digite{' '}
+                        <span className="font-mono font-extrabold text-rose-700 bg-white px-2 py-0.5 rounded border border-rose-200">
+                          apagar
+                        </span>{' '}
+                        no campo abaixo para excluir <strong className="text-stone-900">{deleteTargetNotif.title}</strong>:
+                      </p>
+                      <input
+                        type="text"
+                        autoFocus
+                        value={deleteNotifConfirmInput}
+                        onChange={(e) => setDeleteNotifConfirmInput(e.target.value)}
+                        placeholder='Digite "apagar" para confirmar'
+                        className="w-full px-3.5 py-2.5 bg-white border border-rose-300 rounded-xl text-xs font-semibold text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                        id="input-confirm-delete-notif"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2.5 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setDeleteNotifStep(1)}
+                        disabled={isDeletingNotif}
+                        className="px-4 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-semibold border border-stone-200 transition-colors cursor-pointer"
+                      >
+                        Voltar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleConfirmDeleteSentNotification}
+                        disabled={
+                          isDeletingNotif ||
+                          deleteNotifConfirmInput.trim().toLowerCase() !== 'apagar'
+                        }
+                        className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 disabled:bg-stone-300 disabled:text-stone-500 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 transition-colors cursor-pointer disabled:cursor-not-allowed"
+                        id="btn-notif-delete-confirm-final"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        <span>{isDeletingNotif ? 'Excluindo...' : 'Excluir Definitivamente'}</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>
