@@ -1,15 +1,8 @@
 /**
- * Mercado Pago Integration Service
- * Official Credentials for SF TECNOLOGIA (Samuel Silva Freitas)
+ * Mercado Pago Integration Service (Client-Side API Bridge)
+ * All authenticated payment calls execute securely on the server (/api/mercadopago/*),
+ * keeping API credentials out of browser code and avoiding browser CORS blocks.
  */
-
-import { generatePixPayload } from './pixUtils';
-
-export const MERCADO_PAGO_ACCESS_TOKEN =
-  'APP_USR-7247429744524217-032816-ab91c2f2e9f3c2af82fb7fdc7a7c6b23-1084123941';
-
-export const MERCADO_PAGO_PUBLIC_KEY =
-  'APP_USR-48911ed4-b554-4adb-b652-fa21349fad9a';
 
 export const SINGLE_PLAN_CONFIG = {
   id: 'monthly-2999',
@@ -18,8 +11,12 @@ export const SINGLE_PLAN_CONFIG = {
   period: '/mês',
   daysDuration: 30,
   trialDays: 5,
-  description: 'Acesso completo à vitrine virtual, catálogo ilimitado e pedidos formatados no WhatsApp.',
+  description:
+    'Acesso completo à vitrine virtual, catálogo ilimitado e pedidos formatados no WhatsApp.',
 };
+
+export const MERCADO_PAGO_PUBLIC_KEY =
+  'APP_USR-48911ed4-b554-4adb-b652-fa21349fad9a';
 
 export interface MercadoPagoPixResponse {
   success: boolean;
@@ -28,6 +25,7 @@ export interface MercadoPagoPixResponse {
   qrCode?: string;
   qrCodeBase64?: string;
   ticketUrl?: string;
+  errorCode?: string;
   errorMessage?: string;
 }
 
@@ -40,7 +38,7 @@ export interface MercadoPagoPreferenceResponse {
 }
 
 /**
- * Creates an instant PIX payment using Mercado Pago Payments API v1
+ * Creates a real instant PIX payment through our backend /api/mercadopago/pix endpoint
  */
 export async function createMercadoPagoPixPayment(clientInfo: {
   email?: string;
@@ -48,76 +46,50 @@ export async function createMercadoPagoPixPayment(clientInfo: {
   storeName?: string;
   clientId?: string;
 }): Promise<MercadoPagoPixResponse> {
-  let apiErrorMsg = '';
   try {
-    const idempotencyKey = `mp-pix-${clientInfo.clientId || 'client'}-${Date.now()}`;
-    const payerEmail = (clientInfo.email && clientInfo.email.includes('@'))
-      ? clientInfo.email
-      : 'samuellsilvva02@gmail.com';
-
-    const payload = {
-      transaction_amount: SINGLE_PLAN_CONFIG.price,
-      description: `Renovação Web Vitrine (${clientInfo.storeName || 'Loja'})`,
-      payment_method_id: 'pix',
-      payer: {
-        email: payerEmail,
-        first_name: (clientInfo.name || clientInfo.storeName || 'Lojista').slice(0, 30),
-      },
-      external_reference: clientInfo.clientId || 'vitrine-client',
-    };
-
-    const response = await fetch('https://api.mercadopago.com/v1/payments', {
+    const response = await fetch('/api/mercadopago/pix', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${MERCADO_PAGO_ACCESS_TOKEN}`,
         'Content-Type': 'application/json',
-        'X-Idempotency-Key': idempotencyKey,
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        email: clientInfo.email || '',
+        name: clientInfo.name || clientInfo.storeName || 'Lojista',
+        storeName: clientInfo.storeName || clientInfo.name || 'Minha Loja',
+        clientId: clientInfo.clientId || '',
+      }),
     });
 
-    if (response.ok) {
-      const data = await response.json();
-      const transactionData = data.point_of_interaction?.transaction_data;
-      if (transactionData?.qr_code) {
-        return {
-          success: true,
-          paymentId: data.id,
-          status: data.status,
-          qrCode: transactionData.qr_code,
-          qrCodeBase64: transactionData.qr_code_base64,
-          ticketUrl: transactionData.ticket_url,
-        };
-      }
-    } else {
-      const errorData = await response.json().catch(() => ({}));
-      apiErrorMsg = errorData.message || 'Erro ao comunicar com a gateway de pagamento.';
+    const data = await response.json().catch(() => ({}));
+
+    if (response.ok && data?.success && data?.qrCode) {
+      return {
+        success: true,
+        paymentId: data.paymentId,
+        status: data.status || 'pending',
+        qrCode: data.qrCode,
+        qrCodeBase64: data.qrCodeBase64,
+        ticketUrl: data.ticketUrl,
+      };
     }
+
+    return {
+      success: false,
+      errorCode: data?.errorCode,
+      errorMessage:
+        data?.errorMessage || 'Não foi possível gerar o QR Code Pix no Mercado Pago. Tente novamente.',
+    };
   } catch (error) {
-    console.warn('CORS/Network restriction calling Mercado Pago API directly, using robust instant Pix fallback:', error);
+    console.error('Error creating Pix payment via server API:', error);
+    return {
+      success: false,
+      errorMessage: 'Falha de conexão com o servidor ao gerar Pix. Tente novamente em instantes.',
+    };
   }
-
-  // Fallback robust Pix generator with valid EMV format and CRC16 checksum
-  const mockPaymentId = 'pix-instant-' + Date.now();
-  const validPixCopiaECola = generatePixPayload(
-    'a8d6dde8-33ae-45c8-b88a-5023cc204a55',
-    SINGLE_PLAN_CONFIG.price,
-    'SF TECNOLOGIA',
-    'SAO PAULO',
-    `RENOV${Date.now().toString().slice(-6)}`
-  );
-
-  return {
-    success: true,
-    paymentId: mockPaymentId,
-    status: 'pending',
-    qrCode: validPixCopiaECola,
-    ticketUrl: `https://mercadopago.com.br/payments/${mockPaymentId}`,
-  };
 }
 
 /**
- * Creates a Checkout Pro preference on Mercado Pago (Cards, Boleto, MP Account, Pix)
+ * Creates a Checkout Pro preference on Mercado Pago (Cards, Boleto, MP Account, Pix) via backend
  */
 export async function createMercadoPagoPreference(clientInfo: {
   email?: string;
@@ -126,59 +98,32 @@ export async function createMercadoPagoPreference(clientInfo: {
   clientId?: string;
 }): Promise<MercadoPagoPreferenceResponse> {
   try {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://webvitrine.com';
-    const payerEmail = (clientInfo.email && clientInfo.email.includes('@'))
-      ? clientInfo.email
-      : 'samuellsilvva02@gmail.com';
-
-    const payload = {
-      items: [
-        {
-          id: SINGLE_PLAN_CONFIG.id,
-          title: SINGLE_PLAN_CONFIG.title,
-          description: `Assinatura mensal para a loja ${clientInfo.storeName || 'Web Vitrine'} (30 dias)`,
-          quantity: 1,
-          currency_id: 'BRL',
-          unit_price: SINGLE_PLAN_CONFIG.price,
-        },
-      ],
-      payer: {
-        email: payerEmail,
-        name: clientInfo.name || clientInfo.storeName || 'Lojista',
-      },
-      back_urls: {
-        success: `${origin}/?payment=success&client=${encodeURIComponent(clientInfo.clientId || '')}`,
-        failure: `${origin}/?payment=failure`,
-        pending: `${origin}/?payment=pending`,
-      },
-      auto_return: 'approved',
-      external_reference: clientInfo.clientId || 'vitrine-client',
-    };
-
-    const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
+    const response = await fetch('/api/mercadopago/preference', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${MERCADO_PAGO_ACCESS_TOKEN}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        email: clientInfo.email || '',
+        name: clientInfo.name || clientInfo.storeName || 'Lojista',
+        storeName: clientInfo.storeName || clientInfo.name || 'Web Vitrine',
+        clientId: clientInfo.clientId || '',
+      }),
     });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.warn('Mercado Pago preference API error:', errorData);
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data?.success) {
       return {
         success: false,
-        errorMessage: errorData.message || 'Erro ao gerar link de pagamento Mercado Pago.',
+        errorMessage: data?.errorMessage || 'Erro ao gerar link de pagamento Mercado Pago.',
       };
     }
 
-    const data = await response.json();
     return {
       success: true,
-      preferenceId: data.id,
-      initPoint: data.init_point,
-      sandboxInitPoint: data.sandbox_init_point,
+      preferenceId: data.preferenceId,
+      initPoint: data.initPoint,
+      sandboxInitPoint: data.sandboxInitPoint,
     };
   } catch (error) {
     console.error('Error creating Mercado Pago preference:', error);
@@ -190,21 +135,28 @@ export async function createMercadoPagoPreference(clientInfo: {
 }
 
 /**
- * Checks payment status in Mercado Pago Payments API v1
+ * Checks payment status via backend and automatically applies renewal in Firestore when approved
  */
-export async function checkMercadoPagoPaymentStatus(paymentId: number | string): Promise<{
+export async function checkMercadoPagoPaymentStatus(
+  paymentId: number | string,
+  clientId?: string
+): Promise<{
   status: string;
   isApproved: boolean;
+  renewed?: boolean;
+  dueDate?: string;
+  clientId?: string;
   raw?: any;
 }> {
-  if (String(paymentId).startsWith('pix-instant-')) {
+  const cleanId = String(paymentId || '').trim();
+  if (!cleanId || cleanId.startsWith('pix-instant-')) {
     return { status: 'pending', isApproved: false };
   }
+
   try {
-    const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-      headers: {
-        Authorization: `Bearer ${MERCADO_PAGO_ACCESS_TOKEN}`,
-      },
+    const qs = clientId ? `?clientId=${encodeURIComponent(clientId)}` : '';
+    const response = await fetch(`/api/mercadopago/status/${encodeURIComponent(cleanId)}${qs}`, {
+      cache: 'no-store',
     });
 
     if (!response.ok) {
@@ -214,12 +166,66 @@ export async function checkMercadoPagoPaymentStatus(paymentId: number | string):
     const data = await response.json();
     return {
       status: data.status || 'unknown',
-      isApproved: data.status === 'approved',
+      isApproved: Boolean(data.isApproved),
+      renewed: Boolean(data.renewed),
+      dueDate: data.dueDate,
+      clientId: data.clientId,
       raw: data,
     };
   } catch (error) {
-    console.error('Error querying Mercado Pago payment:', error);
+    console.error('Error querying Mercado Pago payment status:', error);
     return { status: 'error', isApproved: false };
+  }
+}
+
+/**
+ * Actively reconciles any approved Mercado Pago payments for this client and activates their account
+ */
+export async function reconcileClientPayments(clientId: string): Promise<{
+  success: boolean;
+  renewed: boolean;
+  dueDate?: string;
+  status?: string;
+}> {
+  if (!clientId) {
+    return { success: false, renewed: false };
+  }
+
+  try {
+    const response = await fetch('/api/mercadopago/reconcile-client', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientId }),
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      return { success: false, renewed: false };
+    }
+
+    const data = await response.json();
+    return {
+      success: Boolean(data.success),
+      renewed: Boolean(data.renewed),
+      dueDate: data.dueDate,
+      status: data.status,
+    };
+  } catch (error) {
+    console.error('Error reconciling client payments:', error);
+    return { success: false, renewed: false };
+  }
+}
+
+function getSaoPauloTodayStr(): string {
+  try {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Sao_Paulo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date());
+  } catch {
+    return new Date().toISOString().split('T')[0];
   }
 }
 
@@ -227,8 +233,9 @@ export async function checkMercadoPagoPaymentStatus(paymentId: number | string):
  * Returns default trial due date (5 days ahead: YYYY-MM-DD)
  */
 export function getDefaultTrialDueDate(): string {
-  const d = new Date();
-  d.setDate(d.getDate() + SINGLE_PLAN_CONFIG.trialDays);
+  const todayStr = getSaoPauloTodayStr();
+  const d = new Date(`${todayStr}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + SINGLE_PLAN_CONFIG.trialDays);
   return d.toISOString().split('T')[0];
 }
 
@@ -236,28 +243,25 @@ export function getDefaultTrialDueDate(): string {
  * Calculates new due date (+30 days) from either current valid due date or today
  */
 export function calculateNextRenewalDueDate(currentDueDateStr?: string): string {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const todayStr = getSaoPauloTodayStr();
+  const today = new Date(`${todayStr}T12:00:00Z`);
 
   let baseDate = today;
-  if (currentDueDateStr) {
-    const currentDue = new Date(currentDueDateStr + 'T00:00:00');
+  if (currentDueDateStr && /^\d{4}-\d{2}-\d{2}/.test(currentDueDateStr)) {
+    const cleanDate = currentDueDateStr.slice(0, 10);
+    const currentDue = new Date(`${cleanDate}T12:00:00Z`);
     if (!isNaN(currentDue.getTime()) && currentDue > today) {
       baseDate = currentDue;
     }
   }
 
   const nextDue = new Date(baseDate);
-  nextDue.setDate(nextDue.getDate() + 30);
+  nextDue.setUTCDate(nextDue.getUTCDate() + 30);
   return nextDue.toISOString().split('T')[0];
 }
 
 /**
  * Calculates remaining days from dueDate string.
- * Returns:
- * - daysRemaining: number (e.g. 5, 4, 0, -2)
- * - isExpired: boolean (daysRemaining <= 0)
- * - isTrial: boolean (if client is within initial trial window)
  */
 export function getSubscriptionStatus(client?: any): {
   daysRemaining: number;
@@ -266,7 +270,12 @@ export function getSubscriptionStatus(client?: any): {
   statusLabel: string;
 } {
   // Check lifetime account
-  const isLifetime = (client && Number(client.planPrice) === 250) || (client?.dueDate && (client.dueDate.startsWith('2126') || client.dueDate.startsWith('2099') || client.dueDate.startsWith('212')));
+  const isLifetime =
+    (client && Number(client.planPrice) === 250) ||
+    (client?.dueDate &&
+      (client.dueDate.startsWith('2126') ||
+        client.dueDate.startsWith('2099') ||
+        client.dueDate.startsWith('212')));
   if (isLifetime) {
     return {
       daysRemaining: 99999,
@@ -297,9 +306,10 @@ export function getSubscriptionStatus(client?: any): {
   }
 
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const due = new Date(client.dueDate + 'T00:00:00');
+    const todayStr = getSaoPauloTodayStr();
+    const today = new Date(`${todayStr}T00:00:00Z`);
+    const cleanDue = String(client.dueDate).slice(0, 10);
+    const due = new Date(`${cleanDue}T00:00:00Z`);
 
     if (isNaN(due.getTime())) {
       return {
@@ -313,7 +323,9 @@ export function getSubscriptionStatus(client?: any): {
     const diffTime = due.getTime() - today.getTime();
     const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     const isExpired = daysRemaining <= 0;
-    const dueDateFormatted = due.toLocaleDateString('pt-BR');
+    const parts = cleanDue.split('-');
+    const dueDateFormatted =
+      parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : due.toLocaleDateString('pt-BR');
 
     let statusLabel = `${daysRemaining} dias restantes`;
     if (daysRemaining <= 0) {

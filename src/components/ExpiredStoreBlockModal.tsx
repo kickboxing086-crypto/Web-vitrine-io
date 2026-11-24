@@ -15,7 +15,11 @@ import {
   RotateCw,
 } from 'lucide-react';
 import { PixRenewalModal } from './PixRenewalModal';
-import { SINGLE_PLAN_CONFIG, getSubscriptionStatus } from '../lib/mercadoPagoService';
+import {
+  SINGLE_PLAN_CONFIG,
+  getSubscriptionStatus,
+  reconcileClientPayments,
+} from '../lib/mercadoPagoService';
 import { getClientById } from '../lib/firestoreService';
 
 interface ExpiredStoreBlockModalProps {
@@ -65,6 +69,7 @@ export const ExpiredStoreBlockModal: React.FC<ExpiredStoreBlockModalProps> = ({
       let freshClient: any = null;
 
       if (clientIdOrUsername) {
+        await reconcileClientPayments(clientIdOrUsername).catch(() => null);
         freshClient = await getClientById(clientIdOrUsername);
       }
 

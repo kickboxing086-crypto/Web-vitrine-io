@@ -191,6 +191,25 @@
         },
         "required": ["id", "senderName", "message", "targetType", "createdAt"]
       }
+    },
+    {
+      "name": "pix_payments",
+      "description": "Tracked Mercado Pago Pix and Checkout Pro renewal payments for idempotent account activation",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "paymentId": { "type": "string" },
+          "clientId": { "type": "string" },
+          "storeName": { "type": "string" },
+          "amount": { "type": "number" },
+          "status": { "type": "string" },
+          "applied": { "type": "boolean" },
+          "createdAt": { "type": "string" },
+          "appliedAt": { "type": "string" },
+          "dueDateAfterRenewal": { "type": "string" }
+        },
+        "required": ["paymentId", "clientId", "amount", "status", "applied", "createdAt"]
+      }
     }
   ]
 }

@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import fs from 'node:fs';
@@ -5,7 +6,17 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { createServer as createViteServer } from 'vite';
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, doc, getDoc } from 'firebase/firestore';
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  doc,
+  getDoc,
+  setDoc,
+  runTransaction,
+  query,
+  where,
+} from 'firebase/firestore';
 
 interface FirebaseAppletConfig {
   projectId: string;
@@ -565,12 +576,596 @@ function injectOpenGraphIntoHtml(html: string, meta: OgMetadata): string {
   return html.replace('</head>', `${metaBlock}\n  </head>`);
 }
 
+const PLAN_PRICE_BRL = 29.99;
+const PLAN_DAYS_DURATION = 30;
+
+function getMercadoPagoAccessToken(): string {
+  return (
+    process.env.MERCADO_PAGO_ACCESS_TOKEN ||
+    'APP_USR-7247429744524217-032816-ab91c2f2e9f3c2af82fb7fdc7a7c6b23-1084123941'
+  ).trim();
+}
+
+function getSaoPauloDateString(date = new Date()): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+}
+
+function calculateNextRenewalDueDateServer(currentDueDateStr?: string, daysDuration = PLAN_DAYS_DURATION): string {
+  const todayStr = getSaoPauloDateString(new Date());
+  const todayDate = new Date(`${todayStr}T12:00:00Z`);
+
+  let baseDate = todayDate;
+  if (currentDueDateStr && /^\d{4}-\d{2}-\d{2}/.test(currentDueDateStr)) {
+    const cleanDate = currentDueDateStr.slice(0, 10);
+    const parsedDue = new Date(`${cleanDate}T12:00:00Z`);
+    if (!isNaN(parsedDue.getTime()) && parsedDue > todayDate) {
+      baseDate = parsedDue;
+    }
+  }
+
+  const nextDue = new Date(baseDate);
+  nextDue.setUTCDate(nextDue.getUTCDate() + daysDuration);
+  return nextDue.toISOString().slice(0, 10);
+}
+
+async function resolveTargetClientDocId(clientRefOrSlug: string): Promise<string | null> {
+  const cleanRef = sanitizeParam(clientRefOrSlug, 120);
+  if (!cleanRef) return null;
+
+  try {
+    const directSnap = await getDoc(doc(db, 'clients', cleanRef));
+    if (directSnap.exists()) {
+      return directSnap.id;
+    }
+  } catch {
+    // continue to slug/username lookup
+  }
+
+  // Force fresh client cache before lookup
+  clientsCache.expiresAt = 0;
+  const matched = await resolveClientBySlug(cleanRef);
+  return matched?.id || null;
+}
+
+async function fetchMercadoPagoPayment(paymentId: string): Promise<any | null> {
+  const token = getMercadoPagoAccessToken();
+  if (!token) return null;
+
+  const cleanId = sanitizeParam(paymentId, 64);
+  if (!cleanId || !/^[a-zA-Z0-9_-]+$/.test(cleanId) || cleanId.startsWith('pix-instant-')) {
+    return null;
+  }
+
+  const response = await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(cleanId)}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  return await response.json();
+}
+
+async function applyPaymentRenewalToClient(
+  rawClientRef: string,
+  paymentData: {
+    id: string;
+    amount: number;
+    status: string;
+    dateApproved?: string;
+    storeName?: string;
+  }
+): Promise<{
+  applied: boolean;
+  alreadyApplied: boolean;
+  clientId: string | null;
+  dueDate?: string;
+  reason?: string;
+}> {
+  const paymentId = sanitizeParam(paymentData.id, 64);
+  if (!paymentId) {
+    return { applied: false, alreadyApplied: false, clientId: null, reason: 'invalid_payment_id' };
+  }
+
+  if (paymentData.status !== 'approved') {
+    return { applied: false, alreadyApplied: false, clientId: null, reason: 'payment_not_approved' };
+  }
+
+  if (Number(paymentData.amount) < 29.0) {
+    return { applied: false, alreadyApplied: false, clientId: null, reason: 'insufficient_amount' };
+  }
+
+  // Resolve clientId from external_reference or stored pix_payments tracking doc
+  let clientCandidate = sanitizeParam(rawClientRef, 120);
+  if (!clientCandidate) {
+    try {
+      const trackedSnap = await getDoc(doc(db, 'pix_payments', paymentId));
+      if (trackedSnap.exists()) {
+        clientCandidate = sanitizeParam(trackedSnap.data()?.clientId, 120);
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  const resolvedClientId = clientCandidate ? await resolveTargetClientDocId(clientCandidate) : null;
+  if (!resolvedClientId) {
+    return { applied: false, alreadyApplied: false, clientId: null, reason: 'client_not_found' };
+  }
+
+  const clientRef = doc(db, 'clients', resolvedClientId);
+  const paymentRef = doc(db, 'pix_payments', paymentId);
+  const nowIso = new Date().toISOString();
+
+  const txResult = await runTransaction(db, async (tx) => {
+    const [clientSnap, pixSnap] = await Promise.all([tx.get(clientRef), tx.get(paymentRef)]);
+
+    if (!clientSnap.exists()) {
+      return { applied: false, alreadyApplied: false, dueDate: undefined };
+    }
+
+    const clientDoc = clientSnap.data() || {};
+    const pixDoc = pixSnap.exists() ? pixSnap.data() : null;
+
+    if (pixDoc?.applied === true || String(clientDoc.lastPaymentId || '') === paymentId) {
+      return {
+        applied: false,
+        alreadyApplied: true,
+        dueDate: clientDoc.dueDate || pixDoc?.dueDateAfterRenewal,
+      };
+    }
+
+    const nextDueDate = calculateNextRenewalDueDateServer(clientDoc.dueDate, PLAN_DAYS_DURATION);
+
+    tx.set(
+      clientRef,
+      {
+        dueDate: nextDueDate,
+        status: 'active',
+        lastRenewedAt: nowIso,
+        lastPaymentId: paymentId,
+        lastPaymentAmount: Number(paymentData.amount) || PLAN_PRICE_BRL,
+        lastPaymentApprovedAt: paymentData.dateApproved || nowIso,
+        planPrice: PLAN_PRICE_BRL,
+      },
+      { merge: true }
+    );
+
+    tx.set(
+      paymentRef,
+      {
+        paymentId,
+        clientId: resolvedClientId,
+        storeName: paymentData.storeName || clientDoc.storeName || '',
+        amount: Number(paymentData.amount) || PLAN_PRICE_BRL,
+        status: 'approved',
+        applied: true,
+        appliedAt: nowIso,
+        dueDateAfterRenewal: nextDueDate,
+      },
+      { merge: true }
+    );
+
+    return {
+      applied: true,
+      alreadyApplied: false,
+      dueDate: nextDueDate,
+    };
+  });
+
+  clientsCache.expiresAt = 0;
+
+  return {
+    applied: txResult.applied,
+    alreadyApplied: txResult.alreadyApplied,
+    clientId: resolvedClientId,
+    dueDate: txResult.dueDate,
+  };
+}
+
+function verifyMercadoPagoWebhookSignature(req: Request, dataId: string): boolean {
+  const secret = (process.env.MERCADO_PAGO_WEBHOOK_SECRET || '').trim();
+  if (!secret) return true; // Optional secret when not configured
+
+  const xSignature = req.headers['x-signature'];
+  const xRequestId = req.headers['x-request-id'];
+  if (typeof xSignature !== 'string' || typeof xRequestId !== 'string') {
+    return false;
+  }
+
+  let ts = '';
+  let v1 = '';
+  for (const part of xSignature.split(',')) {
+    const [k, v] = part.split('=').map((s) => s.trim());
+    if (k === 'ts') ts = v || '';
+    if (k === 'v1') v1 = v || '';
+  }
+  if (!ts || !v1) return false;
+
+  const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
+  const computed = crypto.createHmac('sha256', secret).update(manifest).digest('hex');
+
+  try {
+    const a = Buffer.from(computed, 'hex');
+    const b = Buffer.from(v1, 'hex');
+    return a.length === b.length && crypto.timingSafeEqual(a, b);
+  } catch {
+    return false;
+  }
+}
+
 async function startServer() {
   const app = express();
   app.set('trust proxy', true);
+  app.use(express.json({ limit: '1mb' }));
 
   app.get('/api/health', (_req: Request, res: Response) => {
     res.json({ ok: true });
+  });
+
+  // Create real Mercado Pago Pix payment via server-side API (no CORS block, secret stays on server)
+  app.post('/api/mercadopago/pix', async (req: Request, res: Response) => {
+    try {
+      const token = getMercadoPagoAccessToken();
+      if (!token) {
+        res.status(503).json({
+          success: false,
+          errorCode: 'MP_NOT_CONFIGURED',
+          errorMessage:
+            'Gateway de pagamento não configurada no servidor. Configure a variável MERCADO_PAGO_ACCESS_TOKEN nas configurações do projeto.',
+        });
+        return;
+      }
+
+      const rawClientId = sanitizeParam(req.body?.clientId, 120);
+      const storeName = sanitizeParam(req.body?.storeName || req.body?.name || 'Loja', 80);
+      const rawEmail = sanitizeParam(req.body?.email, 120);
+      const payerEmail = rawEmail && rawEmail.includes('@') ? rawEmail : 'contato@webvitrine.com.br';
+
+      const resolvedClientId = rawClientId ? await resolveTargetClientDocId(rawClientId) : null;
+      const externalRef = resolvedClientId || rawClientId || 'vitrine-client';
+
+      const origin = getRequestOrigin(req);
+      const isPublicHttps =
+        origin.startsWith('https://') &&
+        !origin.includes('localhost') &&
+        !origin.includes('127.0.0.1');
+
+      const expirationDate = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+      const idempotencyKey = `mp-pix-${externalRef}-${Date.now()}`;
+
+      const payload: Record<string, unknown> = {
+        transaction_amount: PLAN_PRICE_BRL,
+        description: `Renovacao Web Vitrine (${storeName})`,
+        payment_method_id: 'pix',
+        date_of_expiration: expirationDate,
+        payer: {
+          email: payerEmail,
+          first_name: storeName.slice(0, 30) || 'Lojista',
+        },
+        external_reference: externalRef,
+        ...(isPublicHttps ? { notification_url: `${origin}/api/mercadopago/webhook` } : {}),
+      };
+
+      const mpRes = await fetch('https://api.mercadopago.com/v1/payments', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'X-Idempotency-Key': idempotencyKey,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const mpData = await mpRes.json().catch(() => ({}));
+      if (!mpRes.ok) {
+        res.status(mpRes.status >= 400 && mpRes.status < 500 ? mpRes.status : 502).json({
+          success: false,
+          errorMessage: mpData?.message || 'Erro ao gerar cobrança Pix no Mercado Pago.',
+        });
+        return;
+      }
+
+      const transactionData = mpData?.point_of_interaction?.transaction_data;
+      if (!transactionData?.qr_code || !mpData?.id) {
+        res.status(502).json({
+          success: false,
+          errorMessage: 'O Mercado Pago não retornou o QR Code Pix. Tente novamente.',
+        });
+        return;
+      }
+
+      const paymentId = String(mpData.id);
+      await setDoc(
+        doc(db, 'pix_payments', paymentId),
+        {
+          paymentId,
+          clientId: externalRef,
+          storeName,
+          amount: Number(mpData.transaction_amount) || PLAN_PRICE_BRL,
+          status: mpData.status || 'pending',
+          applied: false,
+          createdAt: new Date().toISOString(),
+        },
+        { merge: true }
+      );
+
+      res.json({
+        success: true,
+        paymentId,
+        status: mpData.status || 'pending',
+        qrCode: transactionData.qr_code,
+        qrCodeBase64: transactionData.qr_code_base64,
+        ticketUrl: transactionData.ticket_url,
+      });
+    } catch (err) {
+      console.error('Error in POST /api/mercadopago/pix:', err);
+      res.status(500).json({
+        success: false,
+        errorMessage: 'Falha interna ao gerar cobrança Pix.',
+      });
+    }
+  });
+
+  // Check Mercado Pago payment status and automatically renew the client's Firestore subscription
+  app.get('/api/mercadopago/status/:paymentId', async (req: Request, res: Response) => {
+    try {
+      const paymentId = sanitizeParam(req.params.paymentId, 64);
+      const clientHint = sanitizeParam(req.query.clientId, 120);
+
+      if (!paymentId || paymentId.startsWith('pix-instant-')) {
+        res.json({ status: 'pending', isApproved: false });
+        return;
+      }
+
+      const mpData = await fetchMercadoPagoPayment(paymentId);
+      if (!mpData) {
+        res.json({ status: 'unknown', isApproved: false });
+        return;
+      }
+
+      const isApproved = mpData.status === 'approved';
+      let renewalInfo: any = null;
+
+      if (isApproved) {
+        const refToUse = sanitizeParam(mpData.external_reference, 120) || clientHint;
+        renewalInfo = await applyPaymentRenewalToClient(refToUse, {
+          id: String(mpData.id),
+          amount: Number(mpData.transaction_amount) || 0,
+          status: mpData.status,
+          dateApproved: mpData.date_approved,
+        });
+      }
+
+      res.json({
+        status: mpData.status || 'unknown',
+        isApproved,
+        paymentId: String(mpData.id),
+        renewed: Boolean(renewalInfo?.applied || renewalInfo?.alreadyApplied),
+        dueDate: renewalInfo?.dueDate,
+        clientId: renewalInfo?.clientId,
+      });
+    } catch (err) {
+      console.error('Error in GET /api/mercadopago/status/:paymentId:', err);
+      res.status(500).json({ status: 'error', isApproved: false });
+    }
+  });
+
+  // Reconcile recent Mercado Pago payments for a client (e.g. on page reload or block-screen check)
+  app.post('/api/mercadopago/reconcile-client', async (req: Request, res: Response) => {
+    try {
+      const token = getMercadoPagoAccessToken();
+      const rawClientId = sanitizeParam(req.body?.clientId, 120);
+      if (!rawClientId) {
+        res.status(400).json({ success: false, renewed: false, reason: 'missing_client_id' });
+        return;
+      }
+
+      const resolvedClientId = await resolveTargetClientDocId(rawClientId);
+      if (!resolvedClientId) {
+        res.json({ success: false, renewed: false, reason: 'client_not_found' });
+        return;
+      }
+
+      let newlyApplied = false;
+      let latestDueDate: string | undefined;
+
+      if (token) {
+        // 1. Query Mercado Pago payments matching this client's external_reference
+        try {
+          const searchUrl = `https://api.mercadopago.com/v1/payments/search?external_reference=${encodeURIComponent(
+            resolvedClientId
+          )}&sort=date_created&criteria=desc&limit=10`;
+          const searchRes = await fetch(searchUrl, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (searchRes.ok) {
+            const searchData = await searchRes.json().catch(() => ({}));
+            const results = Array.isArray(searchData?.results) ? searchData.results : [];
+            for (const mpPay of results) {
+              if (mpPay?.status === 'approved' && Number(mpPay?.transaction_amount) >= 29.0) {
+                const outcome = await applyPaymentRenewalToClient(resolvedClientId, {
+                  id: String(mpPay.id),
+                  amount: Number(mpPay.transaction_amount),
+                  status: mpPay.status,
+                  dateApproved: mpPay.date_approved,
+                });
+                if (outcome.applied) newlyApplied = true;
+                if (outcome.dueDate) latestDueDate = outcome.dueDate;
+              }
+            }
+          }
+        } catch (searchErr) {
+          console.warn('Mercado Pago search reconciliation error:', searchErr);
+        }
+
+        // 2. Also check any tracked pix_payments in Firestore for this client
+        try {
+          const q = query(collection(db, 'pix_payments'), where('clientId', '==', resolvedClientId));
+          const pixSnaps = await getDocs(q);
+          for (const pDoc of pixSnaps.docs) {
+            const pData = pDoc.data();
+            if (pData?.applied) continue;
+            const mpPay = await fetchMercadoPagoPayment(pDoc.id);
+            if (mpPay?.status === 'approved' && Number(mpPay?.transaction_amount) >= 29.0) {
+              const outcome = await applyPaymentRenewalToClient(resolvedClientId, {
+                id: String(mpPay.id),
+                amount: Number(mpPay.transaction_amount),
+                status: mpPay.status,
+                dateApproved: mpPay.date_approved,
+              });
+              if (outcome.applied) newlyApplied = true;
+              if (outcome.dueDate) latestDueDate = outcome.dueDate;
+            }
+          }
+        } catch (pixLookupErr) {
+          console.warn('pix_payments lookup reconciliation error:', pixLookupErr);
+        }
+      }
+
+      const freshClientSnap = await getDoc(doc(db, 'clients', resolvedClientId));
+      const freshData = freshClientSnap.exists() ? freshClientSnap.data() : null;
+
+      res.json({
+        success: true,
+        renewed: newlyApplied,
+        clientId: resolvedClientId,
+        dueDate: latestDueDate || freshData?.dueDate,
+        status: freshData?.status,
+      });
+    } catch (err) {
+      console.error('Error in POST /api/mercadopago/reconcile-client:', err);
+      res.status(500).json({ success: false, renewed: false });
+    }
+  });
+
+  // Create Checkout Pro preference (Cards, MP Account, Boleto) via server
+  app.post('/api/mercadopago/preference', async (req: Request, res: Response) => {
+    try {
+      const token = getMercadoPagoAccessToken();
+      if (!token) {
+        res.status(503).json({
+          success: false,
+          errorMessage: 'Gateway Mercado Pago aguardando configuração no servidor (MERCADO_PAGO_ACCESS_TOKEN).',
+        });
+        return;
+      }
+
+      const rawClientId = sanitizeParam(req.body?.clientId, 120);
+      const storeName = sanitizeParam(req.body?.storeName || req.body?.name || 'Web Vitrine', 80);
+      const rawEmail = sanitizeParam(req.body?.email, 120);
+      const payerEmail = rawEmail && rawEmail.includes('@') ? rawEmail : 'contato@webvitrine.com.br';
+      const resolvedClientId = rawClientId ? await resolveTargetClientDocId(rawClientId) : null;
+      const externalRef = resolvedClientId || rawClientId || 'vitrine-client';
+
+      const origin = getRequestOrigin(req);
+      const isPublicHttps =
+        origin.startsWith('https://') &&
+        !origin.includes('localhost') &&
+        !origin.includes('127.0.0.1');
+
+      const payload: Record<string, unknown> = {
+        items: [
+          {
+            id: 'monthly-2999',
+            title: 'Plano Mensal Web Vitrine',
+            description: `Assinatura mensal para a loja ${storeName} (30 dias)`,
+            quantity: 1,
+            currency_id: 'BRL',
+            unit_price: PLAN_PRICE_BRL,
+          },
+        ],
+        payer: {
+          email: payerEmail,
+          name: storeName,
+        },
+        back_urls: {
+          success: `${origin}/?payment=success&client=${encodeURIComponent(externalRef)}`,
+          failure: `${origin}/?payment=failure`,
+          pending: `${origin}/?payment=pending`,
+        },
+        auto_return: 'approved',
+        external_reference: externalRef,
+        ...(isPublicHttps ? { notification_url: `${origin}/api/mercadopago/webhook` } : {}),
+      };
+
+      const mpRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const mpData = await mpRes.json().catch(() => ({}));
+      if (!mpRes.ok) {
+        res.status(mpRes.status >= 400 && mpRes.status < 500 ? mpRes.status : 502).json({
+          success: false,
+          errorMessage: mpData?.message || 'Erro ao gerar link de pagamento Mercado Pago.',
+        });
+        return;
+      }
+
+      res.json({
+        success: true,
+        preferenceId: mpData.id,
+        initPoint: mpData.init_point,
+        sandboxInitPoint: mpData.sandbox_init_point,
+      });
+    } catch (err) {
+      console.error('Error in POST /api/mercadopago/preference:', err);
+      res.status(500).json({
+        success: false,
+        errorMessage: 'Falha na conexão com Mercado Pago.',
+      });
+    }
+  });
+
+  // Official Mercado Pago Webhook (verifies payment directly with Mercado Pago API before activating client)
+  app.post('/api/mercadopago/webhook', async (req: Request, res: Response) => {
+    try {
+      const eventType = sanitizeParam(req.body?.type || req.query?.topic || req.query?.type, 40);
+      const rawDataId =
+        req.body?.data?.id ||
+        req.query?.['data.id'] ||
+        req.query?.id ||
+        '';
+      const paymentId = sanitizeParam(String(rawDataId), 64);
+
+      if (!paymentId || (eventType && eventType !== 'payment')) {
+        res.status(200).json({ received: true, ignored: true });
+        return;
+      }
+
+      if (!verifyMercadoPagoWebhookSignature(req, paymentId)) {
+        res.status(401).json({ received: false, error: 'Invalid signature' });
+        return;
+      }
+
+      const mpData = await fetchMercadoPagoPayment(paymentId);
+      if (mpData && mpData.status === 'approved') {
+        await applyPaymentRenewalToClient(sanitizeParam(mpData.external_reference, 120), {
+          id: String(mpData.id),
+          amount: Number(mpData.transaction_amount) || 0,
+          status: mpData.status,
+          dateApproved: mpData.date_approved,
+        });
+      }
+
+      res.status(200).json({ received: true });
+    } catch (err) {
+      console.error('Error in POST /api/mercadopago/webhook:', err);
+      res.status(200).json({ received: true });
+    }
   });
 
   // Serves crisp JPEG/PNG binary image bytes for WhatsApp / OpenGraph crawlers
@@ -652,7 +1247,7 @@ async function startServer() {
     app.use(vite.middlewares);
 
     app.use('*', async (req: Request, res: Response, next: NextFunction) => {
-      if (req.method !== 'GET' && req.method !== 'HEAD') {
+      if (req.path.startsWith('/api/') || (req.method !== 'GET' && req.method !== 'HEAD')) {
         next();
         return;
       }

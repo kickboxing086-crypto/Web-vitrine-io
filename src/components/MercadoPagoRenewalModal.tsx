@@ -21,9 +21,10 @@ import {
   createMercadoPagoPreference,
   checkMercadoPagoPaymentStatus,
   calculateNextRenewalDueDate,
+  getSubscriptionStatus,
   MercadoPagoPixResponse,
 } from '../lib/mercadoPagoService';
-import { saveClient } from '../lib/firestoreService';
+import { saveClient, getClientById } from '../lib/firestoreService';
 
 interface MercadoPagoRenewalModalProps {
   isOpen: boolean;
@@ -54,7 +55,8 @@ export const MercadoPagoRenewalModal: React.FC<MercadoPagoRenewalModalProps> = (
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   const activeStoreName = currentClient?.storeName || storeName || 'Minha Loja';
-  const clientEmail = currentClient?.email || 'samuellsilvva02@gmail.com';
+  const clientEmail = currentClient?.email || 'contato@webvitrine.com.br';
+  const clientIdentifier = currentClient?.id || currentClient?.username || '';
 
   // Generate Pix payment on open
   useEffect(() => {
@@ -87,17 +89,17 @@ export const MercadoPagoRenewalModal: React.FC<MercadoPagoRenewalModalProps> = (
     if (!isOpen || !pixData?.paymentId || isSuccess) return;
 
     pollingRef.current = setInterval(async () => {
-      const statusRes = await checkMercadoPagoPaymentStatus(pixData.paymentId!);
+      const statusRes = await checkMercadoPagoPaymentStatus(pixData.paymentId!, clientIdentifier);
       if (statusRes.isApproved) {
         if (pollingRef.current) clearInterval(pollingRef.current);
-        await completeRenewal();
+        await completeRenewal(String(pixData.paymentId), statusRes.dueDate);
       }
-    }, 4000);
+    }, 3500);
 
     return () => {
       if (pollingRef.current) clearInterval(pollingRef.current);
     };
-  }, [isOpen, pixData?.paymentId, isSuccess]);
+  }, [isOpen, pixData?.paymentId, isSuccess, clientIdentifier]);
 
   const handleGeneratePix = async () => {
     setIsLoadingPix(true);
@@ -107,7 +109,7 @@ export const MercadoPagoRenewalModal: React.FC<MercadoPagoRenewalModalProps> = (
         email: clientEmail,
         name: activeStoreName,
         storeName: activeStoreName,
-        clientId: currentClient?.id || 'client-default',
+        clientId: clientIdentifier,
       });
 
       if (res.success && res.qrCode) {
@@ -115,7 +117,7 @@ export const MercadoPagoRenewalModal: React.FC<MercadoPagoRenewalModalProps> = (
       } else {
         setErrorMsg(res.errorMessage || 'Não foi possível gerar o Pix no momento. Tente novamente.');
       }
-    } catch (e) {
+    } catch {
       setErrorMsg('Falha ao comunicar com a API do Mercado Pago.');
     } finally {
       setIsLoadingPix(false);
@@ -130,7 +132,7 @@ export const MercadoPagoRenewalModal: React.FC<MercadoPagoRenewalModalProps> = (
         email: clientEmail,
         name: activeStoreName,
         storeName: activeStoreName,
-        clientId: currentClient?.id || 'client-default',
+        clientId: clientIdentifier,
       });
 
       if (res.success && res.initPoint) {
@@ -139,7 +141,7 @@ export const MercadoPagoRenewalModal: React.FC<MercadoPagoRenewalModalProps> = (
       } else {
         setErrorMsg(res.errorMessage || 'Não foi possível gerar o link de pagamento do Mercado Pago.');
       }
-    } catch (e) {
+    } catch {
       setErrorMsg('Falha ao gerar link do Mercado Pago.');
     } finally {
       setIsCreatingPreference(false);
@@ -150,9 +152,9 @@ export const MercadoPagoRenewalModal: React.FC<MercadoPagoRenewalModalProps> = (
     if (!pixData?.paymentId) return;
     setIsCheckingPayment(true);
     try {
-      const statusRes = await checkMercadoPagoPaymentStatus(pixData.paymentId);
+      const statusRes = await checkMercadoPagoPaymentStatus(pixData.paymentId, clientIdentifier);
       if (statusRes.isApproved) {
-        await completeRenewal();
+        await completeRenewal(String(pixData.paymentId), statusRes.dueDate);
       } else {
         setErrorMsg('Pagamento ainda não identificado no Mercado Pago. Aguarde alguns segundos após pagar no seu banco.');
         setTimeout(() => setErrorMsg(null), 4000);
@@ -164,20 +166,25 @@ export const MercadoPagoRenewalModal: React.FC<MercadoPagoRenewalModalProps> = (
     }
   };
 
-  const completeRenewal = async () => {
+  const completeRenewal = async (confirmedPaymentId?: string, serverDueDate?: string) => {
     try {
-      const nextDueDateStr = calculateNextRenewalDueDate(currentClient?.dueDate);
-      const updatedClient = {
-        ...currentClient,
-        dueDate: nextDueDateStr,
-        status: 'active',
-        lastRenewedAt: new Date().toISOString(),
-        planPrice: SINGLE_PLAN_CONFIG.price,
-      };
+      let latestClient = clientIdentifier ? await getClientById(clientIdentifier) : null;
 
-      // Persist in Firestore & LocalStorage
-      await saveClient(updatedClient);
-      localStorage.setItem('store_current_client', JSON.stringify(updatedClient));
+      if (!latestClient || getSubscriptionStatus(latestClient).isExpired) {
+        const nextDueDateStr = serverDueDate || calculateNextRenewalDueDate(currentClient?.dueDate);
+        const updatedClient = {
+          ...(latestClient || currentClient),
+          dueDate: nextDueDateStr,
+          status: 'active',
+          lastRenewedAt: new Date().toISOString(),
+          ...(confirmedPaymentId ? { lastPaymentId: confirmedPaymentId } : {}),
+          planPrice: SINGLE_PLAN_CONFIG.price,
+        };
+        await saveClient(updatedClient);
+        latestClient = updatedClient;
+      }
+
+      localStorage.setItem('store_current_client', JSON.stringify(latestClient));
 
       setIsSuccess(true);
       confetti({
@@ -187,11 +194,11 @@ export const MercadoPagoRenewalModal: React.FC<MercadoPagoRenewalModalProps> = (
       });
 
       if (onRenewalSuccess) {
-        onRenewalSuccess(updatedClient);
+        onRenewalSuccess(latestClient);
       }
     } catch (e) {
       console.error('Error completing renewal:', e);
-      setIsSuccess(true); // Soft-succeed on client side
+      setIsSuccess(true);
     }
   };
 

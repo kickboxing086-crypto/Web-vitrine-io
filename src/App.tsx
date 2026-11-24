@@ -58,6 +58,11 @@ import {
   markAllSystemNotificationsAsRead,
 } from './lib/firestoreService';
 import { sendBrowserPushNotification } from './lib/pushNotifications';
+import {
+  checkMercadoPagoPaymentStatus,
+  reconcileClientPayments,
+  getSubscriptionStatus,
+} from './lib/mercadoPagoService';
 import { Navbar } from './components/Navbar';
 import { ProductCard } from './components/ProductCard';
 import { ProductModal } from './components/ProductModal';
@@ -616,9 +621,51 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [settings.isFirstSetupDone, isAdminAuthenticated]);
 
-  // Listener for Post-Payment Success Message (even after closing the tab and returning)
+  // Listener for Post-Payment Success Message & Automatic Mercado Pago Reconciliation
   useEffect(() => {
-    const checkPaymentSuccess = () => {
+    const checkPaymentSuccess = async () => {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const paymentParam = urlParams.get('payment');
+        const mpPaymentId = urlParams.get('payment_id') || urlParams.get('collection_id');
+        const clientParam = urlParams.get('client') || urlParams.get('external_reference') || currentClient?.id;
+
+        if ((paymentParam === 'success' || mpPaymentId) && clientParam) {
+          let confirmed = false;
+          if (mpPaymentId) {
+            const statusRes = await checkMercadoPagoPaymentStatus(mpPaymentId, clientParam);
+            confirmed = statusRes.isApproved;
+          } else {
+            const recon = await reconcileClientPayments(clientParam);
+            confirmed = recon.renewed;
+          }
+
+          if (confirmed) {
+            const fresh = await getClientById(clientParam);
+            if (fresh) {
+              setCurrentClient(fresh);
+              localStorage.setItem('store_current_client', JSON.stringify(fresh));
+              setPaymentSuccessInfo({
+                isOpen: true,
+                planTitle: 'Plano Mensal Web Vitrine',
+                period: '30 dias',
+                storeName: fresh.storeName || settings.storeName || 'Sua Vitrine',
+              });
+            }
+          }
+
+          // Clean payment query params from URL without losing store route
+          ['payment', 'payment_id', 'collection_id', 'collection_status', 'status', 'preference_id', 'external_reference', 'payment_type', 'merchant_order_id', 'processing_mode', 'merchant_account_id', 'site_id', 'client'].forEach((k) =>
+            urlParams.delete(k)
+          );
+          const nextSearch = urlParams.toString();
+          const cleanUrl = `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ''}${window.location.hash}`;
+          window.history.replaceState({}, document.title, cleanUrl);
+        }
+      } catch (err) {
+        console.error('Error verifying post-payment redirect params:', err);
+      }
+
       try {
         const raw = localStorage.getItem('store_payment_success_data');
         if (raw) {
@@ -635,12 +682,18 @@ export default function App() {
       }
 
       if (currentClient?.id) {
-        getClientById(currentClient.id).then((fresh) => {
+        try {
+          if (getSubscriptionStatus(currentClient).isExpired) {
+            await reconcileClientPayments(currentClient.id).catch(() => null);
+          }
+          const fresh = await getClientById(currentClient.id);
           if (fresh && (fresh.dueDate !== currentClient.dueDate || fresh.status !== currentClient.status)) {
             setCurrentClient((prev: any) => ({ ...prev, ...fresh }));
             localStorage.setItem('store_current_client', JSON.stringify(fresh));
           }
-        }).catch(console.error);
+        } catch (err) {
+          console.error('Error syncing fresh client status:', err);
+        }
       }
     };
 
@@ -651,7 +704,7 @@ export default function App() {
       window.removeEventListener('focus', checkPaymentSuccess);
       window.removeEventListener('storage', checkPaymentSuccess);
     };
-  }, [settings.storeName]);
+  }, [settings.storeName, currentClient?.id]);
 
   // Real-time Cloud Firestore synchronization
   useEffect(() => {

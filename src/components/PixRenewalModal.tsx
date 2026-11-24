@@ -18,6 +18,7 @@ import {
   SINGLE_PLAN_CONFIG,
   createMercadoPagoPixPayment,
   checkMercadoPagoPaymentStatus,
+  reconcileClientPayments,
   calculateNextRenewalDueDate,
   getSubscriptionStatus,
   MercadoPagoPixResponse,
@@ -44,20 +45,25 @@ export const PixRenewalModal: React.FC<PixRenewalModalProps> = ({
   const [copied, setCopied] = useState(false);
   const [isCheckingPayment, setIsCheckingPayment] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [renewedClient, setRenewedClient] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState(300); // Strict 5 minutes = 300 seconds
 
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
+  const isCompletingRef = useRef(false);
 
   const activeStoreName = currentClient?.storeName || storeName || 'Minha Loja';
-  const clientEmail = currentClient?.email || 'samuellsilvva02@gmail.com';
+  const clientEmail = currentClient?.email || 'contato@webvitrine.com.br';
+  const clientIdentifier = currentClient?.id || currentClient?.username || '';
 
   // Generate Pix payment on open with 5 min timer
   useEffect(() => {
     if (isOpen) {
       setIsSuccess(false);
+      setRenewedClient(null);
       setErrorMsg(null);
-      setTimeLeft(300); // 5 minutes max
+      setTimeLeft(300);
+      isCompletingRef.current = false;
       handleGeneratePix();
     } else {
       if (pollingRef.current) clearInterval(pollingRef.current);
@@ -84,36 +90,46 @@ export const PixRenewalModal: React.FC<PixRenewalModalProps> = ({
     return () => clearInterval(timer);
   }, [isOpen, pixData, timeLeft, isSuccess]);
 
-  // Real-time polling for Pix approval
+  // Real-time polling for Pix approval (every 3 seconds)
   useEffect(() => {
     if (!isOpen || !pixData?.paymentId || isSuccess || timeLeft === 0) return;
 
     pollingRef.current = setInterval(async () => {
+      if (isCompletingRef.current) return;
+
       let isApproved = false;
+      let serverDueDate: string | undefined;
+
       if (pixData.paymentId) {
-        const statusRes = await checkMercadoPagoPaymentStatus(pixData.paymentId);
-        if (statusRes.isApproved) isApproved = true;
-      }
-      if (!isApproved && (currentClient?.id || currentClient?.username)) {
-        try {
-          const fresh = await getClientById(currentClient.id || currentClient.username);
-          if (fresh && !getSubscriptionStatus(fresh).isExpired) {
-            isApproved = true;
-          }
-        } catch {
-          // ignore
+        const statusRes = await checkMercadoPagoPaymentStatus(pixData.paymentId, clientIdentifier);
+        if (statusRes.isApproved) {
+          isApproved = true;
+          serverDueDate = statusRes.dueDate;
         }
       }
+
+      if (!isApproved && clientIdentifier) {
+        try {
+          const fresh = await getClientById(clientIdentifier);
+          if (fresh && !getSubscriptionStatus(fresh).isExpired) {
+            isApproved = true;
+            serverDueDate = fresh.dueDate;
+          }
+        } catch {
+          // ignore transient read errors during polling
+        }
+      }
+
       if (isApproved) {
         if (pollingRef.current) clearInterval(pollingRef.current);
-        await completeRenewal();
+        await completeRenewal(String(pixData.paymentId), serverDueDate);
       }
-    }, 4000);
+    }, 3000);
 
     return () => {
       if (pollingRef.current) clearInterval(pollingRef.current);
     };
-  }, [isOpen, pixData?.paymentId, isSuccess, timeLeft, currentClient]);
+  }, [isOpen, pixData?.paymentId, isSuccess, timeLeft, clientIdentifier]);
 
   const handleGeneratePix = async () => {
     setIsLoadingPix(true);
@@ -124,15 +140,17 @@ export const PixRenewalModal: React.FC<PixRenewalModalProps> = ({
         email: clientEmail,
         name: activeStoreName,
         storeName: activeStoreName,
-        clientId: currentClient?.id || 'client-default',
+        clientId: clientIdentifier,
       });
 
       if (res.success && res.qrCode) {
         setPixData(res);
       } else {
+        setPixData(null);
         setErrorMsg(res.errorMessage || 'Não foi possível gerar o QR Code Pix. Tente novamente.');
       }
-    } catch (e) {
+    } catch {
+      setPixData(null);
       setErrorMsg('Falha ao gerar Pix de pagamento.');
     } finally {
       setIsLoadingPix(false);
@@ -140,26 +158,42 @@ export const PixRenewalModal: React.FC<PixRenewalModalProps> = ({
   };
 
   const handleManualCheckPayment = async () => {
-    if (!pixData?.paymentId && !currentClient?.id) return;
+    if (!pixData?.paymentId && !clientIdentifier) return;
     setIsCheckingPayment(true);
+    setErrorMsg(null);
     try {
       let isApproved = false;
+      let serverDueDate: string | undefined;
+
       if (pixData?.paymentId) {
-        const statusRes = await checkMercadoPagoPaymentStatus(pixData.paymentId);
-        if (statusRes.isApproved) isApproved = true;
-      }
-      if (!isApproved && (currentClient?.id || currentClient?.username)) {
-        const fresh = await getClientById(currentClient.id || currentClient.username);
-        if (fresh && !getSubscriptionStatus(fresh).isExpired) {
+        const statusRes = await checkMercadoPagoPaymentStatus(pixData.paymentId, clientIdentifier);
+        if (statusRes.isApproved) {
           isApproved = true;
+          serverDueDate = statusRes.dueDate;
+        }
+      }
+
+      if (!isApproved && clientIdentifier) {
+        const reconRes = await reconcileClientPayments(clientIdentifier);
+        if (reconRes.renewed) {
+          isApproved = true;
+          serverDueDate = reconRes.dueDate;
+        } else {
+          const fresh = await getClientById(clientIdentifier);
+          if (fresh && !getSubscriptionStatus(fresh).isExpired) {
+            isApproved = true;
+            serverDueDate = fresh.dueDate;
+          }
         }
       }
 
       if (isApproved) {
-        await completeRenewal();
+        await completeRenewal(pixData?.paymentId ? String(pixData.paymentId) : undefined, serverDueDate);
       } else {
-        setErrorMsg('Pagamento ainda não confirmado. Aguarde alguns segundos após pagar no aplicativo do seu banco.');
-        setTimeout(() => setErrorMsg(null), 4000);
+        setErrorMsg(
+          'Pagamento ainda não confirmado. Aguarde alguns segundos após finalizar no app do seu banco e clique novamente.'
+        );
+        setTimeout(() => setErrorMsg(null), 5000);
       }
     } catch {
       setErrorMsg('Erro ao consultar status do pagamento.');
@@ -168,34 +202,51 @@ export const PixRenewalModal: React.FC<PixRenewalModalProps> = ({
     }
   };
 
-  const completeRenewal = async () => {
+  const completeRenewal = async (confirmedPaymentId?: string, serverDueDate?: string) => {
+    if (isCompletingRef.current) return;
+    isCompletingRef.current = true;
+
     try {
-      const nextDueDateStr = calculateNextRenewalDueDate(currentClient?.dueDate);
-      const updatedClient = {
-        ...currentClient,
-        dueDate: nextDueDateStr,
-        status: 'active',
-        lastRenewedAt: new Date().toISOString(),
-        planPrice: SINGLE_PLAN_CONFIG.price,
-      };
+      // Read the latest document updated by the server transaction
+      let latestClient = clientIdentifier ? await getClientById(clientIdentifier) : null;
 
-      await saveClient(updatedClient);
-      localStorage.setItem('store_current_client', JSON.stringify(updatedClient));
+      if (!latestClient || getSubscriptionStatus(latestClient).isExpired) {
+        const nextDueDateStr = serverDueDate || calculateNextRenewalDueDate(currentClient?.dueDate);
+        const updatedClient = {
+          ...(latestClient || currentClient),
+          dueDate: nextDueDateStr,
+          status: 'active',
+          lastRenewedAt: new Date().toISOString(),
+          ...(confirmedPaymentId ? { lastPaymentId: confirmedPaymentId } : {}),
+          planPrice: SINGLE_PLAN_CONFIG.price,
+        };
+        await saveClient(updatedClient);
+        latestClient = updatedClient;
+      }
 
+      localStorage.setItem('store_current_client', JSON.stringify(latestClient));
+      setRenewedClient(latestClient);
       setIsSuccess(true);
+
       confetti({
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 },
       });
-
-      if (onRenewalSuccess) {
-        onRenewalSuccess(updatedClient);
-      }
     } catch (e) {
       console.error('Error completing renewal:', e);
       setIsSuccess(true);
+    } finally {
+      isCompletingRef.current = false;
     }
+  };
+
+  const handleCloseOrContinue = () => {
+    if (isSuccess && renewedClient && onRenewalSuccess) {
+      onRenewalSuccess(renewedClient);
+      return;
+    }
+    onClose();
   };
 
   const handleCopyPix = () => {
@@ -206,6 +257,13 @@ export const PixRenewalModal: React.FC<PixRenewalModalProps> = ({
   };
 
   if (!isOpen) return null;
+
+  const displayDueDate = renewedClient?.dueDate || currentClient?.dueDate;
+  const formattedDueDate = (() => {
+    if (!displayDueDate) return 'Em 30 dias';
+    const parts = String(displayDueDate).slice(0, 10).split('-');
+    return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : displayDueDate;
+  })();
 
   return (
     <AnimatePresence>
@@ -220,7 +278,7 @@ export const PixRenewalModal: React.FC<PixRenewalModalProps> = ({
           <div className="p-5 sm:p-6 bg-gradient-to-b from-[#1C1C22] to-[#141417] border-b border-[#27272A] relative">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleCloseOrContinue}
               className="absolute top-4 right-4 p-2 text-stone-400 hover:text-white rounded-full hover:bg-stone-800 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
@@ -230,7 +288,7 @@ export const PixRenewalModal: React.FC<PixRenewalModalProps> = ({
               <span className="px-2.5 py-0.5 rounded-full bg-[#D4AF37] text-stone-950 text-[10px] font-extrabold uppercase tracking-wider">
                 Pagamento via Pix
               </span>
-              <span className="text-xs text-stone-400">QR Code Instantâneo (5 Minutos)</span>
+              <span className="text-xs text-stone-400">Confirmação Automática</span>
             </div>
 
             <h2 className="text-xl sm:text-2xl font-serif-luxury font-bold text-white">
@@ -251,7 +309,8 @@ export const PixRenewalModal: React.FC<PixRenewalModalProps> = ({
                 Plano Renovado com Sucesso!
               </h3>
               <p className="text-xs sm:text-sm text-stone-300 max-w-sm mx-auto leading-relaxed">
-                Pagamento via Pix confirmado. Sua vitrine virtual está <strong className="text-emerald-400">100% ativa</strong> por mais 30 dias.
+                Pagamento via Pix confirmado automaticamente. Sua vitrine virtual está{' '}
+                <strong className="text-emerald-400">100% ativa</strong> por mais 30 dias.
               </p>
               <div className="p-4 rounded-2xl bg-[#1C1C22] border border-[#27272A] text-left text-xs space-y-1.5 max-w-sm mx-auto">
                 <div className="flex justify-between">
@@ -264,14 +323,12 @@ export const PixRenewalModal: React.FC<PixRenewalModalProps> = ({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-stone-400">Novo Vencimento:</span>
-                  <span className="text-[#D4AF37] font-bold">
-                    {currentClient?.dueDate ? new Date(currentClient.dueDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'Em 30 dias'}
-                  </span>
+                  <span className="text-[#D4AF37] font-bold">{formattedDueDate}</span>
                 </div>
               </div>
               <button
                 type="button"
-                onClick={onClose}
+                onClick={handleCloseOrContinue}
                 className="w-full py-3 bg-[#D4AF37] hover:bg-[#E5C378] text-stone-950 font-bold rounded-xl text-sm transition-colors cursor-pointer shadow-md"
               >
                 Voltar ao Painel da Loja
@@ -293,9 +350,7 @@ export const PixRenewalModal: React.FC<PixRenewalModalProps> = ({
                   </span>
                 </div>
                 <div className="text-right">
-                  <span className="text-2xl font-extrabold text-white">
-                    R$ 29,99
-                  </span>
+                  <span className="text-2xl font-extrabold text-white">R$ 29,99</span>
                   <span className="text-xs text-stone-400 block">/mês</span>
                 </div>
               </div>
@@ -321,7 +376,9 @@ export const PixRenewalModal: React.FC<PixRenewalModalProps> = ({
                     <div className="w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto">
                       <AlertCircle className="w-6 h-6" />
                     </div>
-                    <p className="text-sm font-bold text-white">O tempo limite de 5 minutos expirou.</p>
+                    <p className="text-sm font-bold text-white">
+                      O tempo limite de 5 minutos expirou.
+                    </p>
                     <button
                       type="button"
                       onClick={handleGeneratePix}
@@ -348,7 +405,11 @@ export const PixRenewalModal: React.FC<PixRenewalModalProps> = ({
                         <Clock className="w-4 h-4 text-[#D4AF37]" />
                         <span>Tempo restante para pagamento:</span>
                       </div>
-                      <strong className={`font-mono font-bold text-sm ${timeLeft <= 60 ? 'text-rose-400 animate-pulse' : 'text-[#D4AF37]'}`}>
+                      <strong
+                        className={`font-mono font-bold text-sm ${
+                          timeLeft <= 60 ? 'text-rose-400 animate-pulse' : 'text-[#D4AF37]'
+                        }`}
+                      >
                         {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
                       </strong>
                     </div>
@@ -410,7 +471,7 @@ export const PixRenewalModal: React.FC<PixRenewalModalProps> = ({
                       onClick={handleGeneratePix}
                       className="px-4 py-2 bg-[#D4AF37] text-stone-950 font-bold rounded-xl text-xs cursor-pointer"
                     >
-                      Gerar QR Code Pix
+                      Tentar Gerar QR Code Pix Novamente
                     </button>
                   </div>
                 )}
@@ -420,7 +481,7 @@ export const PixRenewalModal: React.FC<PixRenewalModalProps> = ({
               <div className="pt-2 border-t border-[#222228] flex items-center justify-center text-[11px] text-stone-500">
                 <span className="flex items-center gap-1">
                   <ShieldCheck className="w-3.5 h-3.5 text-[#D4AF37]" />
-                  Pix Seguro Instantâneo
+                  Pix Seguro com Liberação Automática
                 </span>
               </div>
             </div>
